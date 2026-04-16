@@ -1,0 +1,180 @@
+---
+name: design-setup
+description: Set up Claude for UI/UX design work — configures your design tool, frontend stack, and accessibility standard so Claude generates production-quality components and avoids generic AI aesthetics.
+---
+
+# UI/UX Design Setup
+
+This skill configures Claude for UI/UX design and frontend work.
+
+**Language:** Use `detected_language` from handoff context, or detect from the user's first message and use it throughout.
+
+**Existing CLAUDE.md:** If `existing_claude_md: true` in handoff context, or if CLAUDE.md exists in the filesystem, extend it by appending a new section (`## Claude Onboarding Agent — Design Setup`) rather than overwriting.
+
+## Step 1: Superpowers (Optional)
+
+> "**Superpowers** is a free Claude Code skills library used by 94,000+ people. Its brainstorming skill is particularly useful for exploring design directions and component structures before committing to an implementation.
+>
+> Would you like to install it?
+> **A) Yes — Plugin Marketplace** (one command, recommended)
+> **B) Yes — GitHub** (clone from github.com/obra/superpowers)
+> **C) Skip for now**"
+
+If A or B: install using the chosen method.
+
+**If Plugin Marketplace:** `/plugin install superpowers@claude-plugins-official`
+**If GitHub:** `git clone https://github.com/obra/superpowers ~/.claude/plugins/superpowers`
+
+Verify installation. On failure: warn and set `superpowers_installed: false`. Continue regardless.
+
+## Step 2: Context Questions
+
+Ask one at a time:
+
+1. "Which design tool do you primarily use?
+   A) Figma
+   B) Sketch
+   C) Adobe XD
+   D) Other — please specify"
+
+2. "What is your frontend stack?
+   A) React + Tailwind CSS
+   B) Vue
+   C) Vanilla CSS / plain HTML
+   D) Other — please specify
+   E) None — I work design-only, no code"
+
+3. "What is your primary workflow with Claude?
+   A) Hand off designs → have Claude generate the code
+   B) Review and improve existing UI code
+   C) Both"
+
+4. "Which accessibility standard should Claude enforce?
+   A) WCAG AA (standard compliance)
+   B) WCAG AAA (strict compliance)
+   C) No specific standard"
+
+## Step 3: Optional Community Skills
+
+> "Would you like to install additional community skills?
+>
+> A) frontend-design (official Anthropic) — avoids AI-generic UI, makes bold design decisions (277k installs, strongly recommended)
+> B) web-artifacts-builder — build complex HTML artifacts with React + Tailwind + shadcn/ui
+> C) accessibility-skill — automated WCAG audit and remediation guidance
+> D) All of the above
+> E) None"
+
+For each selected skill, run: `/plugin install <skill>@claude-plugins-official`
+
+On failure: warn and continue. Store successfully installed skills as `optional_skills_installed`.
+
+## Step 4: Generate Artifacts
+
+### CLAUDE.md
+
+```markdown
+# Claude Instructions — UI/UX Design
+
+## Design Context
+Tool: [Q1 answer] | Stack: [Q2 answer] | Workflow: [Q3 answer] | Accessibility: [Q4 answer]
+
+## Guidelines
+- Avoid generic AI aesthetics — no default gray cards, no rounded-everything, no "modern minimal" clichés unless explicitly requested
+- Always check [Q4 accessibility standard] compliance for color contrast and interactive elements
+- When generating UI code: component-first, no inline styles, use design tokens where available
+- When reviewing designs or code: flag accessibility issues before aesthetic feedback
+- Prefer existing component library patterns over custom implementations
+- For Figma handoff: extract exact spacing, typography, and color tokens from the provided specs — do not approximate
+- When given a topic or feature, suggest multiple visual directions before committing to one
+
+[Include ONLY if superpowers_installed is true]
+## Superpowers
+Superpowers is installed. For design exploration and component planning, use superpowers:brainstorming to compare directions before generating code.
+```
+
+Adapt based on Q2 (stack):
+- React + Tailwind → add "Prefer Tailwind utility classes over custom CSS. Use shadcn/ui components where applicable."
+- Vue → add "Prefer Vue SFC patterns. Use Vuetify or PrimeVue components where applicable."
+- None (design-only) → omit code-specific guidelines
+
+### AGENTS.md
+
+```markdown
+# Agent Roles
+
+## designer
+Generates UI components and layouts from design specs or descriptions. Follows the design system and accessibility standard defined in CLAUDE.md. Never introduces inline styles or undocumented design tokens.
+
+## accessibility-auditor
+Reviews UI code and designs for WCAG compliance. Returns a prioritized list of violations with remediation suggestions, ordered by severity.
+```
+
+### .claude/settings.json
+
+Build based on Q2 (frontend stack):
+- React + Tailwind or Vue → include npm/npx/node:
+```json
+{
+  "permissions": {
+    "allow": [
+      "Bash(git *)",
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(node *)"
+    ]
+  }
+}
+```
+- None (design-only) or Vanilla CSS:
+```json
+{
+  "permissions": {
+    "allow": ["Bash(git *)"]
+  }
+}
+```
+
+### .gitignore
+
+```gitignore
+# Design files
+*.fig
+*.sketch
+
+# Frontend build
+node_modules/
+dist/
+.next/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude local settings
+.claude/settings.local.json
+```
+
+## Step 5: Completion Summary
+
+```
+✓ UI/UX Design setup complete!
+
+Files created:
+  CLAUDE.md             — design context, accessibility standard ([Q4]), UI guidelines
+  AGENTS.md             — designer and accessibility-auditor role definitions
+  .claude/settings.json — tool permissions for [stack]
+  .gitignore            — design file and build rules
+
+External skills:
+  [✓ Superpowers installed via Plugin Marketplace / GitHub]
+  [skipped — install later with: /plugin install superpowers@claude-plugins-official]
+  [⚠ Superpowers installation failed — install manually: https://github.com/obra/superpowers]
+
+Optional community skills: [list of installed skills, or "none selected"]
+
+Next steps:
+  Start a new Claude session and paste a design description or Figma spec.
+  Example: "Build this card component: [description or paste Figma spec]"
+  Example: "Review this UI for WCAG AA compliance"
+  Example: "Redesign this form — it feels too generic"
+```
