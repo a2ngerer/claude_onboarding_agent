@@ -100,7 +100,22 @@ Thumbs.db
 .claude/settings.local.json
 ```
 
-## Step 4: Completion Summary
+## Step 4: Optional Community Skills
+
+> "Would you like to install additional community skills?
+>
+> A) claude-scientific-skills — NumPy, SciPy, pandas, matplotlib helpers for scientific Python
+> B) claude-d3js-skill — data visualization patterns and D3.js helpers
+> C) All of the above
+> D) None
+>
+> (Multiple selections via comma, e.g. 'A, B')"
+
+For each selected skill, run: `/plugin install <skill>@claude-plugins-official`
+
+On failure: warn and continue. Add successfully installed skills to the Completion Summary under: `Optional community skills: [list or "none selected"]`
+
+## Step 5: Completion Summary
 
 ```
 ✓ Research setup complete!
