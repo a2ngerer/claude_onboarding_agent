@@ -20,6 +20,8 @@ Already know what you need? Call any setup skill directly.
 | `/office-setup` | Configures writing style, document preferences, and company context |
 | `/research-setup` | Sets up citation format, research domain, and academic writing guidelines |
 | `/content-creator-setup` | Configures brand voice, platform preferences, and audience context |
+| `/devops-setup` | Configures cloud provider, IaC tool, and CI/CD platform — generates safe infrastructure workflow guidelines and agent roles |
+| `/design-setup` | Configures design tool, frontend stack, and accessibility standard — generates UI guidelines and avoids generic AI aesthetics |
 
 ---
 
