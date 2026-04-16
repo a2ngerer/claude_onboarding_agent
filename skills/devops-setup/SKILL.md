@@ -100,9 +100,11 @@ Superpowers is installed. For multi-step infrastructure tasks, use superpowers:w
 ```
 
 Adapt based on answers:
-- Terraform answer → reference `terraform plan` in guidelines
-- Pulumi answer → reference `pulumi preview`
-- If neither → omit plan/preview line
+- Terraform → reference `terraform plan` in guidelines
+- Pulumi → reference `pulumi preview`
+- CloudFormation → reference `aws cloudformation deploy --change-set` as the preview step
+- Ansible → reference `ansible-playbook --check` as the dry-run step
+- None → omit plan/preview line entirely
 
 ### AGENTS.md
 
@@ -140,6 +142,7 @@ Add based on Q1 (Cloud):
 - AWS → `"Bash(aws *)"`
 - GCP → `"Bash(gcloud *)"`
 - Azure → `"Bash(az *)"`
+- Mixed / Multiple → all three: `"Bash(aws *)"`, `"Bash(gcloud *)"`, `"Bash(az *)"`
 
 Example for Terraform + Kubernetes + AWS:
 ```json
@@ -160,7 +163,7 @@ Example for Terraform + Kubernetes + AWS:
 
 ### .gitignore
 
-```
+```gitignore
 # IaC state files
 *.tfstate
 *.tfstate.backup
