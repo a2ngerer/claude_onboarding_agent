@@ -25,7 +25,9 @@
     "skills/knowledge-base-builder",
     "skills/office-setup",
     "skills/research-setup",
-    "skills/content-creator-setup"
+    "skills/content-creator-setup",
+    "skills/devops-setup",
+    "skills/design-setup"
   ],
   "commands": [
     "onboarding",
@@ -33,6 +35,8 @@
     "build-knowledge-base",
     "office-setup",
     "research-setup",
-    "content-creator-setup"
+    "content-creator-setup",
+    "devops-setup",
+    "design-setup"
   ]
 }
