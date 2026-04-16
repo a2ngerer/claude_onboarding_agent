@@ -172,6 +172,8 @@ External skills:
   [✓ Superpowers installed via Plugin Marketplace / GitHub]
   [⚠ Superpowers installation failed — install manually: https://github.com/obra/superpowers]
 
+Optional community skills: [list of installed skills, or "none selected"]
+
 Next steps:
   Start a new Claude session and run: /superpowers:using-superpowers
   Then try: /superpowers:brainstorming "describe your first feature"

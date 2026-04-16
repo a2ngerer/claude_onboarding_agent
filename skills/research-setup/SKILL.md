@@ -129,6 +129,8 @@ External skills:
   [skipped — install later with: /plugin install superpowers@claude-plugins-official]
   [⚠ Superpowers installation failed — install manually: https://github.com/obra/superpowers]
 
+Optional community skills: [list of installed skills, or "none selected"]
+
 Next steps:
   Start a new Claude session and say: "Summarize this paper: [paste abstract or upload PDF]"
   Or: "Help me outline a literature review on [topic]"

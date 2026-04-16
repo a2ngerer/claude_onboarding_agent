@@ -68,7 +68,7 @@ Once the user confirms a choice, pass the following handoff context inline and i
 HANDOFF_CONTEXT:
   detected_language: "[ISO 639-1 code, e.g. en, de, es]"
   existing_claude_md: [true/false]
-  inferred_use_case: "[coding|knowledge-base|office|research|content-creator|unknown]"
+  inferred_use_case: "[coding|knowledge-base|office|research|content-creator|devops|design|unknown]"
   repo_signals: ["[list of detected signals, e.g. pyproject.toml, *.py files]"]
 ```
 

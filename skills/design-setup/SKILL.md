@@ -125,6 +125,7 @@ Build based on Q2 (frontend stack):
   }
 }
 ```
+- Other: treat same as React + Tailwind (include npm/npx/node) as a safe default for unknown stacks
 - None (design-only) or Vanilla CSS:
 ```json
 {
