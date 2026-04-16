@@ -1,0 +1,38 @@
+{
+  "name": "claude-onboarding-agent",
+  "description": "Guided setup for Claude Code — generates tailored CLAUDE.md, AGENTS.md, and config files for any use case in minutes.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Alexander Angerer",
+    "email": "alexander.angerer@outlook.de"
+  },
+  "homepage": "https://github.com/a2ngerer/claude_onboarding_agent",
+  "repository": "https://github.com/a2ngerer/claude_onboarding_agent",
+  "license": "MIT",
+  "keywords": [
+    "onboarding",
+    "setup",
+    "claude-code",
+    "skills",
+    "knowledge-base",
+    "obsidian",
+    "superpowers",
+    "productivity"
+  ],
+  "skills": [
+    "skills/onboarding",
+    "skills/coding-setup",
+    "skills/knowledge-base-builder",
+    "skills/office-setup",
+    "skills/research-setup",
+    "skills/content-creator-setup"
+  ],
+  "commands": [
+    "onboarding",
+    "coding-setup",
+    "build-knowledge-base",
+    "office-setup",
+    "research-setup",
+    "content-creator-setup"
+  ]
+}
