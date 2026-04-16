@@ -1,0 +1,109 @@
+---
+name: office-setup
+description: Set up Claude for office and business productivity — configures your writing style, document preferences, and company context so Claude always produces on-brand, appropriately formal output.
+---
+
+# Office Setup
+
+This skill configures Claude for business and office work.
+
+**Language:** Use `detected_language` from handoff context, or detect from the user's first message and use it throughout.
+
+**Existing CLAUDE.md:** If `existing_claude_md: true` in handoff context, or if CLAUDE.md exists in the filesystem, extend it by appending a new section (`## Claude Onboarding Agent — Office Setup`) rather than overwriting.
+
+## Step 1: Superpowers (Optional)
+
+Explain Superpowers to the user and ask if they want it:
+
+> "**Superpowers** is a free Claude Code skills library used by 94,000+ people. It adds structured workflows for brainstorming, planning, and working through complex tasks systematically — useful for any kind of knowledge work, not just coding.
+>
+> Would you like to install it?
+> **A) Yes — Plugin Marketplace** (one command, recommended)
+> **B) Yes — GitHub** (clone from github.com/obra/superpowers)
+> **C) Skip for now**"
+
+If A or B: install using the chosen method and verify.
+
+**If Plugin Marketplace:** `/plugin install superpowers@claude-plugins-official`
+**If GitHub:** `git clone https://github.com/obra/superpowers ~/.claude/plugins/superpowers`
+
+Verify installation. On failure: warn and set `superpowers_installed: false`. Continue regardless.
+
+## Step 2: Context Questions
+
+Ask one at a time:
+
+1. "What types of documents do you create most often?
+   A) Emails and messages
+   B) Reports and proposals
+   C) Presentations
+   D) All of the above / a mix"
+
+2. "What writing style do you prefer?
+   A) Formal — corporate tone, complete sentences, no contractions
+   B) Semi-formal — professional but approachable
+   C) Casual — conversational and direct"
+
+3. "Is there any company, team, or project context that Claude should always keep in mind? (Optional — press Enter to skip)
+   Example: 'We are a SaaS company selling to enterprise HR teams' or 'I work in legal compliance at a bank'"
+
+## Step 3: Generate Artifacts
+
+### CLAUDE.md
+
+```markdown
+# Claude Instructions — Office & Business
+
+## Context
+[Answer from Q3, or "No specific context provided."]
+
+## Writing Style
+Preferred style: [answer from Q2 — Formal / Semi-formal / Casual]
+Primary document types: [answer from Q1]
+
+## Guidelines
+- Always match the preferred writing style defined above
+- For emails: suggest a clear subject line when drafting; include greeting and sign-off
+- For reports: use an executive summary, clear section headers, and a conclusions section
+- For presentations: suggest slide structure with one idea per slide; include speaker notes when asked
+- Proofread for grammar and clarity before presenting output
+- If the document's audience or purpose is not clear, ask before drafting longer pieces
+
+[Include ONLY if superpowers_installed is true]
+## Superpowers
+Superpowers is installed. For complex multi-step tasks (research + structure + write), use superpowers:brainstorming to plan the approach before drafting.
+```
+
+### .gitignore
+
+```gitignore
+# Office temp files
+~$*
+*.tmp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude local settings
+.claude/settings.local.json
+```
+
+## Step 4: Completion Summary
+
+```
+✓ Office setup complete!
+
+Files created:
+  CLAUDE.md    — writing style, document preferences, and context instructions
+  .gitignore   — office temp file rules
+
+External skills:
+  [✓ Superpowers installed via Plugin Marketplace / GitHub]
+  [skipped — install later with: /plugin install superpowers@claude-plugins-official]
+  [⚠ Superpowers installation failed — install manually: https://github.com/obra/superpowers]
+
+Next steps:
+  Start a new Claude session and say: "Draft an email to [recipient] about [topic]"
+  Or: "Write a report on [subject] for [audience]"
+```

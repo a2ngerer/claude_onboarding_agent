@@ -1,0 +1,120 @@
+---
+name: research-setup
+description: Set up Claude for academic research and writing — configures citation format, research domain, and writing tool preferences so Claude supports your workflow from literature review to final paper.
+---
+
+# Research Setup
+
+This skill configures Claude for academic and research work.
+
+**Language:** Use `detected_language` from handoff context, or detect from the user's first message and use it throughout.
+
+**Existing CLAUDE.md:** If `existing_claude_md: true` in handoff context, or if CLAUDE.md exists in the filesystem, extend it by appending a new section (`## Claude Onboarding Agent — Research Setup`) rather than overwriting.
+
+## Step 1: Superpowers (Optional)
+
+> "**Superpowers** is a free Claude Code skills library used by 94,000+ people. Its brainstorming and planning skills work well for structuring research arguments, outlining literature reviews, and planning complex documents before drafting.
+>
+> Would you like to install it?
+> **A) Yes — Plugin Marketplace** (one command, recommended)
+> **B) Yes — GitHub** (clone from github.com/obra/superpowers)
+> **C) Skip for now**"
+
+If A or B: install using the chosen method.
+
+**If Plugin Marketplace:** `/plugin install superpowers@claude-plugins-official`
+**If GitHub:** `git clone https://github.com/obra/superpowers ~/.claude/plugins/superpowers`
+
+Verify installation. On failure: warn and set `superpowers_installed: false`. Continue regardless.
+
+## Step 2: Context Questions
+
+Ask one at a time:
+
+1. "What is your research domain? (e.g., machine learning, economics, molecular biology, history, philosophy)"
+
+2. "What citation format do you use?
+   A) APA
+   B) MLA
+   C) Chicago / Turabian
+   D) IEEE
+   E) Vancouver
+   F) Other — please specify"
+
+3. "What do you primarily write in?
+   A) LaTeX
+   B) Word / Google Docs
+   C) Markdown
+   D) A mix"
+
+## Step 3: Generate Artifacts
+
+### CLAUDE.md
+
+```markdown
+# Claude Instructions — Research & Academic Writing
+
+## Domain
+Research domain: [answer from Q1]
+Citation format: [answer from Q2]
+Writing tool: [answer from Q3]
+
+## Guidelines
+- Always use [citation format] for all references and bibliographies
+- When summarizing a paper, include: main contribution, methodology, key results, limitations
+- For literature reviews: group papers thematically, not chronologically
+- When building an argument: state the claim clearly, cite supporting evidence, address the strongest counterargument
+- [If LaTeX] Format all citations as BibTeX entries. Use \cite{} in the body text.
+- [If Word/Docs] Format all references in [citation format] style in a bibliography section at the end
+- Never fabricate citations. If you cannot find a specific source, say so explicitly.
+- When using information from training data (not a provided source), flag it clearly.
+
+[Include ONLY if superpowers_installed is true]
+## Superpowers
+Superpowers is installed. For complex writing tasks — outlines, literature reviews, argument structures — use superpowers:brainstorming to map the structure before drafting.
+```
+
+### .gitignore
+
+```gitignore
+# LaTeX build artifacts
+*.aux
+*.log
+*.bbl
+*.blg
+*.out
+*.toc
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+
+# Large files
+*.pdf
+*.zip
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude local settings
+.claude/settings.local.json
+```
+
+## Step 4: Completion Summary
+
+```
+✓ Research setup complete!
+
+Files created:
+  CLAUDE.md    — domain, citation format ([format]), and writing guidelines
+  .gitignore   — LaTeX artifacts and large file rules
+
+External skills:
+  [✓ Superpowers installed via Plugin Marketplace / GitHub]
+  [skipped — install later with: /plugin install superpowers@claude-plugins-official]
+  [⚠ Superpowers installation failed — install manually: https://github.com/obra/superpowers]
+
+Next steps:
+  Start a new Claude session and say: "Summarize this paper: [paste abstract or upload PDF]"
+  Or: "Help me outline a literature review on [topic]"
+```
