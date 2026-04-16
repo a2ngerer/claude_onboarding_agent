@@ -42,19 +42,23 @@ Example format (adapt wording to detected language):
 3. Office & Business Productivity — emails, reports, presentations
 4. Research & Academic Writing — literature, papers, LaTeX
 5. Content Creation — YouTube, social media, newsletters
-6. Not sure — help me decide
+6. DevOps / Cloud Engineering — CI/CD, Kubernetes, Terraform, cloud providers
+7. UI/UX Design — component design, Figma handoff, accessibility
+8. Not sure — help me decide
 
 ---
 
 ## Step 4: Handle "Not Sure"
 
-If the user picks option 6, ask these 3 yes/no questions one at a time:
+If the user picks option 8, ask these 5 yes/no questions one at a time:
 
 1. "Are you primarily using Claude to work with code or a codebase?" → yes → recommend Coding Setup
 2. "Are you trying to organize documents, notes, or code into a structured knowledge base or wiki?" → yes → recommend Knowledge Base Builder
 3. "Do you mostly work with documents, emails, reports, or presentations?" → yes → recommend Office Setup
+4. "Do you manage infrastructure, CI/CD pipelines, or cloud resources?" → yes → recommend DevOps Setup
+5. "Do you primarily work with UI designs, components, or frontend interfaces?" → yes → recommend Design Setup
 
-If none match after 3 questions, present all 5 options again with one-line descriptions and ask the user to pick a number.
+If none match after 5 questions, present all 7 options (1–7, excluding "Not sure") with one-line descriptions and ask the user to pick a number.
 
 ## Step 5: Dispatch
 
@@ -74,5 +78,7 @@ Skill routing:
 - Office → invoke `office-setup` skill
 - Research → invoke `research-setup` skill
 - Content Creator → invoke `content-creator-setup` skill
+- DevOps Setup → invoke `devops-setup` skill
+- UI/UX Design Setup → invoke `design-setup` skill
 
 Step back completely. The setup skill handles everything from here.
