@@ -138,7 +138,26 @@ Generate a `.gitignore` appropriate for the detected stack. Always include `.cla
 - Rust: `target/`, `.claude/settings.local.json`
 - Generic fallback: `.env`, `*.log`, `.DS_Store`, `.claude/settings.local.json`
 
-## Step 5: Completion Summary
+## Step 5: Optional Community Skills
+
+> "Would you like to install additional community skills?
+>
+> A) frontend-design (official Anthropic) — avoids AI-generic UI, bold design decisions (277k installs)
+> B) mcp-builder — create MCP servers for external API integrations
+> C) webapp-testing — Playwright-based UI testing
+> D) security-suite — Trail of Bits CodeQL/Semgrep analysis
+> E) All of the above
+> F) None
+>
+> (Multiple selections via comma, e.g. 'A, C')"
+
+For each selected skill, run: `/plugin install <skill>@claude-plugins-official`
+
+On failure for any skill: warn clearly ("⚠ Could not install [skill] — skipping. Install manually later.") and continue. Never block the setup.
+
+Add the list of successfully installed optional skills to the Completion Summary under a new line: `Optional community skills: [list or "none selected"]`
+
+## Step 6: Completion Summary
 
 ```
 ✓ Coding setup complete! Here's what was configured:
