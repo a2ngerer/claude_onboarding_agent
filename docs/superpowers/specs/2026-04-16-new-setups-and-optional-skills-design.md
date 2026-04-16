@@ -35,10 +35,11 @@ The onboarding agent currently covers 5 personas (coding, knowledge-base, office
 
 | Path | Change |
 |---|---|
-| `skills/onboarding/SKILL.md` | Add options 7 & 8, two new "Not sure" questions, two new dispatch routes |
-| `skills/coding-setup/SKILL.md` | Add Step 5 (Optional Skills) before completion summary |
-| `skills/research-setup/SKILL.md` | Add Optional Skills step (scientific-skills, d3js) |
+| `skills/onboarding/SKILL.md` | Add options 7 & 8 (currently 5 options + "Not sure"), two new "Not sure" questions, two new dispatch routes |
+| `skills/coding-setup/SKILL.md` | Add Step 5 (Optional Skills) before current Step 5 (Completion Summary → becomes Step 6) |
+| `skills/research-setup/SKILL.md` | Add Optional Skills step before completion summary |
 | `.claude-plugin/plugin.json` | Register devops-setup and design-setup |
+| `README.md` | Add devops-setup and design-setup rows to "What's Inside" table |
 
 ---
 
@@ -113,9 +114,9 @@ Same pattern as existing skills — offer A/B/C (Plugin Marketplace / GitHub / S
 
 ### Optional Skills Step
 
-Ask after context questions, before artifact generation:
+Ask after context questions, before artifact generation. Prompt text is in English in the SKILL.md; runtime language is detected from handoff context as with all other skill content.
 
-> "Möchtest du zusätzliche Community-Skills installieren?
+> "Would you like to install additional community skills?
 >
 > A) kubernetes-ops — Kubernetes best practices and manifest patterns
 > B) aws-cloud-patterns — AWS architecture patterns and CDK helpers
@@ -175,15 +176,21 @@ Tool: [Q1] | Stack: [Q2] | Workflow: [Q3] | Accessibility: [Q4]
 - For Figma handoff: extract exact spacing, typography, and color tokens from provided specs
 ```
 
-**`.claude/settings.json`**
-```json
-{
-  "permissions": {
-    "allow": ["Bash(git *)"]
-  }
-}
+**AGENTS.md**
+```markdown
+# Agent Roles
+
+## designer
+Generates UI components and layouts from design specs or descriptions. Follows the design system and accessibility standard defined in CLAUDE.md. Never introduces inline styles or undocumented design tokens.
+
+## accessibility-auditor
+Reviews UI code and designs for WCAG compliance. Returns a prioritized list of violations with remediation suggestions.
 ```
-Extend based on stack (npm/npx for React/Vue, etc.)
+
+**`.claude/settings.json`** — permissions based on Q2 (frontend stack):
+- Always: `Bash(git *)`
+- React + Tailwind / Vue: add `Bash(npm *)`, `Bash(npx *)`, `Bash(node *)`
+- none (design-only): only `Bash(git *)`
 
 **`.gitignore`**
 ```
@@ -201,7 +208,9 @@ Same offer pattern as other skills.
 
 ### Optional Skills Step
 
-> "Möchtest du zusätzliche Community-Skills installieren?
+Prompt text is in English in the SKILL.md; runtime language follows handoff context.
+
+> "Would you like to install additional community skills?
 >
 > A) frontend-design (official Anthropic) — avoids AI-generic UI, bold design decisions (277k installs, strongly recommended)
 > B) web-artifacts-builder — build complex HTML artifacts with React + Tailwind + shadcn/ui
@@ -257,8 +266,10 @@ Install via `/plugin install`. On failure: warn + continue. Add installed skills
 
 A) claude-scientific-skills — NumPy, SciPy, pandas, matplotlib helpers
 B) claude-d3js-skill — data visualization patterns and D3.js helpers
-C) Both
-D) None"
+C) All of the above
+D) None
+
+(Multiple selections via comma, e.g. 'A, B')"
 ```
 
 ---
@@ -282,6 +293,8 @@ Add after existing question 3:
 
 4. "Do you manage infrastructure, CI/CD pipelines, or cloud resources?" → yes → DevOps Setup
 5. "Do you primarily work with UI designs, components, or frontend interfaces?" → yes → Design Setup
+
+If none of questions 1–5 match (all "no"), fall through to the existing catch-all: present all 7 options (1–7, excluding "Not sure") with one-line descriptions and ask the user to pick a number.
 
 ### Step 5 — Dispatch
 
