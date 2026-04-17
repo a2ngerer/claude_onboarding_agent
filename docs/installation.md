@@ -27,13 +27,13 @@ The `plugin.json` manifest at `.claude-plugin/plugin.json` declares which skill 
 
 **Uninstall:** the uninstall script removes all symlinks in `~/.claude/skills/` that point into the plugin directory, then deletes the clone.
 
-| Aspekt | Bewertung |
-|--------|-----------|
-| Transparenz | Vollständig — `install.sh` ist lesbar, jeder Schritt nachvollziehbar |
-| Sicherheitsmodell | Kein Sandboxing — das Skript läuft mit vollen Shell-Rechten des Nutzers |
-| Update-Kontrolle | Explizit — `git pull` nur wenn der Nutzer es auslöst, kein Auto-Update |
-| Abhängigkeiten | `git` und `bash` müssen im System vorhanden sein |
-| Wiederherstellbarkeit | Einfach und vollständig transparent — Symlinks entfernen, Verzeichnis löschen |
+| Aspect | Notes |
+|--------|-------|
+| Transparency | Full — `install.sh` is readable, every step is visible |
+| Security model | No sandboxing — the script runs with full shell permissions of the user |
+| Update control | Explicit — `git pull` only when the user triggers it, no auto-update |
+| Dependencies | `git` and `bash` must be present on the system |
+| Recoverability | Simple and fully transparent — remove symlinks, delete the directory |
 
 ---
 
@@ -56,10 +56,10 @@ The `plugin.json` file in this repo is already structured to be compatible with 
 
 **Key difference from today:** the current curl approach requires the user's shell to run a bash script with `git` and filesystem access. The plugin system will handle all of that inside Claude Code itself, with sandboxing and signature verification — closer to how browser extensions or VS Code extensions work today.
 
-| Aspekt | Bewertung |
-|--------|-----------|
-| Transparenz | Geringer — Installation läuft innerhalb Claude Code, kein lesbares Shell-Skript |
-| Sicherheitsmodell | Sandboxed — Claude Code verifiziert Signaturen, keine Shell-Rechte erforderlich |
-| Update-Kontrolle | Über Claude Codes eigenen Mechanismus — Details noch offen |
-| Abhängigkeiten | Nur Claude Code selbst |
-| Wiederherstellbarkeit | `/plugin uninstall` — einfach, aber weniger transparent als manuelles Löschen |
+| Aspect | Notes |
+|--------|-------|
+| Transparency | Lower — installation runs inside Claude Code, no readable shell script |
+| Security model | Sandboxed — Claude Code verifies signatures, no shell permissions required |
+| Update control | Via Claude Code's own update mechanism — details still open |
+| Dependencies | Only Claude Code itself |
+| Recoverability | `/plugin uninstall` — simple, but less transparent than manual deletion |
