@@ -3,31 +3,36 @@ set -e
 
 PLUGIN_DIR="${HOME}/.claude/plugins"
 PLUGIN_NAME="claude-onboarding-agent"
+SKILLS_DIR="${HOME}/.claude/skills"
 REPO_URL="https://github.com/a2ngerer/claude_onboarding_agent.git"
 
 echo "Installing Claude Onboarding Agent..."
 
-# Create plugins directory if it does not exist
 mkdir -p "$PLUGIN_DIR"
+mkdir -p "$SKILLS_DIR"
 
 TARGET="${PLUGIN_DIR}/${PLUGIN_NAME}"
 
 if [ -d "$TARGET" ]; then
-  echo "Plugin already installed at ${TARGET}. Updating..."
+  echo "Already installed — updating..."
   git -C "$TARGET" pull
 else
-  echo "Cloning into ${TARGET}..."
+  echo "Cloning repository..."
   git clone "$REPO_URL" "$TARGET"
 fi
 
+echo "Linking skills to ~/.claude/skills/..."
+for skill_dir in "$TARGET/skills"/*/; do
+  skill_name=$(basename "$skill_dir")
+  link_path="${SKILLS_DIR}/${skill_name}"
+  if [ -L "$link_path" ]; then
+    rm "$link_path"
+  fi
+  ln -s "$skill_dir" "$link_path"
+  echo "  ✓ ${skill_name}"
+done
+
 echo ""
-echo "✓ Claude Onboarding Agent installed to ${TARGET}"
+echo "✓ Claude Onboarding Agent installed successfully!"
 echo ""
-echo "Next steps:"
-echo "  Start a new Claude Code session and run: /onboarding"
-echo "  Or jump directly to a setup skill:"
-echo "    /coding-setup"
-echo "    /build-knowledge-base"
-echo "    /office-setup"
-echo "    /research-setup"
-echo "    /content-creator-setup"
+echo "Start a new Claude Code session and run: /onboarding"

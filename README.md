@@ -35,17 +35,13 @@ Already know what you need? Call any setup skill directly.
 
 > **Note:** Marketplace listing is in progress. Use Option 2 in the meantime.
 
-### Option 2: GitHub
+### Option 2: One-liner (current recommended method)
 
-**One-liner:**
 ```bash
 curl -fsSL https://raw.githubusercontent.com/a2ngerer/claude_onboarding_agent/main/scripts/install.sh | bash
 ```
 
-**Or manually:**
-```bash
-git clone https://github.com/a2ngerer/claude_onboarding_agent.git ~/.claude/plugins/claude-onboarding-agent
-```
+This clones the repository and symlinks all skills into `~/.claude/skills/` so Claude Code picks them up automatically. Future updates: re-run the same command.
 
 ---
 
