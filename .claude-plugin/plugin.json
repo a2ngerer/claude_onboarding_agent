@@ -6,6 +6,12 @@
     "name": "Alexander Angerer",
     "email": "alexander.angerer@outlook.de"
   },
+  "contributors": [
+    {
+      "name": "Maximilian Achenbach",
+      "email": "Maximiliana28@gmail.com"
+    }
+  ],
   "homepage": "https://github.com/a2ngerer/claude_onboarding_agent",
   "repository": "https://github.com/a2ngerer/claude_onboarding_agent",
   "license": "MIT",

@@ -141,6 +141,13 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for how to add new setup skills.
 
 ---
 
+## Authors
+
+- Alexander Angerer — <alexander.angerer@outlook.de>
+- Maximilian Achenbach — <Maximiliana28@gmail.com>
+
+---
+
 ## License
 
 [MIT](LICENSE) — free to use, modify, and distribute.
