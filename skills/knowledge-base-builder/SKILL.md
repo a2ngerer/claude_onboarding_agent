@@ -11,16 +11,15 @@ This skill configures Claude to build and maintain a structured, interlinked kno
 
 **Existing CLAUDE.md:** If `existing_claude_md: true` in handoff context, or if CLAUDE.md exists in the filesystem, extend it by appending a new section (`## Claude Onboarding Agent — Knowledge Base`) rather than overwriting.
 
-## Step 1: Installation Method
+## Step 1: Install Dependencies
 
-Ask the user:
+Read `skills/_shared/installation-protocol.md` and follow it for each dependency below.
 
-> "How would you like to install Superpowers and the Karpathy Guidelines — the skill libraries this setup uses?
->
-> **A) Plugin Marketplace** (recommended) — one command each
-> **B) GitHub** — clone directly from their repositories (more control, works offline after clone)"
+Note: Process Superpowers and Karpathy Guidelines here. The Obsidian MCP is conditional on the user's answer in Step 2 — process it immediately after Step 2, question 2.
 
-Store as `install_method`.
+Dependencies:
+- Superpowers (required) — marketplace-id: `superpowers@claude-plugins-official`, github: `https://github.com/obra/superpowers`, name: `superpowers`
+- Karpathy Guidelines (optional) — github only: `https://github.com/forrestchang/andrej-karpathy-skills`, name: `karpathy-skills`
 
 ## Step 2: Context Questions
 
@@ -42,59 +41,29 @@ Ask one at a time, waiting for each answer:
    A) Yes, I have Obsidian installed — set up the MCP integration
    B) No / skip for now — use plain markdown files"
 
+   After the user answers question 2: if they chose Option A (Obsidian), immediately run the installation protocol for:
+   - Obsidian MCP (conditional: true — always project-local, configured via settings.json not plugin install)
+     - Already-installed check: look for `obsidian` key in `.claude/settings.json` under `mcpServers`
+     - If not found: add the following to `.claude/settings.json`:
+       ```json
+       {
+         "mcpServers": {
+           "obsidian": {
+             "command": "npx",
+             "args": ["-y", "mcp-obsidian", "[vault_path_from_question_3]"]
+           }
+         }
+       }
+       ```
+     - Set `obsidian_mcp_installed: true` on success, `false` on failure
+
 3. "What is the path to your target folder?
    - Obsidian users: your vault path (e.g., `/Users/you/Documents/MyVault`)
    - Others: any folder you choose (e.g., `~/my-wiki`)"
 
 4. "What language are your source files in? (for code: the programming language; for notes: the human language, e.g., English, German)"
 
-## Step 3: Install Dependencies
-
-### Install Superpowers
-
-**If Plugin Marketplace:**
-```
-/plugin install superpowers@claude-plugins-official
-```
-
-**If GitHub:**
-```bash
-git clone https://github.com/obra/superpowers ~/.claude/plugins/superpowers
-```
-
-Verify: check that `~/.claude/plugins/superpowers/skills/` exists. On failure: warn the user, set `superpowers_installed: false`, continue.
-
-### Install Karpathy Guidelines
-
-**If Plugin Marketplace:**
-```
-/plugin install andrej-karpathy-skills
-```
-
-**If GitHub:**
-```bash
-git clone https://github.com/forrestchang/andrej-karpathy-skills ~/.claude/plugins/karpathy-skills
-```
-
-Verify: check that the directory exists. On failure: warn and continue — this is an optional enhancement.
-
-### Set Up Obsidian MCP (only if user chose Option A in question 2)
-
-Add to `.claude/settings.json`:
-```json
-{
-  "mcpServers": {
-    "obsidian": {
-      "command": "npx",
-      "args": ["-y", "mcp-obsidian", "[vault_path_from_question_3]"]
-    }
-  }
-}
-```
-
-Inform the user: "The Obsidian MCP server is configured. Make sure Obsidian is open when using Claude for knowledge base tasks — Claude writes directly into your vault."
-
-## Step 4: Generate Artifacts
+## Step 3: Generate Artifacts
 
 ### Folder Structure
 
@@ -189,7 +158,7 @@ Thumbs.db
 .claude/settings.local.json
 ```
 
-## Step 5: Completion Summary
+## Step 4: Completion Summary
 
 ```
 ✓ Knowledge Base setup complete!
@@ -203,8 +172,8 @@ Files created:
   .gitignore                   — excludes large source files
 
 External skills:
-  [✓/⚠] Superpowers [via method / failed — install manually]
-  [✓/⚠] Karpathy Guidelines [via method / failed — optional, skipped]
+  [✓/⚠] Superpowers [via superpowers_method (superpowers_scope) / failed — install manually]
+  [✓/⚠] Karpathy Guidelines [via karpathy_method (karpathy_scope) / failed — optional, skipped]
   [✓ Obsidian MCP configured / using plain markdown files]
 
 Next steps:
