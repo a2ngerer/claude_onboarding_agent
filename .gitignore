@@ -10,3 +10,6 @@ Thumbs.db
 
 # Claude local settings
 .claude/settings.local.json
+
+# Internal marketing plans — keep offline
+docs/marketing/
