@@ -18,25 +18,5 @@
     "obsidian",
     "superpowers",
     "productivity"
-  ],
-  "skills": [
-    "skills/onboarding",
-    "skills/coding-setup",
-    "skills/knowledge-base-builder",
-    "skills/office-setup",
-    "skills/research-setup",
-    "skills/content-creator-setup",
-    "skills/devops-setup",
-    "skills/design-setup"
-  ],
-  "commands": [
-    "onboarding",
-    "coding-setup",
-    "build-knowledge-base",
-    "office-setup",
-    "research-setup",
-    "content-creator-setup",
-    "devops-setup",
-    "design-setup"
   ]
 }
