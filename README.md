@@ -43,6 +43,8 @@ curl -fsSL https://raw.githubusercontent.com/a2ngerer/claude_onboarding_agent/ma
 
 This clones the repository and symlinks all skills into `~/.claude/skills/` so Claude Code picks them up automatically. Future updates: re-run the same command.
 
+> **How it works technically, and what the future plugin system will look like:** [docs/installation.md](docs/installation.md)
+
 ### Uninstall
 
 ```bash
