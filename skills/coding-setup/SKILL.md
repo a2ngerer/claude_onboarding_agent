@@ -11,16 +11,12 @@ This skill sets up Claude Code for professional software development using a pro
 
 **Existing CLAUDE.md:** If `existing_claude_md: true` in handoff context, or if CLAUDE.md exists in the filesystem, extend it by appending a new section (`## Claude Onboarding Agent — Coding Setup`) rather than overwriting.
 
-## Step 1: Installation Method
+## Step 1: Install Dependencies
 
-Ask the user:
+Read `skills/_shared/installation-protocol.md` and follow it for each dependency below.
 
-> "How would you like to install Superpowers — the external skills library this setup requires?
->
-> **A) Plugin Marketplace** (recommended) — one command: `/plugin install superpowers@claude-plugins-official`
-> **B) GitHub** — clone directly from github.com/obra/superpowers (more control, works offline after clone)"
-
-Store the choice as `install_method`.
+Dependencies:
+- Superpowers (required) — marketplace-id: `superpowers@claude-plugins-official`, github: `https://github.com/obra/superpowers`, name: `superpowers`
 
 ## Step 2: Context Questions
 
@@ -31,29 +27,7 @@ Ask these 4 questions one at a time. Wait for each answer before asking the next
 3. "Which git host do you use? (GitHub / GitLab / Bitbucket / other / none)"
 4. "Which IDE or editor do you use? (VS Code / JetBrains / Neovim / other)"
 
-## Step 3: Install Superpowers
-
-Execute the chosen installation method:
-
-**If Plugin Marketplace (A):**
-```
-/plugin install superpowers@claude-plugins-official
-```
-Verify by checking that the superpowers plugin is listed as installed.
-
-**If GitHub (B):**
-```bash
-git clone https://github.com/obra/superpowers ~/.claude/plugins/superpowers
-```
-Verify by checking that `~/.claude/plugins/superpowers/skills/` directory exists.
-
-**If installation fails:**
-- Warn the user clearly: "⚠ Superpowers installation failed. Setup will continue, but the workflow instructions referencing Superpowers will be omitted from CLAUDE.md. Please install Superpowers manually: https://github.com/obra/superpowers"
-- Set `superpowers_installed: false` and continue.
-
-If installation succeeds, set `superpowers_installed: true`.
-
-## Step 4: Generate Artifacts
+## Step 3: Generate Artifacts
 
 Generate the following files automatically:
 
@@ -138,7 +112,7 @@ Generate a `.gitignore` appropriate for the detected stack. Always include `.cla
 - Rust: `target/`, `.claude/settings.local.json`
 - Generic fallback: `.env`, `*.log`, `.DS_Store`, `.claude/settings.local.json`
 
-## Step 5: Optional Community Skills
+## Step 4: Optional Community Skills
 
 > "Would you like to install additional community skills?
 >
@@ -157,7 +131,7 @@ On failure for any skill: warn clearly ("⚠ Could not install [skill] — skipp
 
 Add the list of successfully installed optional skills to the Completion Summary under a new line: `Optional community skills: [list or "none selected"]`
 
-## Step 6: Completion Summary
+## Step 5: Completion Summary
 
 ```
 ✓ Coding setup complete! Here's what was configured:
@@ -169,7 +143,7 @@ Files created:
   .gitignore           — [stack]-appropriate ignore rules
 
 External skills:
-  [✓ Superpowers installed via Plugin Marketplace / GitHub]
+  [✓ Superpowers installed via superpowers_method (superpowers_scope)]
   [⚠ Superpowers installation failed — install manually: https://github.com/obra/superpowers]
 
 Optional community skills: [list of installed skills, or "none selected"]
