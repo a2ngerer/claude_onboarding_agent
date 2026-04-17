@@ -1,10 +1,10 @@
 # Claude Onboarding Agent — Development Instructions
 
 ## What This Repo Is
-A Claude Code plugin with 6 skills. Skills are markdown files in `skills/*/SKILL.md`. The plugin generates configuration files (CLAUDE.md, AGENTS.md, etc.) in users' projects.
+A Claude Code plugin with 8 skills (1 orchestrator + 7 setup skills). Skills are markdown files in `skills/*/SKILL.md`. The plugin generates configuration files (CLAUDE.md, AGENTS.md, etc.) in users' projects.
 
 ## Key Paths
-- `skills/` — all 6 skill files (one folder per skill, each with a `SKILL.md`)
+- `skills/` — all skill files (one folder per skill, each with a `SKILL.md`)
 - `.claude/commands/` — slash-command entry points
 - `.claude-plugin/plugin.json` — plugin manifest (registers skills and commands)
 - `scripts/install.sh` — GitHub installation script

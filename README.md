@@ -68,7 +68,9 @@ Suggest most likely use case (or ask if repo is empty)
      ├── 2. Knowledge Base Builder
      ├── 3. Office & Business
      ├── 4. Research & Writing
-     └── 5. Content Creation
+     ├── 5. Content Creation
+     ├── 6. DevOps & Infrastructure
+     └── 7. Design & Frontend
                │
                ▼
      Ask 3–7 targeted questions
@@ -91,6 +93,8 @@ Suggest most likely use case (or ask if repo is empty)
 /office-setup
 /research-setup
 /content-creator-setup
+/devops-setup
+/design-setup
 ```
 
 ---
@@ -106,6 +110,8 @@ Every setup skill creates a tailored `CLAUDE.md` with context and instructions s
 | Office | ✓ + writing style | — | — | ✓ | Superpowers (optional) |
 | Research | ✓ + citation format | — | — | ✓ LaTeX | Superpowers (optional) |
 | Content | ✓ + brand voice | — | — | ✓ media files | Superpowers (optional) |
+| DevOps | ✓ + infra workflow | ✓ 3 roles | ✓ stack permissions | ✓ IaC state, secrets | Superpowers (optional) |
+| Design | ✓ + UI guidelines | ✓ 2 roles | ✓ stack permissions | ✓ design assets | Superpowers (optional) |
 
 ### The Coding Workflow (powered by Superpowers)
 
