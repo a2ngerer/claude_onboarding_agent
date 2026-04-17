@@ -11,21 +11,12 @@ This skill configures Claude for UI/UX design and frontend work.
 
 **Existing CLAUDE.md:** If `existing_claude_md: true` in handoff context, or if CLAUDE.md exists in the filesystem, extend it by appending a new section (`## Claude Onboarding Agent — Design Setup`) rather than overwriting.
 
-## Step 1: Superpowers (Optional)
+## Step 1: Install Dependencies
 
-> "**Superpowers** is a free Claude Code skills library used by 94,000+ people. Its brainstorming skill is particularly useful for exploring design directions and component structures before committing to an implementation.
->
-> Would you like to install it?
-> **A) Yes — Plugin Marketplace** (one command, recommended)
-> **B) Yes — GitHub** (clone from github.com/obra/superpowers)
-> **C) Skip for now**"
+Read `skills/_shared/installation-protocol.md` and follow it for each dependency below.
 
-If A or B: install using the chosen method.
-
-**If Plugin Marketplace:** `/plugin install superpowers@claude-plugins-official`
-**If GitHub:** `git clone https://github.com/obra/superpowers ~/.claude/plugins/superpowers`
-
-Verify installation. On failure: warn and set `superpowers_installed: false`. Continue regardless.
+Dependencies:
+- Superpowers (optional) — description: "A free Claude Code skills library (94,000+ users). The brainstorming skill is useful for exploring design directions and component structures before committing to an implementation." — marketplace-id: `superpowers@claude-plugins-official`, github: `https://github.com/obra/superpowers`, name: `superpowers`
 
 ## Step 2: Context Questions
 
@@ -167,7 +158,7 @@ Files created:
   .gitignore            — design file and build rules
 
 External skills:
-  [✓ Superpowers installed via Plugin Marketplace / GitHub]
+  [✓ Superpowers installed via superpowers_method (superpowers_scope)]
   [skipped — install later with: /plugin install superpowers@claude-plugins-official]
   [⚠ Superpowers installation failed — install manually: https://github.com/obra/superpowers]
 
