@@ -43,7 +43,7 @@ For MCPs (Obsidian MCP):
 Ask: "Install [Name] globally (`~/.claude`) or project-local (`.claude`)?"
 
 - **global**: Marketplace and GitHub are both available → proceed to Step P4
-- **local**: Only GitHub is available. Tell the user: "Project-local installs use GitHub only — the Plugin Marketplace only supports global installs." → skip Step P4, go to Step P5b
+- **local**: Only GitHub is available. Tell the user: "Project-local installs use GitHub only — the Plugin Marketplace only supports global installs." → skip Step P4, go to Step P5c
 
 Store as `<name>_scope: global | local`.
 
@@ -60,7 +60,7 @@ Store as `<name>_method: marketplace | github`.
 
 - **P5a — Marketplace**: check via `/plugin list` that the plugin now appears. Set `<name>_method: marketplace`.
 - **P5b — GitHub global**: check that `~/.claude/plugins/<name>/` exists. Set `<name>_method: github`, `<name>_scope: global`.
-- **P5c — GitHub local**: `git clone <url> .claude/plugins/<name>`. Check that `.claude/plugins/<name>/` exists. Set `<name>_method: github`, `<name>_scope: local`.
+- **P5c — GitHub local**: Install: `git clone <url> .claude/plugins/<name>`. Then verify: check that `.claude/plugins/<name>/` exists. Set `<name>_method: github`, `<name>_scope: local`.
 
 On success: set `<name>_installed: true`.
 
