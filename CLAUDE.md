@@ -18,6 +18,9 @@ A Claude Code plugin with 8 skills (1 orchestrator + 7 setup skills). Skills are
 4. Add the new path as an option in `skills/onboarding/SKILL.md` (Step 3 and Step 5)
 5. Update `README.md` (What's Inside table)
 
+## Repository Language Rule
+All public repo artifacts — GitHub issues, PR titles/descriptions, commit messages, code comments, docs — must be written in English, regardless of the conversation language. Conversation with the user may be in German; output that lands in the repo or on GitHub must not.
+
 ## Skill Authoring Rules
 - All SKILL.md content in English
 - Skills detect user language at runtime and respond accordingly
