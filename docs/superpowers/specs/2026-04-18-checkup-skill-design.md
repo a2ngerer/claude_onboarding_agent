@@ -49,7 +49,7 @@ Both entry points terminate in the same Decision Flow.
 Any of these conditions forces a **rebuild** verdict without invoking the LLM judgment stage:
 
 - **No metadata, no delimiters:** No `.claude/onboarding-meta.json` **and** no `<!-- onboarding-agent:start -->` delimiters in `CLAUDE.md`. `/upgrade` has no anchor for selective edits.
-- **Setup-type mismatch:** Metadata declares a setup type (e.g. `coding-setup`) that clearly contradicts the repo content (e.g. zero code files, only Markdown/LaTeX).
+- **Setup-type mismatch:** Metadata declares a setup type that clearly contradicts the repo content. Concrete heuristic: for `coding-setup`, fewer than 5 code files *or* code files make up less than 20% of non-hidden files. Equivalent per-type thresholds are pinned down in the implementation plan.
 - **Corrupt config:** `CLAUDE.md` or `.claude/settings.json` is not parseable.
 
 If a hard gate fires, skip to Stage 4 with verdict = `rebuild` and the triggering reason.
@@ -69,7 +69,16 @@ Provide the following to Claude:
 - Anchor data from `docs/anchors/*` (if #2 is implemented and reachable).
 - Brief repo context: detected primary language, rough file count, presence of frameworks.
 
-Claude returns one of three verdicts with a 2–3 sentence rationale:
+Claude returns a JSON object with the following contract:
+
+```json
+{
+  "verdict": "rebuild | improve | fine-as-is",
+  "rationale": "2-3 sentence explanation"
+}
+```
+
+Verdict meanings:
 
 - `rebuild` — setup is structurally incompatible with current project state.
 - `improve` — setup is salvageable; `/upgrade` can bring it current.
@@ -82,6 +91,8 @@ Present verdict, rationale, and planned next action. User can:
 - Accept (`y`).
 - Reject (`n`) → exit without action.
 - Override with a different verdict → accepted, reason logged.
+
+An override to `rebuild` always runs `/onboarding --rebuild` (with backup), never a plain `/onboarding` — so an override cannot accidentally overwrite the existing setup without a backup.
 
 ### Stage 5 — Delegation
 
@@ -110,7 +121,7 @@ Present verdict, rationale, and planned next action. User can:
 - `skills/onboarding/SKILL.md`:
   - New first step: *Detect existing setup → offer `/checkup`*.
   - Build handoff context and delegate when user accepts.
-  - Support a `--rebuild` flag: skip detection, back up the existing setup to `.claude/backups/<timestamp>/`, then run the normal flow.
+  - Support a `--rebuild` flag: skip detection, back up the existing setup to `.claude/backups/<timestamp>/`, then run the normal flow. The backup includes `CLAUDE.md`, all plugin-generated artifacts, **and** `.claude/settings.json` and `.claude/settings.local.json` if present — user-modified settings files are never discarded without a copy.
 
 ### Out of scope (covered by other issues)
 
