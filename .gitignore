@@ -13,3 +13,7 @@ Thumbs.db
 
 # Internal marketing plans — keep offline
 docs/marketing/
+
+# Raw source recordings — only the rendered GIFs get committed
+docs/assets/*.mov
+docs/assets/*.cast

@@ -9,6 +9,10 @@
   From blank project to a Claude Code setup tailored to <em>your</em> work — in under five minutes.
 </p>
 
+<p align="center">
+  <img src="docs/assets/demo.gif" alt="Claude Onboarding Agent demo" width="820">
+</p>
+
 ---
 
 Most people start a new Claude session and just... start typing. No context, no workflow, no structure. Results are inconsistent, Claude forgets everything between sessions, and it never really learns how you work.
