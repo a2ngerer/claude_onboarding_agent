@@ -30,7 +30,7 @@ Not sure where to start? Run `/onboarding` and we'll figure it out with you. Or 
 | You are… | Run this | You get |
 |---|---|---|
 | **A developer** shipping code | `/coding-setup` | Superpowers workflow, subagent roles, stack permissions |
-| **Building a personal wiki / second brain** | `/build-knowledge-base` | Karpathy-pattern wiki, optional Obsidian MCP |
+| **Building a personal wiki / second brain** | `/build-knowledge-base` | Karpathy-pattern wiki, optional Obsidian CLI subagent |
 | **Writing docs, emails, reports** | `/office-setup` | Writing style, document templates, company context |
 | **A researcher or academic** | `/research-setup` | Citation format, domain vocabulary, LaTeX-aware ignores |
 | **Creating content** (YouTube, blog, social) | `/content-creator-setup` | Brand voice, platform presets, audience profile |
@@ -73,7 +73,7 @@ curl -fsSL https://raw.githubusercontent.com/a2ngerer/claude_onboarding_agent/ma
 |---|---|
 | `/onboarding` | Orchestrator — scans your repo, infers your use case, routes you to the right setup |
 | `/coding-setup` | Installs [Superpowers](https://github.com/obra/superpowers), wires up brainstorm → plan → subagents → review → commit |
-| `/build-knowledge-base` | Builds a [Karpathy-pattern](https://github.com/forrestchang/andrej-karpathy-skills) wiki from your notes or codebase (+ optional [Obsidian](https://obsidian.md) MCP) |
+| `/build-knowledge-base` | Builds a [Karpathy-pattern](https://github.com/forrestchang/andrej-karpathy-skills) wiki from your notes or codebase (+ optional [Obsidian](https://obsidian.md) CLI integration via dispatched subagent — no always-on MCP token cost) |
 | `/office-setup` | Writing style, document preferences, company context |
 | `/research-setup` | Citation format, research domain, academic writing guidelines |
 | `/content-creator-setup` | Brand voice, platform preferences, audience context |
@@ -120,10 +120,10 @@ Suggest the most likely use case (or ask if the repo is empty)
 
 Every setup skill creates a tailored `CLAUDE.md` with context and instructions specific to your workflow. Here's what each path produces:
 
-| Skill | CLAUDE.md | AGENTS.md | settings.json | .gitignore | External |
-|-------|-----------|-----------|---------------|------------|----------|
-| Coding | ✓ + workflow | ✓ 3 roles | ✓ stack permissions | ✓ stack | Superpowers |
-| Knowledge Base | ✓ + Karpathy pattern | — | ✓ Obsidian MCP (optional) | ✓ | Superpowers + Karpathy |
+| Skill | CLAUDE.md | Agents | settings.json | .gitignore | External |
+|-------|-----------|--------|---------------|------------|----------|
+| Coding | ✓ + workflow | ✓ 3 roles (AGENTS.md) | ✓ stack permissions | ✓ stack | Superpowers |
+| Knowledge Base | ✓ + Karpathy pattern | ✓ `.claude/agents/obsidian-vault-keeper.md` (optional) | — | ✓ | Superpowers + Karpathy |
 | Office | ✓ + writing style | — | — | ✓ | Superpowers (optional) |
 | Research | ✓ + citation format | — | — | ✓ LaTeX | Superpowers (optional) |
 | Content | ✓ + brand voice | — | — | ✓ media files | Superpowers (optional) |
@@ -142,7 +142,7 @@ Brainstorm idea → Write plan → Dispatch subagents → Code review → Commit
 
 The Knowledge Base Builder sets up the [Karpathy LLM Wiki pattern](https://github.com/forrestchang/andrej-karpathy-skills): a `raw/` folder for source material and a `wiki/` folder of interlinked markdown notes that Claude builds and maintains. Drop files into `raw/`, ask Claude to ingest them — the wiki grows automatically.
 
-Optional: connect [Obsidian](https://obsidian.md) via MCP for direct vault integration and graph visualization.
+Optional: connect [Obsidian](https://obsidian.md) via the official Obsidian CLI, wired into a dedicated `obsidian-vault-keeper` subagent. Vault reads/writes only load the CLI reference when actually invoked, so chats that don't touch the vault pay zero Obsidian tokens — unlike a persistent MCP whose tool schemas are loaded into every session.
 
 ---
 

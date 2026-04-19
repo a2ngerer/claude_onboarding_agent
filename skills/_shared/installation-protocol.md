@@ -22,23 +22,18 @@ For plugins/skills (Superpowers, Karpathy Guidelines):
   - Set `<name>_installed: true`
   - Skip to next dependency
 
-For MCPs (Obsidian MCP):
-- Check `.claude/settings.json` for an existing entry under `mcpServers` with key `obsidian`
-- If found:
-  - Tell the user: "Found Obsidian MCP already configured — skipping."
-  - Set `obsidian_mcp_installed: true`
-  - Skip to next dependency
+Note on Obsidian integration: the knowledge-base-builder skill previously used an Obsidian MCP dependency here. That was removed in favor of the official Obsidian CLI + `obsidian-vault-keeper` subagent pattern, which is verified inline inside that skill (see its Step 2) rather than installed through this protocol. No `obsidian_*_installed` variables are set by this file.
 
 ### Step P2: Opt-in / condition check
 
 - **required**: skip this step, proceed to Step P3
 - **optional**: ask "Would you like to install [Name]?" with a one-line description
   - If no: set `<name>_installed: false`, skip to next dependency
-- **conditional**: check the boolean variable set by the skill (e.g. `obsidian_mcp_condition`)
+- **conditional**: check the boolean variable set by the skill (e.g. `<name>_condition`)
   - If false: set `<name>_installed: false`, skip to next dependency
   - If true: proceed to Step P3
 
-### Step P3: Scope (plugins/skills only — MCPs always skip to Step P5c)
+### Step P3: Scope (plugins/skills)
 
 Ask: "Install [Name] globally (`~/.claude`) or project-local (`.claude`)?"
 
@@ -75,4 +70,5 @@ On failure:
 |---------------------|--------------------------|---------------------|----------------------|
 | Superpowers         | `superpowers_installed`  | `superpowers_scope` | `superpowers_method` |
 | Karpathy Guidelines | `karpathy_installed`     | `karpathy_scope`    | `karpathy_method`    |
-| Obsidian MCP        | `obsidian_mcp_installed` | — (always local)    | — (always GitHub)    |
+
+Obsidian CLI is verified inline by knowledge-base-builder (variable `obsidian_cli_available`), not through this protocol.

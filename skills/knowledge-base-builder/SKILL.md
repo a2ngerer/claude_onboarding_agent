@@ -1,6 +1,6 @@
 ---
 name: knowledge-base-builder
-description: Set up Claude to build and maintain a structured knowledge base using the Karpathy LLM Wiki pattern — works with codebases, personal notes, or both. Supports Obsidian MCP for direct vault integration.
+description: Set up Claude to build and maintain a structured knowledge base using the Karpathy LLM Wiki pattern — works with codebases, personal notes, or both. Integrates with Obsidian via the official Obsidian CLI (token-efficient, dispatched through a dedicated subagent — no always-on MCP overhead).
 ---
 
 # Knowledge Base Builder
@@ -15,7 +15,7 @@ This skill configures Claude to build and maintain a structured, interlinked kno
 
 Read `skills/_shared/installation-protocol.md` and follow it for each dependency below.
 
-Note: Process Superpowers and Karpathy Guidelines here. The Obsidian MCP is conditional on the user's answer in Step 2 — process it immediately after Step 2, question 2.
+Note: Process Superpowers and Karpathy Guidelines here. The Obsidian CLI verification is handled inline in Step 2 (after question 2) — it is a system check, not an install.
 
 Dependencies:
 - Superpowers (required) — marketplace-id: `superpowers@claude-plugins-official`, github: `https://github.com/obra/superpowers`, name: `superpowers`
@@ -32,30 +32,33 @@ Ask one at a time, waiting for each answer:
 
 2. "Do you have Obsidian installed?
 
-   Obsidian is a free, local-first markdown editor with graph view and wiki-style linking. With the Obsidian MCP integration, Claude can write notes directly into your Obsidian vault — creating a richer, more connected knowledge base with automatic backlinks and graph visualization.
+   Obsidian is a free, local-first markdown editor with graph view and wiki-style linking. With the official **Obsidian CLI** (desktop 1.12.4+), Claude can read and write your vault directly from the terminal — wikilinks are rewritten on `move`, new notes go through Obsidian's own APIs, and the graph view picks up changes automatically.
+
+   This setup wires the CLI into a dedicated subagent (`obsidian-vault-keeper`). Claude dispatches the agent only when your task actually touches the vault — so you pay **no extra context tokens** in chats that don't involve Obsidian. This replaces the earlier Obsidian MCP approach, whose tool schemas were loaded into every Claude session regardless of whether you used them.
 
    Without Obsidian, Claude creates well-organized markdown files you can open in any text editor — this works great and unlocks the same core workflow.
 
-   **Recommendation: Option A opens more doors** — the Obsidian graph view makes it much easier to navigate a large knowledge base.
+   **Recommendation: Option A** if you use Obsidian — the graph view makes a large knowledge base much easier to navigate.
 
-   A) Yes, I have Obsidian installed — set up the MCP integration
+   A) Yes, I have Obsidian installed — set up the CLI + subagent integration
    B) No / skip for now — use plain markdown files"
 
-   After the user answers question 2: if they chose Option A (Obsidian), immediately run the installation protocol for:
-   - Obsidian MCP (conditional: true — always project-local, configured via settings.json not plugin install)
-     - Already-installed check: look for `obsidian` key in `.claude/settings.json` under `mcpServers`
-     - If not found: add the following to `.claude/settings.json`:
-       ```json
-       {
-         "mcpServers": {
-           "obsidian": {
-             "command": "npx",
-             "args": ["-y", "mcp-obsidian", "[vault_path_from_question_3]"]
-           }
-         }
-       }
-       ```
-     - Set `obsidian_mcp_installed: true` on success, `false` on failure
+   After the user answers question 2: if they chose Option A (Obsidian), run the **Obsidian CLI verification** immediately:
+
+   ### Obsidian CLI verification
+
+   a. Tell the user (adapt to detected language):
+      > "To finish the Obsidian integration I need the official Obsidian CLI on your PATH.
+      > 1. Open Obsidian → Settings → General → enable **Command line interface**.
+      > 2. Follow the on-screen steps to add `obsidian` to your PATH (macOS/Linux may need `source ~/.zshrc` or a new terminal).
+      > 3. Keep Obsidian running — the CLI is a remote control, not a headless tool.
+      > Reply `done` when ready."
+
+   b. When the user confirms, run `command -v obsidian` via Bash.
+      - If the command returns a path: set `obsidian_cli_available: true`.
+      - If it returns nothing or errors: warn the user once — "⚠ `obsidian` not found on PATH. I'll continue with the plain-markdown fallback; you can re-run `/build-knowledge-base` after enabling the CLI." Set `obsidian_cli_available: false` and treat the remaining steps as Option B.
+
+   c. If `obsidian_cli_available: true`, also check that Obsidian responds: run `obsidian help` via Bash. If it errors with "Obsidian is not running", ask the user to open Obsidian and retry once. If it still fails, set `obsidian_cli_available: false` and fall back.
 
 3. "What is the path to your target folder?
    - Obsidian users: your vault path (e.g., `/Users/you/Documents/MyVault`)
@@ -92,6 +95,82 @@ Built with Claude using the Karpathy LLM Wiki pattern.
 - Second line: `tags: #topic #subtopic`
 - Body: structured content with headers
 - Last section: `## Related: [[linked-note-1]], [[linked-note-2]]`
+```
+
+### Obsidian integration files (ONLY if `obsidian_cli_available: true`)
+
+Create two files in the current repo (not inside the vault):
+
+**a) `.claude/agents/obsidian-vault-keeper.md`** — subagent definition. Claude Code auto-loads this from `.claude/agents/`. The main thread dispatches this agent via the Agent tool whenever an operation must land in the vault.
+
+```markdown
+---
+name: obsidian-vault-keeper
+description: Use to read, write, search, move, or delete notes in the user's Obsidian vault via the official Obsidian CLI. Dispatch this agent for any operation that should touch the vault — it reads claude_instructions/obsidian-cli.md for the command reference and runs `obsidian …` via Bash. Returns a compact summary, not raw note contents (unless asked).
+tools: Bash, Read, Glob, Grep
+---
+
+You are the Obsidian Vault Keeper. You perform read/write operations on the user's Obsidian vault using the official Obsidian CLI.
+
+## Before your first command
+Read `claude_instructions/obsidian-cli.md` for the full command reference and output formats.
+
+## Rules
+- Use the `obsidian` CLI via Bash exclusively. Never edit vault files with Edit/Write — wikilinks and backlinks depend on Obsidian's own APIs (e.g. `obsidian move` rewrites links, a plain `mv` does not).
+- Obsidian must be running. If a command errors with "Obsidian is not running", ask the caller to open Obsidian, then retry once.
+- Prefer structured output: append `format=json` or `format=paths` when supported. It parses smaller and cleaner than prose.
+- For multi-step operations (e.g. search → move all matches), pipe `format=paths` through a shell loop rather than issuing commands one note at a time.
+- Return a compact summary — operation name, counts, paths affected. Do NOT dump note contents unless explicitly asked.
+
+## Error handling
+- `obsidian` binary missing → tell caller: enable "Command line interface" in Obsidian Settings → General, then add to PATH. Abort.
+- Command fails for another reason → surface stderr verbatim so the caller can see it.
+
+## Out of scope
+- Configuring Obsidian plugins, themes, or settings.
+- Writing outside the vault path (use normal tools for that).
+```
+
+**b) `claude_instructions/obsidian-cli.md`** — read-on-demand CLI reference. Keeps CLAUDE.md lean (point-don't-dump).
+
+```markdown
+# Obsidian CLI Reference
+
+Official Obsidian CLI (desktop 1.12.4+). Requires the Obsidian app to be running and the `obsidian` binary on PATH (Settings → General → Command line interface).
+
+## Read
+- `obsidian read file="path/to/note"` — print note content
+- `obsidian file file="path/to/note"` — file metadata
+- `obsidian files` — list all notes (add `format=paths` for path-only output)
+- `obsidian folders` — folder tree
+
+## Write
+- `obsidian create name="path/to/note" content="..."` — create a new note
+- `obsidian create name="path/to/note" template="TemplateName"` — create from a template
+- `obsidian append file="path/to/note" content="..."` — append to an existing note
+- `obsidian prepend file="path/to/note" content="..."` — insert after frontmatter
+
+## Search
+- `obsidian search query="term"` — fulltext search
+- `obsidian search:context query="term" limit=10` — include surrounding lines
+- Add `format=json` or `format=paths` for machine-readable output
+
+## Tags
+- `obsidian tag tag="#name"` — list files with a specific tag
+- `obsidian tags` — list every tag in the vault
+
+## Move / Delete
+- `obsidian move file="note" to="folder/"` — moves and rewrites wikilinks automatically
+- `obsidian delete file="note"` — move to system trash
+- `obsidian delete file="note" permanent` — delete permanently
+
+## Output formats
+Supported values for `format=`: `json`, `csv`, `tsv`, `md`, `paths`, `text`, `tree`, `yaml`. Prefer `paths` or `json` for piping.
+
+## Troubleshooting
+- "Obsidian is not running" → open Obsidian, retry.
+- "Unknown command" → run `obsidian help` to list commands for the installed version.
+- Wikilinks broke after moving a file → always use `obsidian move`, never Finder/`mv`.
 ```
 
 ### CLAUDE.md
@@ -136,8 +215,13 @@ When documenting code:
 4. Maintain a `wiki/architecture.md` overview that links to all component notes
 
 ## Obsidian
-[Include if MCP was configured] Obsidian MCP is active. Claude writes directly into your vault when Obsidian is open.
-[Include if plain markdown] Using plain markdown files. Open the wiki/ folder in Obsidian or any markdown editor.
+[Include if obsidian_cli_available is true]
+Obsidian vault ops run through the `obsidian-vault-keeper` subagent (see `.claude/agents/obsidian-vault-keeper.md`). **Always dispatch that agent via the Agent tool** for reads, writes, searches, moves, or deletes on the vault — do not shell out to `obsidian` directly from this thread and do not edit vault files with Edit/Write.
+Command reference: `claude_instructions/obsidian-cli.md` (read-on-demand; the subagent handles this automatically).
+Why a subagent: keeps CLI schema out of the main context window, so chats that don't touch the vault cost zero Obsidian tokens.
+
+[Include if obsidian_cli_available is false]
+Using plain markdown files. Open the `wiki/` folder in Obsidian or any markdown editor.
 ```
 
 ### .gitignore
@@ -164,19 +248,24 @@ Thumbs.db
 ✓ Knowledge Base setup complete!
 
 Files created:
-  CLAUDE.md                    — Karpathy-pattern workflow instructions
-  [target]/raw/                — drop source material here
-  [target]/wiki/               — your knowledge base will be built here
-  [target]/wiki/README.md      — how to use your knowledge base
-  [if Obsidian MCP] .claude/settings.json — Obsidian MCP configured
-  .gitignore                   — excludes large source files
+  CLAUDE.md                              — Karpathy-pattern workflow instructions
+  [target]/raw/                          — drop source material here
+  [target]/wiki/                         — your knowledge base will be built here
+  [target]/wiki/README.md                — how to use your knowledge base
+  [if obsidian_cli_available]
+    .claude/agents/obsidian-vault-keeper.md — subagent that owns vault I/O
+    claude_instructions/obsidian-cli.md     — CLI command reference (read-on-demand)
+  .gitignore                             — excludes large source files
 
 External skills:
   [✓/⚠] Superpowers [via superpowers_method (superpowers_scope) / failed — install manually]
   [✓/⚠] Karpathy Guidelines [via karpathy_method (karpathy_scope) / failed — optional, skipped]
-  [✓ Obsidian MCP configured / using plain markdown files]
+  [✓ Obsidian CLI verified — vault ops routed through obsidian-vault-keeper subagent
+   / ⚠ Obsidian CLI unavailable — using plain markdown files
+   / — not requested]
 
 Next steps:
   Drop files into [target]/raw/
   Start a new Claude session and say: "Ingest the files in raw/ and build the wiki"
+  [if obsidian_cli_available] For vault ops, just ask — Claude will dispatch the obsidian-vault-keeper agent automatically.
 ```
