@@ -44,13 +44,14 @@ Example format (adapt wording to detected language):
 5. Content Creation — YouTube, social media, newsletters
 6. DevOps / Cloud Engineering — CI/CD, Kubernetes, Terraform, cloud providers
 7. UI/UX Design — component design, Figma handoff, accessibility
-8. Not sure — help me decide
+8. Already set up — audit my current Claude configuration (`/tipps`)
+9. Not sure — help me decide
 
 ---
 
 ## Step 4: Handle "Not Sure"
 
-If the user picks option 8, ask these 5 yes/no questions one at a time:
+If the user picks option 9, ask these 5 yes/no questions one at a time:
 
 1. "Are you primarily using Claude to work with code or a codebase?" → yes → recommend Coding Setup
 2. "Are you trying to organize documents, notes, or code into a structured knowledge base or wiki?" → yes → recommend Knowledge Base Builder
@@ -80,5 +81,6 @@ Skill routing:
 - Content Creator → invoke `content-creator-setup` skill
 - DevOps Setup → invoke `devops-setup` skill
 - UI/UX Design Setup → invoke `design-setup` skill
+- Already set up (audit) → invoke `tipps` skill
 
 Step back completely. The setup skill handles everything from here.
