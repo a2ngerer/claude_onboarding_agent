@@ -18,7 +18,7 @@ Audit the current Claude setup and print a prioritized, actionable list of impro
 Read these files if they exist: `CLAUDE.md`, `AGENTS.md`, `.claude/settings.json`. Skip any check whose required file is absent.
 
 **Check 1.1 — Secrets in CLAUDE.md** `[HIGH]`
-Condition: `CLAUDE.md` contains patterns that look like secrets — API keys (strings matching `sk-`, `ghp_`, `AIza`, `xox`), passwords (lines containing `password =` or `password:`), bearer tokens, or email addresses outside a comment.
+Condition: `CLAUDE.md` contains patterns that look like secrets — API keys (strings matching `sk-`, `ghp_`, `AIza`, `xox`), passwords (lines containing `password =` or `password:`), or bearer tokens.
 Finding title: "Potential secret or personal data in CLAUDE.md"
 Why: CLAUDE.md is often committed to version control. Secrets in it can be leaked publicly.
 How to apply: Move secrets to `.env` or a secrets manager. Remove personal data from CLAUDE.md.
@@ -44,7 +44,7 @@ How to apply: Run `/fewer-permission-prompts` to generate a minimal allowlist fr
 **Check 1.5 — No section delimiters in CLAUDE.md** `[LOW]`
 Condition: `CLAUDE.md` exists and does not contain the string `<!-- onboarding-agent:start -->`.
 Finding title: "CLAUDE.md has no section delimiters"
-Why: Section delimiters allow `/upgrade` to make targeted edits to specific sections without touching the rest of the file.
+Why: Section delimiters allow automated tools to make targeted edits to specific sections without touching the rest of the file.
 How to apply: Add `<!-- onboarding-agent:start -->` and `<!-- onboarding-agent:end -->` around each generated section.
 
 ---
@@ -54,7 +54,7 @@ How to apply: Add `<!-- onboarding-agent:start -->` and `<!-- onboarding-agent:e
 Check for `.git/` directory. If absent, skip this entire pass without mentioning it.
 
 **Check 2.1 — Claude artifacts not gitignored** `[MEDIUM]`
-Condition: `.gitignore` does not contain `.claude/` or `*.claude-*` (check both).
+Condition: `.gitignore` is missing either entry — fire if `.claude/` is absent OR `*.claude-*` is absent (or both).
 Finding title: "Claude artifacts not in .gitignore"
 Why: `.claude/settings.local.json` and session files may contain local paths or tokens that should not be committed.
 How to apply: Add these lines to `.gitignore`:
@@ -73,7 +73,7 @@ How to apply: For Python: `pip install pre-commit && pre-commit install`. For No
 
 ## Pass 3 — Project Tooling
 
-Check for manifest files: `package.json`, `pyproject.toml`, `requirements.txt`, `Cargo.toml`, `go.mod`. If none exist, skip this entire pass without mentioning it.
+Check for manifest files in this order: `pyproject.toml`, `requirements.txt`, `package.json`, `Cargo.toml`, `go.mod`. Use the first match to determine the primary stack. If none exist, skip this entire pass without mentioning it.
 
 Detect primary stack from the first manifest found:
 - `pyproject.toml` or `requirements.txt` → Python
@@ -92,6 +92,7 @@ Condition (Python): No `ruff.toml`, no `.flake8`, and `ruff` not present in `pyp
 Condition (Node): No `.eslintrc`, no `.eslintrc.js`, no `.eslintrc.json`, no `biome.json`.
 Condition (Rust): `clippy` is always available via `cargo clippy` — skip this check for Rust.
 Condition (Go): `golangci-lint` not present in any config file — skip if not detectable.
+How to apply (Go): `curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin && golangci-lint run`
 Finding title: "No linter configured for [stack]"
 Why: A linter catches bugs and enforces consistency automatically on every save or CI run.
 How to apply (Python): `uv add --dev ruff` then add `[tool.ruff]` to `pyproject.toml`.
@@ -124,7 +125,7 @@ How to apply: `/plugin install fewer-permission-prompts@claude-plugins-official`
 **Check 4.2 — MCP servers without description** `[LOW]`
 Condition: `mcpServers` in settings.json has one or more entries that lack a `"description"` field.
 Finding title: "MCP server(s) have no description"
-Why: Descriptions help Claude understand when to use each server, improving tool selection.
+Why: Descriptions help Claude understand when to use each server, improving tool selection. Note: the "description" field is not part of the official mcpServers schema but is a convention this plugin promotes for documentation purposes.
 How to apply: Add a `"description": "..."` field to each MCP server entry in `.claude/settings.json`.
 
 **Check 4.3 — Skills mismatched to project type** `[LOW]`
