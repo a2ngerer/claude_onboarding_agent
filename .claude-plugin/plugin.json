@@ -24,5 +24,27 @@
     "obsidian",
     "superpowers",
     "productivity"
+  ],
+  "skills": [
+    "skills/onboarding/SKILL.md",
+    "skills/coding-setup/SKILL.md",
+    "skills/design-setup/SKILL.md",
+    "skills/knowledge-base-builder/SKILL.md",
+    "skills/devops-setup/SKILL.md",
+    "skills/content-creator-setup/SKILL.md",
+    "skills/office-setup/SKILL.md",
+    "skills/research-setup/SKILL.md",
+    "skills/tipps/SKILL.md"
+  ],
+  "commands": [
+    { "name": "onboarding", "skill": "onboarding" },
+    { "name": "coding-setup", "skill": "coding-setup" },
+    { "name": "design-setup", "skill": "design-setup" },
+    { "name": "build-knowledge-base", "skill": "knowledge-base-builder" },
+    { "name": "devops-setup", "skill": "devops-setup" },
+    { "name": "content-creator-setup", "skill": "content-creator-setup" },
+    { "name": "office-setup", "skill": "office-setup" },
+    { "name": "research-setup", "skill": "research-setup" },
+    { "name": "tipps", "skill": "tipps" }
   ]
 }
