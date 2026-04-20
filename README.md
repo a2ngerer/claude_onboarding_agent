@@ -79,6 +79,7 @@ curl -fsSL https://raw.githubusercontent.com/a2ngerer/claude_onboarding_agent/ma
 | `/content-creator-setup` | Brand voice, platform preferences, audience context |
 | `/devops-setup` | Cloud provider, IaC tool, CI/CD — safe infra workflow + agent roles |
 | `/design-setup` | Design tool, frontend stack, accessibility standard — UI guidelines without the generic AI look |
+| `/tipps` | Audits your existing Claude setup — permissions, CLAUDE.md quality, git hygiene, tooling — and returns a prioritized improvement list |
 
 ---
 
