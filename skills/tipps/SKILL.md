@@ -136,9 +136,57 @@ How to apply: Remove unused skills via `/plugin uninstall <skill-name>`.
 
 ---
 
+## Pass 5 — Realtime Anchors
+
+Fetch the `claude-models` anchor using the shared protocol at `skills/_shared/fetch-anchor.md` with `anchor_name: claude-models` and the embedded fallback below. If `fetch-anchor` returns `anchor_markdown: null` (no cache, no network, no fallback consumed), skip this pass silently.
+
+From the fetched anchor, parse the list of model IDs under the `## Deprecated` section.
+
+**Check 5.1 — Deprecated Claude model ID referenced** `[MEDIUM]`
+Condition: Any file among `CLAUDE.md`, `AGENTS.md`, and `.claude/settings.json` (restricted to files that exist and were already scanned in earlier passes) contains a string exactly matching one of the model IDs from the anchor's `## Deprecated` section.
+Finding title: "Deprecated Claude model ID referenced in config"
+Why: Deprecated model IDs have a retirement date and typically point to weaker models than the current family. Traffic to retired IDs starts failing once Anthropic completes deprecation.
+How to apply: Replace with the current equivalent from the anchor's `## Model IDs` table (e.g. `claude-opus-4-7` for the latest Opus, `claude-sonnet-4-6` for the latest Sonnet).
+
+### Pass 5 Fallback — Minimal claude-models snapshot
+
+Pass this as `fallback_content` to the `fetch-anchor` protocol so the skill still works offline:
+
+```markdown
+---
+name: claude-models
+description: Minimal embedded fallback — Opus 4.7 / Sonnet 4.6 / Haiku 4.5 and known-deprecated IDs
+last_updated: 2026-04-21
+sources: []
+version: 1
+---
+
+## Model IDs
+
+| Tier   | Model ID                    |
+|--------|-----------------------------|
+| Opus   | claude-opus-4-7             |
+| Sonnet | claude-sonnet-4-6           |
+| Haiku  | claude-haiku-4-5-20251001   |
+
+## Deprecated
+
+- claude-3-opus-20240229
+- claude-3-sonnet-20240229
+- claude-3-haiku-20240307
+- claude-3-5-sonnet-20240620
+- claude-3-5-sonnet-20241022
+- claude-3-5-haiku-20241022
+- claude-2.1
+- claude-2.0
+- claude-instant-1.2
+```
+
+---
+
 ## Output
 
-After all four passes, print the following block. Do not print anything before it.
+After all five passes, print the following block. Do not print anything before it.
 
 ```
 ## Claude Setup Audit
