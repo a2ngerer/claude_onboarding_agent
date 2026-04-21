@@ -27,16 +27,22 @@ A rule block stays inline in CLAUDE.md if **both** hold:
 
 Otherwise the rules are extracted into `.claude/rules/<topic>.md`.
 
-**Extraction whitelist (always extracted, regardless of length):**
+**Extraction whitelist (always extracted, regardless of length) — aligned with filenames skills currently generate:**
 
-- `writing-style`
-- `citations`
-- `api-conventions`
-- `env-vars`
-- `component-structure`
-- `data-layout`
+| Filename | Owning Skill | Purpose |
+|---|---|---|
+| `writing-style.md` | academic-writing-setup | Voice, tense, section rules |
+| `citation-rules.md` | academic-writing-setup | `.bib` conventions, no-invented-citations |
+| `obsidian-cli.md` | knowledge-base-builder | CLI command reference (read-on-demand) |
+| `data-schema.md` | data-science-setup | Datasets, columns, lineage |
+| `evaluation-protocol.md` | data-science-setup | Metrics, splits, baselines |
+| `api-conventions.md` | web-development-setup | Route layout, error shape, auth |
+| `component-structure.md` | web-development-setup | Atomic/container split, colocation |
+| `env-vars.md` | web-development-setup | Public-prefix rules, secret stores |
 
-These topics are cross-cutting, reused across projects, and benefit from independent versioning and linking. Skill authors MUST NOT extend the whitelist opportunistically — the list is fixed in skill-authoring documentation to prevent drift. Non-whitelisted topics follow the pure line-count rule; no discretionary "might as well extract" exceptions.
+Skill authors MUST NOT extend the whitelist opportunistically — the list is fixed in skill-authoring documentation to prevent drift. Non-whitelisted topics follow the pure line-count rule; no discretionary "might as well extract" exceptions.
+
+**Whitelist-vs-threshold resolution:** If a whitelist filename would contain fewer than 25 lines, it still gets extracted. The whitelist wins over the length threshold. Extraction inverts only for non-whitelist topics.
 
 ### CLAUDE.md Pointer Format
 
@@ -51,21 +57,47 @@ Rules section template for generated CLAUDE.md:
 
 Inline rules and file pointers coexist in the same section.
 
+## Plugin File Ownership & Collision Handling
+
+The plugin does **not** own the `.claude/rules/` directory. It owns only the filenames listed in the extraction-whitelist table above. Any file in `.claude/rules/` not on that list is considered user-authored and is never read or modified by the plugin.
+
+**Topic exclusivity:** Each whitelist filename has exactly one owning skill (see the Owning Skill column). No two skills ever write the same filename. If a future skill needs to generate rules on an existing topic, the spec must be updated to either (a) assign the topic to a new owner or (b) introduce a new disambiguated filename (e.g., `data-env-vars.md` alongside `env-vars.md`).
+
+**Write-time collision policy:** When a skill is about to write a whitelist file and the target already exists:
+
+- **Default:** Skip the write. The skill logs `Skipped .claude/rules/<name>.md (already exists)` and continues.
+- **Rationale:** Setup-generators run once; overwriting would destroy user edits from subsequent sessions. Prompting would block non-interactive runs. Delimited in-file sections would re-bloat rule files, defeating extraction.
+- **Explicit regenerate:** Users who want to regenerate rules invoke `checkup --rebuild` or `upgrade`, which MAY overwrite after an explicit dry-run preview (consistent with the existing `--rebuild` behavior of those skills).
+
+**Edge case: user manually emptied a whitelist file.** The skip policy preserves the empty file. The user's intent is ambiguous — they may want regenerate, or they may want the file to stay empty. Resolution: `checkup --rebuild` is the documented path for regeneration; silent auto-refill is never done.
+
 ## Migration Path for Existing Setups
 
 The `checkup` and `upgrade` skills detect the presence of `claude_instructions/` and offer a migration:
 
 1. **Detection:** If `claude_instructions/` exists in the user's project, the skill proposes migration during its normal flow.
-2. **Preview (dry-run):** Shows the user:
-   - Files that will move from `claude_instructions/<name>.md` to `.claude/rules/<name>.md`
+
+2. **Migration scope (whitelist-only):** Only the filenames in the extraction whitelist are migrated. Files in `claude_instructions/` that do not match a whitelist filename are considered user-custom and are left in place. Rationale: the plugin only owns files it generates (see Plugin File Ownership); touching user-custom files would violate that ownership model. This intentionally leaves `claude_instructions/` in place as long as user-custom files remain — the folder is removed only when empty.
+
+3. **Preview (dry-run):** Shows the user:
+   - Files that will move from `claude_instructions/<name>.md` to `.claude/rules/<name>.md` (whitelist only)
+   - Files that will stay (non-whitelist, flagged as user-custom)
+   - Target-file conflicts: if `.claude/rules/<name>.md` already exists, migration skips that file and flags it for manual reconciliation
    - CLAUDE.md pointer rewrites (old path → new path)
-   - Removal of the empty `claude_instructions/` folder after migration
-   - A warning: "External references (e.g., links in external docs) to `claude_instructions/` will break — verify before confirming."
-3. **User decision:**
-   - **Confirm:** Migration runs. If the file is tracked by git, `git mv` is used to preserve history; otherwise a plain filesystem move. Pointers in CLAUDE.md are rewritten.
+   - Removal of the `claude_instructions/` folder only if empty after migration
+   - Warning: "External references (e.g., links in external docs or markdown link syntax like `[label](claude_instructions/...)`) to `claude_instructions/` will not be rewritten — verify and update manually."
+
+4. **User decision:**
+   - **Confirm:** Migration runs. File-by-file: if the source is tracked by git, `git mv` is used to preserve history; otherwise a plain filesystem move. Mixed-mode (some tracked, some not) is handled per-file, not per-folder. Pointers in CLAUDE.md are rewritten.
    - **Decline:** A marker file `.claude/.migration-declined` is written. No further action.
-4. **Re-prompting behavior:** Without the marker file, the prompt re-appears on every `checkup` or `upgrade` invocation. With the marker file, the skill silently skips the prompt. The user can delete the marker to be asked again.
-5. **No dual-read fallback:** Once migrated, the plugin does not read from `claude_instructions/`. Users who decline stay on the old path until they explicitly migrate.
+
+5. **Marker file location:** The marker lives at `.claude/.migration-declined`. It sits inside `.claude/` because it is a plugin-state artifact (alongside `.claude/onboarding-meta.json`). Placing it inside `.claude/rules/` would conflate it with rule files; placing it at repo root would pollute the project tree.
+
+6. **Re-prompting behavior:** Without the marker file, the prompt re-appears on every `checkup` or `upgrade` invocation. With the marker file, the skill silently skips the prompt. The user can delete the marker to be asked again.
+
+7. **Pointer-rewrite pattern:** Only the exact plugin-generated plaintext form is rewritten: `claude_instructions/<name>.md` → `.claude/rules/<name>.md`, matched as a whole token (not regex on substrings). Markdown link syntax (`[…](claude_instructions/…)`), relative-path variants (`./claude_instructions/`), and any other user-authored reference forms are left untouched and listed in the dry-run output under a "manual review needed" header. Rationale: broader regex risks false positives in user prose; plaintext-exact is deterministic and auditable.
+
+8. **No dual-read fallback:** Once migrated, the plugin does not read from `claude_instructions/`. Users who decline stay on the old path until they explicitly migrate.
 
 `onboarding` (new setups) writes directly to `.claude/rules/` with no legacy-path check.
 
