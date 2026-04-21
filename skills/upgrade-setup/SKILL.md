@@ -208,7 +208,28 @@ This means `/upgrade` now implicitly covers what `/anchors` does. `/anchors` rem
 
 Anchor-driven checks (deprecated model IDs and similar) now live in `/tipps` Pass 5. Anchor section refreshes are handled by the anchor-derived branch of Step 2.2. Nothing to do here.
 
-### Step 2.4 — Early exit when nothing to do
+### Step 2.4 — Project-Local Subagents
+
+The plugin owns these subagent filenames under `.claude/agents/`:
+
+| Slug | Owning Skill |
+|---|---|
+| `code-reviewer` | coding-setup |
+| `component-auditor` | web-development-setup |
+| `notebook-auditor` | data-science-setup |
+| `writing-style-auditor` | academic-writing-setup |
+| `obsidian-vault-keeper` | knowledge-base-builder |
+
+Detection and preview rules:
+
+- Read `./.claude/onboarding-meta.json` and collect `subagents_installed[]`. Cross-check against `.claude/agents/` on disk.
+- For each slug in the catalog whose owning skill appears in `detected_skills`:
+  - If the subagent file exists on disk: report it as "present — plugin-owned, not diffed (subagent bodies are user-editable after first install; re-install only via `/checkup --rebuild`)".
+  - If the subagent file is missing but the owning skill ran AND the current plugin version introduces the slug as part of a new rollout: include it in the dry-run preview as a new file the user can opt into. This is the only path where `/upgrade-setup` emits a subagent; it never overwrites an existing one.
+- Any file in `.claude/agents/` not on the catalog is user-authored and never touched.
+- Subagent files are NOT added to `proposed_changes` for Pass 3 diff review — the opt-in happens as a single yes/no near the end of the preview. A "yes" dispatches the owning skill's emit step via `skills/_shared/emit-subagent.md` (which still honors collision-skip if the file appeared between preview and apply).
+
+### Step 2.5 — Early exit when nothing to do
 
 If `proposed_changes` is empty, print:
 

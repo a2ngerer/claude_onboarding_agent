@@ -106,6 +106,25 @@ Before deciding on rebuild vs. improve, check for legacy rule-file layouts:
 
 Do not suppress the migration prompt within a session — re-offer on every `checkup` invocation until the user either migrates or writes `.migration-declined`.
 
+### Step 1.5 — Project-Local Subagents
+
+The plugin owns these subagent filenames under `.claude/agents/`:
+
+| Slug | Owning Skill |
+|---|---|
+| `code-reviewer` | coding-setup |
+| `component-auditor` | web-development-setup |
+| `notebook-auditor` | data-science-setup |
+| `writing-style-auditor` | academic-writing-setup |
+| `obsidian-vault-keeper` | knowledge-base-builder |
+
+Detection: read `.claude/onboarding-meta.json` and list the slugs in `subagents_installed[]`. Cross-check against `.claude/agents/` on disk. Record the present / missing / unknown slugs as `subagent_state` for reporting in Stage 5.
+
+`--rebuild` behaviour:
+- For each slug in the catalog, if the owning skill was run (per `skills_used`) and the subagent file is either missing or present-but-plugin-owned, include it in the rebuild preview.
+- Any file in `.claude/agents/` not on the catalog is user-authored and never touched.
+- Rebuild re-runs the owning skill's emit step via the shared helper; collision-skip is bypassed by the explicit preview confirmation.
+
 ---
 
 ## Stage 2 — Hard gates (deterministic)
