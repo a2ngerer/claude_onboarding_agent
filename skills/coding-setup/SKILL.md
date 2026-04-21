@@ -36,7 +36,35 @@ Ask these 4 questions one at a time. Wait for each answer before asking the next
 3. "Which git host do you use? (GitHub / GitLab / Bitbucket / other / none)"
 4. "Which IDE or editor do you use? (VS Code / JetBrains / Neovim / other)"
 
-## Step 3: Generate Artifacts
+## Step 3: Offer Project-Local Subagent
+
+Read `skills/_shared/emit-subagent.md` and follow it with these inputs:
+
+- `slug`: `code-reviewer`
+- `purpose_blurb`: "Review a PR-sized diff (uncommitted, staged, or a named commit range) against the project's code standards."
+- `frontmatter_description`: "Use to review uncommitted diffs, staged changes, or a named commit range against the project's code standards and conventions. Dispatch when the user asks for a code review, wants feedback on a change, or says 'review this' / 'check my changes' / 'review my diff'."
+- `tools_list`: `Bash, Read, Grep, Glob`
+- `rules_files`: (none — this subagent relies on CLAUDE.md's code standards)
+- `body_markdown`:
+
+  ```
+  You are the Code Reviewer. You review a bounded diff against the project's code standards and conventions documented in CLAUDE.md.
+
+  ## Procedure
+  1. Determine the diff scope from the caller's request (uncommitted changes, staged only, a named commit range, or a specific file list). If ambiguous, ask once; otherwise proceed with `git diff` on uncommitted + staged.
+  2. Read CLAUDE.md for project context and standards.
+  3. Review the diff. Flag: YAGNI violations, speculative abstractions, missing validation at boundaries, error-handling for impossible scenarios, test coverage gaps, convention drift.
+  4. Return a structured verdict: one-line summary, bullet list of findings (severity: blocker / suggestion / nit), and a final recommendation (ship / revise / block).
+
+  ## Rules
+  - Do not write code. Your output is feedback, not a fix.
+  - Do not run tests or linters on the caller's behalf unless explicitly asked.
+  - Cite file:line for every finding.
+  ```
+
+Record the emit outcome (`emit_subagent`, `subagent_skipped_existing`, `subagent_deferred`) for use in the completion summary (Step 9). If `emit_subagent: true`, add `"code-reviewer"` to the list passed to `skills/_shared/write-meta.md` in Step 7 as `subagents_installed`.
+
+## Step 4: Generate Artifacts
 
 Generate the following files automatically:
 
@@ -121,7 +149,7 @@ Generate a `.gitignore` appropriate for the detected stack. Always include `.cla
 - Rust: `target/`, `.claude/settings.local.json`
 - Generic fallback: `.env`, `*.log`, `.DS_Store`, `.claude/settings.local.json`
 
-## Step 4: Optional Community Skills
+## Step 5: Optional Community Skills
 
 > "Would you like to install additional community skills?
 >
@@ -140,7 +168,7 @@ On failure for any skill: warn clearly ("⚠ Could not install [skill] — skipp
 
 Add the list of successfully installed optional skills to the Completion Summary under a new line: `Optional community skills: [list or "none selected"]`
 
-## Step 5: Optional Graphify Integration
+## Step 6: Optional Graphify Integration
 
 Ask ONCE (adapt to detected language):
 
@@ -151,14 +179,14 @@ Ask ONCE (adapt to detected language):
 > (yes / no / later)"
 
 - **yes** → set `host_setup_slug: "coding"`, `host_skill_slug: "coding-setup"`, `run_initial_build: true`, `install_git_hook: true`. Read `skills/_shared/graphify-install.md` and follow steps G1–G9 in order. The shared protocol handles prerequisites (Python >= 3.10, `uv` or `pipx`), install (`uv tool install graphifyy` preferred, `pipx install graphifyy` fallback — never `pip install`), `graphify install`, hook verification, optional initial build + git hook, and appends the attributed CLAUDE.md section with `setup=coding skill=graphify-setup section=graphify`. Record the protocol's output variables for the completion summary.
-- **no** → do not mention Graphify further. Set `graphify_installed: false` and skip to Step 6.
+- **no** → do not mention Graphify further. Set `graphify_installed: false` and skip to Step 7.
 - **later** → invoke `skills/_shared/graphify-install.md` in "later" mode: skip Steps G1–G7 and only write the short deferred pointer block into CLAUDE.md (`"Knowledge graph: run /graphify-setup when ready."`). Set `graphify_installed: false`, `graphify_deferred: true`.
 
-## Step 6: Write Upgrade Metadata
+## Step 7: Write Upgrade Metadata
 
-Set `setup_slug: coding`, `skill_slug: coding-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`. If Step 5 installed Graphify, `skills_used` will automatically pick up `graphify-setup` via the shared protocol's own write-meta call — this step records `coding-setup` alongside it.
+Set `setup_slug: coding`, `skill_slug: coding-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. If Step 3 emitted the `code-reviewer` subagent, set `subagents_installed: ["code-reviewer"]`; otherwise leave it unset (the helper treats it as an empty list). Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`. If Step 6 installed Graphify, `skills_used` will automatically pick up `graphify-setup` via the shared protocol's own write-meta call — this step records `coding-setup` alongside it.
 
-## Step 7: Render Anchor Sections
+## Step 8: Render Anchor Sections
 
 Read `skills/_shared/anchor-mapping.md`. Locate the row for `setup_type: coding`. For each anchor slug in that row:
 
@@ -172,7 +200,7 @@ Read `skills/_shared/anchor-mapping.md`. Locate the row for `setup_type: coding`
 
 Do not fail if any single `render-anchor-section.md` call returns `placeholder` — that is the designed offline path. Collect the list of rendered / placeholder slugs to mention in the completion summary.
 
-## Step 8: Completion Summary
+## Step 9: Completion Summary
 
 ```
 ✓ Coding setup complete! Here's what was configured:
@@ -182,6 +210,7 @@ Files created:
   AGENTS.md                     — coder, reviewer, and git-agent role definitions
   .claude/settings.json         — tool permissions for [stack]
   .gitignore                    — [stack]-appropriate ignore rules
+  .claude/agents/code-reviewer.md — project-local subagent (auto-invoked) [only on yes path; if skipped existing: .claude/agents/code-reviewer.md (already existed — skipped; re-run /checkup --rebuild to regenerate); if no/later: Subagent code-reviewer not installed — re-run /coding-setup to add it later.]
   .claude/onboarding-meta.json  — setup marker for /upgrade-setup
 
 External skills:
