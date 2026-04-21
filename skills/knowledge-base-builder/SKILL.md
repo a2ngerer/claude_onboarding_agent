@@ -9,7 +9,16 @@ This skill configures Claude to build and maintain a structured, interlinked kno
 
 **Language:** Use `detected_language` from handoff context, or detect from the user's first message and use it throughout.
 
-**Existing CLAUDE.md:** If `existing_claude_md: true` in handoff context, or if CLAUDE.md exists in the filesystem, extend it by appending a new section (`## Claude Onboarding Agent — Knowledge Base`) rather than overwriting.
+**Existing CLAUDE.md:** If `existing_claude_md: true` in handoff context, or if CLAUDE.md exists in the filesystem, DO NOT overwrite it. Append a new delimited section at the end of the file:
+
+```
+<!-- onboarding-agent:start setup=knowledge-base skill=knowledge-base-builder section=claude-md -->
+## Claude Onboarding Agent — Knowledge Base
+...generated content...
+<!-- onboarding-agent:end -->
+```
+
+If the delimited block already exists from a previous run, replace only the content between the markers; leave the rest of the file untouched. Wrap generated `.gitignore` entries in `# onboarding-agent: knowledge-base — start` / `— end` markers so `/upgrade` can refresh them non-destructively.
 
 ## Step 1: Install Dependencies
 
@@ -242,7 +251,11 @@ Thumbs.db
 .claude/settings.local.json
 ```
 
-## Step 4: Completion Summary
+## Step 4: Write Upgrade Metadata
+
+Set `setup_slug: knowledge-base`, `skill_slug: knowledge-base-builder`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`.
+
+## Step 5: Completion Summary
 
 ```
 ✓ Knowledge Base setup complete!
@@ -256,6 +269,7 @@ Files created:
     .claude/agents/obsidian-vault-keeper.md — subagent that owns vault I/O
     claude_instructions/obsidian-cli.md     — CLI command reference (read-on-demand)
   .gitignore                             — excludes large source files
+  .claude/onboarding-meta.json           — setup marker for /upgrade
 
 External skills:
   [✓/⚠] Superpowers [via superpowers_method (superpowers_scope) / failed — install manually]

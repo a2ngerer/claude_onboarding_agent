@@ -9,7 +9,16 @@ This skill configures Claude for content creation work.
 
 **Language:** Use `detected_language` from handoff context, or detect from the user's first message and use it throughout.
 
-**Existing CLAUDE.md:** If `existing_claude_md: true` in handoff context, or if CLAUDE.md exists in the filesystem, extend it by appending a new section (`## Claude Onboarding Agent — Content Creator Setup`) rather than overwriting.
+**Existing CLAUDE.md:** If `existing_claude_md: true` in handoff context, or if CLAUDE.md exists in the filesystem, DO NOT overwrite it. Append a new delimited section at the end of the file:
+
+```
+<!-- onboarding-agent:start setup=content-creator skill=content-creator-setup section=claude-md -->
+## Claude Onboarding Agent — Content Creator Setup
+...generated content...
+<!-- onboarding-agent:end -->
+```
+
+If the delimited block already exists from a previous run, replace only the content between the markers; leave the rest untouched. Wrap generated `.gitignore` entries in `# onboarding-agent: content-creator — start` / `— end` markers so `/upgrade` can refresh them non-destructively.
 
 ## Step 1: Install Dependencies
 
@@ -82,14 +91,19 @@ Thumbs.db
 .claude/settings.local.json
 ```
 
-## Step 4: Completion Summary
+## Step 4: Write Upgrade Metadata
+
+Set `setup_slug: content-creator`, `skill_slug: content-creator-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`.
+
+## Step 5: Completion Summary
 
 ```
 ✓ Content Creator setup complete!
 
 Files created:
-  CLAUDE.md    — brand voice, platform preferences, and audience instructions
-  .gitignore   — large media file rules
+  CLAUDE.md                     — brand voice, platform preferences, and audience instructions
+  .gitignore                    — large media file rules
+  .claude/onboarding-meta.json  — setup marker for /upgrade
 
 External skills:
   [✓ Superpowers installed via superpowers_method (superpowers_scope)]
