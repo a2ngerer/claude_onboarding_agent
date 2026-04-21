@@ -102,9 +102,27 @@ For each skill in `detected_skills`, compute the **canonical current output** of
 
 The upgrade skill treats every delimited section as a **structural template** — it proposes overwriting the marker body with the latest template but preserves any fields that were filled in from user answers (project stack, citation style, etc.). In practice this means: the LLM running this skill compares the on-disk marker body against the latest template from the relevant setup skill and proposes a structural-only diff. **Answer-derived values (Q1, Q2, …) are kept as-is — only the scaffolding around them changes.**
 
-### Step 2.1 — Enumerate candidate files
+### Step 2.1 — Enumerate candidate files (via `repo-scanner` subagent)
 
-For each skill in `detected_skills`, read its `SKILL.md` from the plugin installation (resolved in Step 1.3) and list every file it generates that uses delimited sections. The universal candidates are:
+Dispatch a `repo-scanner` subagent (defined in `.claude/agents/repo-scanner.md`) to enumerate, on disk, the universal candidate files that might carry plugin-owned delimited sections. The orchestrator stays out of the raw filesystem — it only needs the existence flags.
+
+**Dispatch brief:**
+
+```
+Use the Agent tool with:
+  subagent_type: repo-scanner
+  description: "Enumerate candidate files for upgrade diffing"
+  prompt: |
+    Scan the project rooted at the current working directory.
+    Return your standard `repo-scan` fenced block. The caller only
+    needs these fields:
+      - existing_claude_md
+      - existing_agents_md
+      - signals (any string matching a candidate file path)
+Expected output: one `repo-scan` fenced block per the subagent's output contract.
+```
+
+For each skill in `detected_skills`, read its `SKILL.md` from the plugin installation (resolved in Step 1.3) and cross-reference against the scan report to build the candidate list. The universal candidates are:
 
 - `./CLAUDE.md`
 - `./AGENTS.md` (if the skill generates one)
@@ -112,7 +130,15 @@ For each skill in `detected_skills`, read its `SKILL.md` from the plugin install
 - `./.claude/settings.json` (if the skill generates one)
 - `./claude_instructions/*.md` (if the skill generates any — data-science, academic-writing)
 
-Skip any candidate file that does not exist on disk. Do not create new files here — Pass 2 is diff-only.
+Skip any candidate file that the scan report indicates does not exist. Do not create new files here — Pass 2 is diff-only.
+
+### Fallback (if the subagent fails)
+
+Trigger the fallback when the subagent dispatch errors, returns no `repo-scan` block after one retry, or returns a block with missing fields. On dispatch error, do not retry — fall back immediately. Print:
+
+> "⚠ repo-scanner subagent unavailable — enumerating candidate files inline."
+
+Then enumerate inline exactly as above, but resolve file existence with direct filesystem checks (Glob / `test -f`) instead of via the scan report. The universal candidate list is identical — only the existence probe changes.
 
 ### Step 2.2 — For each candidate file, diff each section
 
