@@ -30,6 +30,7 @@ Not sure where to start? Run `/onboarding` and we'll figure it out with you. Or 
 | You are… | Run this | You get |
 |---|---|---|
 | **A developer** shipping code | `/coding-setup` | Superpowers workflow, subagent roles, stack permissions |
+| **Building a web app** (frontend, backend, or full-stack) | `/web-development-setup` | Frontend, backend, or full-stack web app — framework-aware permissions, env-var hygiene, deploy-target pointers |
 | **A data scientist / ML engineer** | `/data-science-setup` | Notebook hygiene, experiment tracking, `data/raw→processed` layout, reproducibility |
 | **Building a personal wiki / second brain** | `/build-knowledge-base` | Karpathy-pattern wiki, optional Obsidian CLI subagent |
 | **Writing docs, emails, reports** | `/office-setup` | Writing style, document templates, company context |
@@ -75,6 +76,7 @@ curl -fsSL https://raw.githubusercontent.com/a2ngerer/claude_onboarding_agent/ma
 |---|---|
 | `/onboarding` | Orchestrator — scans your repo, infers your use case, routes you to the right setup |
 | `/coding-setup` | Installs [Superpowers](https://github.com/obra/superpowers), wires up brainstorm → plan → subagents → review → commit |
+| `/web-development-setup` | Framework-aware web-app setup — Next.js / React / Vue / Svelte / SolidJS / Astro / Remix + optional backend (Node/Bun/Python/Go). API conventions, component structure, env-var hygiene, deploy-target pointers |
 | `/data-science-setup` | Notebook workflow (Jupyter/marimo), experiment tracking (MLflow/W&B/DVC), reproducible `pyproject.toml`, `data/raw/interim/processed` layout, model-card pointers |
 | `/build-knowledge-base` | Builds a [Karpathy-pattern](https://github.com/forrestchang/andrej-karpathy-skills) wiki from your notes or codebase (+ optional [Obsidian](https://obsidian.md) CLI integration via dispatched subagent — no always-on MCP token cost) |
 | `/office-setup` | Writing style, document preferences, company context |
@@ -130,6 +132,7 @@ Every setup skill creates a tailored `CLAUDE.md` with context and instructions s
 | Skill | CLAUDE.md | Agents | settings.json | .gitignore | External |
 |-------|-----------|--------|---------------|------------|----------|
 | Coding | ✓ + workflow | ✓ 3 roles (AGENTS.md) | ✓ stack permissions | ✓ stack | Superpowers |
+| Web Development | ✓ + pointers (`claude_instructions/api-conventions.md`, `component-structure.md`, `env-vars.md`) | — | ✓ framework + package-manager + deploy-CLI permissions | ✓ `node_modules/`, framework build outputs (`.next/`, `dist/`, `.astro/`, …), `.env.local`, test artifacts | Superpowers (optional) |
 | Data Science | ✓ + pointers (`claude_instructions/data-schema.md`, `evaluation-protocol.md`) | — | ✓ uv / notebook / tracker permissions | ✓ raw data, notebook checkpoints, experiment artifacts | Superpowers (optional) |
 | Knowledge Base | ✓ + Karpathy pattern | ✓ `.claude/agents/obsidian-vault-keeper.md` (optional) | — | ✓ | Superpowers + Karpathy |
 | Office | ✓ + writing style | — | — | ✓ | Superpowers (optional) |
