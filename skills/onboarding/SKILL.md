@@ -200,6 +200,38 @@ Skill routing:
 
 Step back completely. The setup skill handles everything from here. For the five host setups that offer Graphify conditionally (coding-setup, knowledge-base-setup, research-setup, data-science-setup, web-development-setup), the Graphify question appears AFTER the host setup's main questions, not here — those skills delegate to `skills/_shared/graphify-install.md` themselves.
 
+## Step 5a: Verify artifacts (via `artifact-verifier` subagent)
+
+After the delegated setup skill reports completion, dispatch an `artifact-verifier` subagent (defined in `.claude/agents/artifact-verifier.md`) to confirm the files it claimed to write exist and are structurally valid.
+
+Capture the list of files the setup skill announced in its completion summary (e.g. `CLAUDE.md`, `AGENTS.md`, `.claude/settings.json`, `.gitignore`, any `claude_instructions/*.md`). If the setup skill did not print an explicit file list, use the default candidate set for the chosen setup type.
+
+**Dispatch brief:**
+
+```
+Use the Agent tool with:
+  subagent_type: artifact-verifier
+  description: "Verify the files the setup skill just wrote"
+  prompt: |
+    Verify the following files exist on disk and are structurally valid.
+    Return your standard `artifact-verify` fenced block.
+    files_to_check:
+      - <path 1>
+      - <path 2>
+      - ...
+Expected output: one `artifact-verify` fenced block per the subagent's output contract (cap: 200 tokens).
+```
+
+Parse the report. If `status: ok`, print one line: `✓ Artifacts verified (<files_checked> files checked).` If `status: issues`, print the issue list verbatim and suggest `/checkup` to decide next steps. Do NOT retry the setup skill automatically — the issues may be intentional (e.g. the user skipped a file during the setup skill's own prompts).
+
+### Fallback (if the subagent fails)
+
+Trigger the fallback when the subagent dispatch errors, returns no `artifact-verify` block after one retry, or returns a block with missing fields after one retry. On dispatch error, do not retry — fall back immediately. Print (adapt to detected language):
+
+> "⚠ artifact-verifier unavailable — please spot-check the generated files manually."
+
+Continue with Step 6.
+
 ## Step 6: Rebuild backup notice (only if `rebuild_mode: true` and Step 1b ran)
 
 After the delegated setup skill prints its own completion summary, print one additional block so the user knows where the pre-rebuild state lives:
@@ -214,3 +246,37 @@ To restore everything to the pre-rebuild state:
 ```
 
 If Step 1b did not run (normal onboarding without `--rebuild`), omit this block entirely.
+
+## Step 7: Optional post-setup audit (via `audit-collector` subagent)
+
+After all other steps complete, ask the user (adapt wording to detected language):
+
+> "Run a post-setup audit now? It checks the new setup against current best practices without modifying anything. (y/n)"
+
+If the user replies `n` (or any negative variant), skip this step silently. Do not re-prompt within the session.
+
+If the user replies `y`, dispatch an `audit-collector` subagent (defined in `.claude/agents/audit-collector.md`).
+
+**Dispatch brief:**
+
+```
+Use the Agent tool with:
+  subagent_type: audit-collector
+  description: "Run /audit-setup and summarize findings"
+  prompt: |
+    Invoke the audit skill named below and return your standard
+    `audit-summary` fenced block with severity-bucketed counts.
+    audit_skill: audit-setup
+    max_top_titles: 3
+Expected output: one `audit-summary` fenced block per the subagent's output contract (cap: 300 tokens).
+```
+
+Parse `total`, `high`, `medium`, `low`, `top_titles`. Print a one-screen summary. If `high >= 1`, also suggest `/upgrade-setup` to apply the recommended fixes.
+
+### Fallback (if the subagent fails)
+
+Trigger the fallback when the subagent dispatch errors, returns no `audit-summary` block after one retry, or returns a block whose sole `top_titles` entry begins with `error:` (the subagent's documented error signal). On dispatch error, do not retry — fall back immediately. Print (adapt to detected language):
+
+> "⚠ audit-collector unavailable — run `/audit-setup` manually to audit the new setup."
+
+End.
