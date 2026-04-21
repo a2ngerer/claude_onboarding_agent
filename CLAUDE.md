@@ -28,5 +28,61 @@ All public repo artifacts — GitHub issues, PR titles/descriptions, commit mess
 - Every skill must handle failed external dependency installation gracefully
 - Never silently overwrite an existing CLAUDE.md — always extend with a new delimited section
 
+## SKILL.md Modularization
+
+A SKILL.md file requires modularization when it exceeds **300 lines**. Files in the 200–300 band are audited on edit but not forced. Files under 200 lines stay inline.
+
+**Extraction boundary — stays in SKILL.md:**
+- YAML front matter, intro, placement advice
+- Language / handoff-context / existing-CLAUDE.md handling
+- Step ordering, one-line step descriptions, context questions
+- Decision branches and short environment probes
+- Installation-protocol / graphify-install / write-meta invocations
+- Completion-summary template
+
+**Extraction boundary — moves to sibling files:**
+- Rule-file content bodies (what the skill writes into `.claude/rules/<topic>.md`)
+- Gitignore blocks and `.env.example` scaffolds
+- Framework/stack lookup matrices longer than ~10 rows
+- Artifact skeletons (`main.tex`, `pyproject.toml`, `package.json`, `.pre-commit-config.yaml`)
+- Per-framework install-command lists
+- Per-stack `.claude/settings.json` bodies longer than ~15 lines
+- Provider-specific instructions relevant only under one question's answer
+
+Blocks shorter than ~15 lines and relevant on every path through the skill stay inline.
+
+### Canonical Sibling Filenames
+
+Use these names across skills wherever the content domain fits. A new name is allowed only when none of these applies and it must describe a content domain (not a step or phase).
+
+| Filename | Purpose |
+|---|---|
+| `rule-file-templates.md` | Ready-to-write bodies of `.claude/rules/<topic>.md` files |
+| `gitignore-block.md` | The delimited `.gitignore` block plus `.env.example` |
+| `framework-defaults.md` | Framework/stack lookup matrices |
+| `document-skeletons.md` | Artifact skeletons (`main.tex`, `pyproject.toml`, etc.) |
+| `stack-scaffolds.md` | Mixed per-stack scaffolds (pyproject + settings.json combinations) |
+
+Siblings live in the same directory as `SKILL.md`, flat (no subdirectories). Two skills may each own a `rule-file-templates.md`; each is scoped to its own skill directory.
+
+### Reference Pattern
+
+Near the top of SKILL.md (after the existing-CLAUDE.md block), add a `## Supporting Files` listing:
+
+```markdown
+## Supporting Files
+
+Read these on-demand at the step that invokes them. Do not read eagerly.
+
+- `rule-file-templates.md` — bodies of the .claude/rules/*.md files this skill generates
+- `gitignore-block.md` — the .gitignore block and .env.example scaffold
+```
+
+At each step that needs a sibling, instruct Claude explicitly: `` Read `<filename>` and write the <artifact> section to <target> ``. Do not rely on a global table of contents.
+
+Every sibling opens with a one-line consumer note: `> Consumed by <skill>/SKILL.md at Step <N>. Do not invoke directly.`
+
+**Review checklist:** When editing a sibling, grep SKILL.md for its filename to confirm the reference still matches. When editing SKILL.md, scan the Supporting-Files block.
+
 ## Spec
 Full design decisions: `docs/superpowers/specs/2026-04-16-onboarding-agent-design.md`
