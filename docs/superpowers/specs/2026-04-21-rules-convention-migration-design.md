@@ -103,15 +103,23 @@ The `checkup` and `upgrade` skills detect the presence of `claude_instructions/`
 
 ## Affected Skills
 
-Seven skills reference or generate `claude_instructions/` today and must be updated:
+Seven skills reference or generate `claude_instructions/` today and must be updated. They split by role:
 
-- `onboarding` — routing/bootstrap logic referencing the path
+**Generators (write whitelist files — must switch target path from `claude_instructions/` to `.claude/rules/`):**
+
+- `web-development-setup` — generates `api-conventions.md`, `component-structure.md`, `env-vars.md`
+- `knowledge-base-builder` — generates `obsidian-cli.md`
+- `data-science-setup` — generates `data-schema.md`, `evaluation-protocol.md`
+- `academic-writing-setup` — generates `writing-style.md`, `citation-rules.md`
+
+**Migration-aware (detect legacy setups and offer migration):**
+
 - `checkup` — detection + migration offer
 - `upgrade` — detection + migration offer
-- `web-development-setup` — generates api-conventions, env-vars
-- `knowledge-base-builder` — generates writing-style or similar
-- `data-science-setup` — generates data-layout, env-vars
-- `academic-writing-setup` — generates writing-style, citations
+
+**Bootstrap (routing references only, no migration offer):**
+
+- `onboarding` — writes new setups directly to `.claude/rules/`; removes all `claude_instructions/` references from its routing logic
 
 Shared scaffolding in `skills/_shared/*` and `README.md` must be audited for path references and updated.
 
@@ -135,13 +143,18 @@ Location: a dedicated section in this repository's `CLAUDE.md` (under "Skill Aut
 ## Risks & Edge Cases
 
 - **External references break.** Users who link to `claude_instructions/` from external docs, wikis, or blog posts will get broken links after migration. Mitigated by the preview warning; not automatically redirected.
-- **Manual CLAUDE.md edits.** Users who have hand-edited CLAUDE.md may have pointers the migration script does not recognize. The dry-run shows exactly which rewrites will happen; anything outside the recognized pattern is left untouched and flagged for manual review.
+- **Markdown-link references untouched.** User-authored links like `[rules](claude_instructions/foo.md)` are deliberately not rewritten (false-positive risk too high). They appear in the dry-run's manual-review list.
+- **Manual CLAUDE.md edits.** Users who have hand-edited CLAUDE.md may have pointers the migration does not recognize (e.g., reformatted pointer lines). Anything outside the exact plaintext pattern is flagged for manual review, not silently skipped.
 - **Marker-file drift.** A user who writes `.claude/.migration-declined` and later changes their mind must delete it manually. This is intentional — the marker exists to make declination explicit, not silent.
+- **Parallel folders after partial migration.** If `claude_instructions/` contains user-custom files alongside plugin files, the plugin folder is not removed. Users end up with both `claude_instructions/` (custom only) and `.claude/rules/` (plugin). Documented in migration output so it does not look like a broken migration.
+- **User-authored shadow file.** If a user manually created `.claude/rules/writing-style.md` with the same name as a plugin whitelist file, the plugin still treats it as plugin-owned by filename. The skip-on-exists policy prevents data loss, but the ownership-by-filename assumption is a known limit — documented, not mitigated in v1.
 - **Threshold subjectivity.** The 25-line rule cuts cleanly; the whitelist is the subjective part. Fixing it in authoring docs is the only mitigation — any future additions must go through a spec update, not an ad-hoc skill decision.
 
 ## Success Criteria
 
-- All seven affected skills write to `.claude/rules/` (never `claude_instructions/`) in new setups.
-- `checkup` and `upgrade` correctly detect and offer migration for legacy setups; marker-file behavior works as specified.
-- Skill-authoring documentation contains the whitelist and threshold, explicit and copy-pasteable.
-- No skill silently falls back to `claude_instructions/` reads after migration is complete.
+- **Code-level:** Grep across `skills/` returns zero occurrences of `claude_instructions/` in generator and bootstrap skills (`onboarding`, `web-development-setup`, `knowledge-base-builder`, `data-science-setup`, `academic-writing-setup`). Only `upgrade` and `checkup` retain references, and only for migration detection.
+- **Migration detection:** In a test project with `claude_instructions/{writing-style,citation-rules}.md`, invoking `checkup` offers migration; accepting it produces `.claude/rules/{writing-style,citation-rules}.md`, a rewritten CLAUDE.md, and removal of the now-empty source folder.
+- **Migration decline:** Declining produces `.claude/.migration-declined`; re-running `checkup` skips the prompt; deleting the marker causes the prompt to reappear.
+- **Whitelist-only migration:** In a test project where `claude_instructions/` also contains `my-custom.md`, migration leaves `my-custom.md` in place, migrates only whitelist files, and does not remove the folder.
+- **Collision behavior:** Running a setup skill twice on the same project does not overwrite the existing rule file; the skill logs a skip message.
+- **Authoring doc:** `CLAUDE.md` of this repository contains the extraction whitelist (table form) and the 25-line threshold rule, both copy-pasteable and verbatim.
