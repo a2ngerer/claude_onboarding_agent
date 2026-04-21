@@ -34,6 +34,20 @@ version: <integer, bumped on every content change>
 
 All five fields are required. The daily updater (see `.github/workflows/update-anchors.yml`) relies on `sources` for research and bumps `last_updated` + `version` on change.
 
+## Source architecture
+
+Two layers of input feed the daily updater:
+
+- **Canonical sources** (per anchor, in the frontmatter `sources:` list). These are authoritative documentation URLs that define factual truth for the anchor (e.g. Anthropic docs for `claude-models`, the MCP registry for `mcp-servers`). The updater never adds URLs to this list — a source change is a separate human PR.
+- **Trend sources** (global, in `docs/anchors/_trend-sources.md`). Exactly three URLs that act as a trend radar, picking up new patterns (community releases, new workflows) before they land in official docs. Each trend source declares a `covers:` list of anchor slugs it informs. `_trend-sources.md` is **not itself an anchor** — consumers never fetch it.
+
+Per daily run, the updater makes two passes per anchor:
+
+1. Canonical pass — verify facts against the anchor's `sources:` URLs.
+2. Trend pass — scan trend sources whose `covers:` list includes this anchor, and propose body updates for newly-surfaced items that fit the anchor's topic.
+
+Every rewrite records `pass`, `source`, and `rationale` in the PR body for reviewer trail.
+
 ## Body rules
 
 - **Max 100 lines** in the body (everything after the closing `---`). Skills read anchors into context on every run.
@@ -63,3 +77,5 @@ A skill that needs an anchor must ship an embedded fallback so it still works of
 2. List every source URL in `sources` — the updater only researches URLs that are already listed.
 3. If a skill will consume it, add an embedded fallback snapshot in that skill's SKILL.md.
 4. Open a PR. Do not include generated cache files.
+
+> `_trend-sources.md` is **not** an anchor. It is a workflow-only file read by the daily updater. Do not place it under the consumer fetch path and do not extend the consumer fetch protocol to it. To change trend sources, open a separate human PR modifying only that file.
