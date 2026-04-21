@@ -133,7 +133,21 @@ Research projects often carry large PDF libraries, Markdown notes, and literatur
 
 Set `setup_slug: research`, `skill_slug: research-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`. If Step 5 installed Graphify, `skills_used` will include both `research-setup` and `graphify-setup`.
 
-## Step 7: Completion Summary
+## Step 7: Render Anchor Sections
+
+Read `skills/_shared/anchor-mapping.md`. Locate the row for `setup_type: research`. For each anchor slug in that row:
+
+1. Call `skills/_shared/render-anchor-section.md` with:
+   - `setup_type: research`
+   - `skill_slug: research-setup`
+   - `anchor_slug: <slug>`
+   - `target_file: ./CLAUDE.md`
+   - `fallback_content: <embedded fallback from skills/anchors/SKILL.md for that slug>`
+2. If a `./AGENTS.md` file was generated earlier in this skill, repeat the call with `target_file: ./AGENTS.md`.
+
+Do not fail if any single `render-anchor-section.md` call returns `placeholder`. Collect rendered / placeholder slugs for the completion summary.
+
+## Step 8: Completion Summary
 
 ```
 ✓ Research setup complete!
@@ -157,4 +171,5 @@ Next steps:
   Start a new Claude session and say: "Summarize this paper: [paste abstract or upload PDF]"
   Or: "Help me outline a literature review on [topic]"
   [If Graphify installed] Try: /graphify query "which papers discuss <topic>?"
+  - Run `/anchors` any time to refresh the anchor-derived sections. If any section was rendered as a placeholder due to offline mode, re-run `/anchors` once you are back online.
 ```
