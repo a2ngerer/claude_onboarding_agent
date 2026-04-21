@@ -116,7 +116,7 @@ Set `graphify_git_hook: yes|no|failed`.
 
 Resolve the target file: `./CLAUDE.md` in the current working directory.
 
-Never silently overwrite the whole file. Instead append — or replace-in-place — the following delimited section. The `setup=<host_setup_slug>` attribute lets the block sit under any host setup; the `skill=graphify-setup` attribute marks it as owned by the graphify skill so `/upgrade` can refresh it.
+Never silently overwrite the whole file. Instead append — or replace-in-place — the following delimited section. The `setup=<host_setup_slug>` attribute lets the block sit under any host setup; the `skill=graphify-setup` attribute marks it as owned by the graphify skill so `/upgrade-setup` can refresh it.
 
 ```
 <!-- onboarding-agent:start setup=<host_setup_slug> skill=graphify-setup section=graphify -->

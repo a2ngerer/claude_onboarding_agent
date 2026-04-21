@@ -20,7 +20,7 @@ Use this skill when the project is primarily a LaTeX or Typst document, not a li
 <!-- onboarding-agent:end -->
 ```
 
-If the delimited block already exists from a previous run (either the attributed form above or the legacy unattributed `<!-- onboarding-agent:start -->` form), replace only the content between the markers; leave the rest of the file untouched. Upgrade the opening marker to the attributed form — `/upgrade` depends on it for detection.
+If the delimited block already exists from a previous run (either the attributed form above or the legacy unattributed `<!-- onboarding-agent:start -->` form), replace only the content between the markers; leave the rest of the file untouched. Upgrade the opening marker to the attributed form — `/upgrade-setup` depends on it for detection.
 
 ## Step 1: Install Dependencies
 
@@ -438,7 +438,7 @@ Files created / updated:
   main.tex or main.typ                   — [created skeleton | left untouched — already present]
   .gitignore                             — LaTeX/Typst artifact rules (delimited section)
   .pre-commit-config.yaml                — [emitted as instructions | skipped per user]
-  .claude/onboarding-meta.json           — setup marker for /upgrade
+  .claude/onboarding-meta.json           — setup marker for /upgrade-setup
 
 External skills:
   [✓ Superpowers installed via superpowers_method (superpowers_scope)]

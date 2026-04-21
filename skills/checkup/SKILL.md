@@ -1,11 +1,11 @@
 ---
 name: checkup
-description: Decide whether an existing Claude setup should be rebuilt from scratch or selectively improved — then delegate. Routes to /onboarding --rebuild, /upgrade, or a short "fine-as-is" summary. Does not audit, does not apply changes.
+description: Decide whether an existing Claude setup should be rebuilt from scratch or selectively improved — then delegate. Routes to /onboarding --rebuild, /upgrade-setup, or a short "fine-as-is" summary. Does not audit, does not apply changes.
 ---
 
 # Checkup — Rebuild vs Improve Router
 
-This skill owns **one decision**: given an existing Claude setup, should the user **rebuild** it, **improve** it, or leave it **fine-as-is**? It then hands off to the appropriate skill. It does not audit (delegates to `/tipps`), does not apply changes (delegates to `/upgrade`), does not scaffold (delegates to `/onboarding`).
+This skill owns **one decision**: given an existing Claude setup, should the user **rebuild** it, **improve** it, or leave it **fine-as-is**? It then hands off to the appropriate skill. It does not audit (delegates to `/tipps`), does not apply changes (delegates to `/upgrade-setup`), does not scaffold (delegates to `/onboarding`).
 
 The skill is a pure router. The only artifact it writes is an append-only line in `.claude/checkup-log.md` per invocation.
 
@@ -17,7 +17,7 @@ Detect language from the user's first message in this invocation and respond in 
 
 The invocation may contain `--no-delegate` anywhere in the argument string (as a flag, not a value).
 
-- If present: set `no_delegate: true`. Stages 1–5 run normally, but Stage 6 prints the verdict and exits without invoking `/onboarding`, `/upgrade`, or `/tipps` for any follow-up. (Testing aid — does not suppress the Stage 3 `/tipps` audit call, which is required for a real verdict.)
+- If present: set `no_delegate: true`. Stages 1–5 run normally, but Stage 6 prints the verdict and exits without invoking `/onboarding`, `/upgrade-setup`, or `/tipps` for any follow-up. (Testing aid — does not suppress the Stage 3 `/tipps` audit call, which is required for a real verdict.)
 - Otherwise: set `no_delegate: false`.
 
 Any other argument is ignored silently (forward compatibility).
@@ -75,13 +75,13 @@ Evaluate the gates in order. The **first** gate that fires forces `verdict = reb
 
 ### Gate G1 — Corrupt settings.json
 
-If `./.claude/settings.json` exists but fails JSON parse → fire with reason: `"corrupt settings.json — /upgrade cannot safely edit it"`.
+If `./.claude/settings.json` exists but fails JSON parse → fire with reason: `"corrupt settings.json — /upgrade-setup cannot safely edit it"`.
 
 ### Gate G2 — Corrupt meta file
 
 If `meta_corrupt: true` (from Step 1.1) AND `delimiters_present: false` → fire with reason: `"corrupt .claude/onboarding-meta.json and no delimiters found — no anchor for selective edits"`.
 
-If `meta_corrupt: true` BUT `delimiters_present: true`, do NOT fire G2 — the markers still give `/upgrade` an anchor. The meta file will be rewritten by `/upgrade` later.
+If `meta_corrupt: true` BUT `delimiters_present: true`, do NOT fire G2 — the markers still give `/upgrade-setup` an anchor. The meta file will be rewritten by `/upgrade-setup` later.
 
 ### Gate G3 — Plugin version downgrade
 
@@ -165,14 +165,14 @@ Apply the following judgment (in this priority order — first match wins):
    - `meta_age_days` > 540 (≈ 18 months — templates will have moved meaningfully)
 2. **improve** if any of:
    - `tipps_findings.total >= 1` AND not caught by the rebuild branch
-   - `anchor_deprecated_models` is a non-empty list (one deprecated ID alone is enough — `/upgrade` can flip it)
+   - `anchor_deprecated_models` is a non-empty list (one deprecated ID alone is enough — `/upgrade-setup` can flip it)
 3. **fine-as-is** if `tipps_findings.total == 0` AND `anchor_deprecated_models` is empty or `null`.
 
 ### Step 4.3 — Rationale
 
 Write a 2–3 sentence rationale that cites the **strongest 1–2 signals**. Examples:
 
-- "3 HIGH findings — overly broad permissions, and a deprecated Claude model ID is still referenced in `.claude/settings.json`. `/upgrade` can fix both without touching user-owned config." → `improve`
+- "3 HIGH findings — overly broad permissions, and a deprecated Claude model ID is still referenced in `.claude/settings.json`. `/upgrade-setup` can fix both without touching user-owned config." → `improve`
 - "No findings from `/tipps`, meta is 12 days old, no deprecated model references. Your setup matches current plugin defaults." → `fine-as-is`
 - "Meta records setup_type=coding but the repo has no source files or manifest. The setup no longer matches this project — starting over is faster than patching." → `rebuild`
 
@@ -192,7 +192,7 @@ Rationale: <rationale>
 
 Delegated command (if accepted):
   - rebuild     → /onboarding --rebuild   (backs up existing setup to .claude/backups/<timestamp>/)
-  - improve     → /upgrade                (per-change confirmation, backup, --dry-run available)
+  - improve     → /upgrade-setup          (per-change confirmation, backup, --dry-run available)
   - fine-as-is  → nothing — short summary, no changes
 
 Accept verdict? (a = accept / r = rebuild / i = improve / f = fine / q = quit)
@@ -248,12 +248,12 @@ If `onboarding --rebuild` is not supported in the installed plugin version (dete
 
 ### 6b — `improve`
 
-Invoke the `upgrade` skill. Pass no additional arguments (the user can re-run `/upgrade --dry-run` themselves if they want).
+Invoke the `upgrade-setup` skill. Pass no additional arguments (the user can re-run `/upgrade-setup --dry-run` themselves if they want).
 
-If `/upgrade` is not installed (not in the plugin's skills list), fall back:
+If `/upgrade-setup` is not installed (not in the plugin's skills list), fall back:
 
 1. Print the `/tipps` findings inline (re-use the block captured in Stage 3 — do not re-run the audit).
-2. Print: "`/upgrade` (issue #5) would automate these changes. Until it is installed, apply the fixes manually using the `How to apply` lines above."
+2. Print: "`/upgrade-setup` (issue #5) would automate these changes. Until it is installed, apply the fixes manually using the `How to apply` lines above."
 
 ### 6c — `fine-as-is`
 
@@ -281,7 +281,7 @@ Checkup complete.
 Verdict:          <verdict>
 Chosen:           <chosen_verdict>
 Override reason:  <override_reason or "(none)">
-Delegated to:     <"/onboarding --rebuild" | "/upgrade" | "(none — fine-as-is)" | "(none — --no-delegate)">
+Delegated to:     <"/onboarding --rebuild" | "/upgrade-setup" | "(none — fine-as-is)" | "(none — --no-delegate)">
 Log:              .claude/checkup-log.md
 Backup:           <".claude/backups/<timestamp>/" when onboarding --rebuild ran | "(n/a)">
 ```
@@ -297,9 +297,9 @@ The `Backup:` path is only meaningful when onboarding with `--rebuild` actually 
 3. **Setup without meta and without delimiters** → Gate G2 fires → `rebuild`.
 4. **Corrupt settings.json** → Gate G1 fires → `rebuild`.
 5. **Type mismatch (meta says coding, repo has no code)** → Gate G4 fires → `rebuild`.
-6. **Meta present, 3 HIGH findings, one deprecated model ID** → `improve`, delegates to `/upgrade`.
+6. **Meta present, 3 HIGH findings, one deprecated model ID** → `improve`, delegates to `/upgrade-setup`.
 7. **`/tipps` not installed** → Stage 3.1 aborts with clear message.
-8. **`/upgrade` missing, verdict improve** → Stage 6b prints findings inline and points at issue #5.
+8. **`/upgrade-setup` missing, verdict improve** → Stage 6b prints findings inline and points at issue #5.
 9. **User overrides `fine-as-is` with `rebuild`** → override reason prompted; log line records `verdict=fine-as-is user_chose=rebuild reason="..."`.
 10. **`/checkup --no-delegate`** → verdict printed, log written, no follow-up invocation.
 

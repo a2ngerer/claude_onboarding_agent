@@ -1,6 +1,6 @@
 # Write Upgrade Metadata
 
-This file is read by setup skills at the end of their flow. It writes (or merges into) `.claude/onboarding-meta.json` so `/upgrade` can later detect the setup and re-apply current best practices without touching user customizations.
+This file is read by setup skills at the end of their flow. It writes (or merges into) `.claude/onboarding-meta.json` so `/upgrade-setup` can later detect the setup and re-apply current best practices without touching user customizations.
 
 ## Inputs (set by the calling skill before reading this file)
 
@@ -47,7 +47,7 @@ Merging rule for `installed_at`:
 - If `existing_meta.installed_at` is set: keep it.
 - Otherwise: write the current ISO-8601 UTC timestamp (`YYYY-MM-DDTHH:MM:SSZ`).
 
-Always reset `upgraded_at` to `null` — only the `/upgrade` skill sets it.
+Always reset `upgraded_at` to `null` — only the `/upgrade-setup` skill sets it.
 
 ### Step M3 — Write
 
@@ -58,5 +58,5 @@ Ensure `./.claude/` exists (`mkdir -p` via Bash). Write the merged object to `./
 Tell the calling skill to mention the file in its completion summary, e.g.:
 
 ```
-  .claude/onboarding-meta.json — setup marker for /upgrade
+  .claude/onboarding-meta.json — setup marker for /upgrade-setup
 ```

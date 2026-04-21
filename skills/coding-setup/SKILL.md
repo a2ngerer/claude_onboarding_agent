@@ -18,7 +18,7 @@ This skill sets up Claude Code for professional software development using a pro
 <!-- onboarding-agent:end -->
 ```
 
-If the delimited block already exists from a previous run, replace only the content between the markers; leave the rest of the file untouched. Use the same marker pattern (`# onboarding-agent: coding — start` / `— end`) around generated `.gitignore` blocks so `/upgrade` can refresh them non-destructively.
+If the delimited block already exists from a previous run, replace only the content between the markers; leave the rest of the file untouched. Use the same marker pattern (`# onboarding-agent: coding — start` / `— end`) around generated `.gitignore` blocks so `/upgrade-setup` can refresh them non-destructively.
 
 ## Step 1: Install Dependencies
 
@@ -168,7 +168,7 @@ Files created:
   AGENTS.md                     — coder, reviewer, and git-agent role definitions
   .claude/settings.json         — tool permissions for [stack]
   .gitignore                    — [stack]-appropriate ignore rules
-  .claude/onboarding-meta.json  — setup marker for /upgrade
+  .claude/onboarding-meta.json  — setup marker for /upgrade-setup
 
 External skills:
   [✓ Superpowers installed via superpowers_method (superpowers_scope)]

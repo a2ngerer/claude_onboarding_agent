@@ -18,7 +18,7 @@ This skill configures Claude to build and maintain a structured, interlinked kno
 <!-- onboarding-agent:end -->
 ```
 
-If the delimited block already exists from a previous run, replace only the content between the markers; leave the rest of the file untouched. Wrap generated `.gitignore` entries in `# onboarding-agent: knowledge-base — start` / `— end` markers so `/upgrade` can refresh them non-destructively.
+If the delimited block already exists from a previous run, replace only the content between the markers; leave the rest of the file untouched. Wrap generated `.gitignore` entries in `# onboarding-agent: knowledge-base — start` / `— end` markers so `/upgrade-setup` can refresh them non-destructively.
 
 ## Step 1: Install Dependencies
 
@@ -283,7 +283,7 @@ Files created:
     .claude/agents/obsidian-vault-keeper.md — subagent that owns vault I/O
     claude_instructions/obsidian-cli.md     — CLI command reference (read-on-demand)
   .gitignore                             — excludes large source files
-  .claude/onboarding-meta.json           — setup marker for /upgrade
+  .claude/onboarding-meta.json           — setup marker for /upgrade-setup
 
 External skills:
   [✓/⚠] Superpowers [via superpowers_method (superpowers_scope) / failed — install manually]

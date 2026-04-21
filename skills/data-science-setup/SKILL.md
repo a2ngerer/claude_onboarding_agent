@@ -18,7 +18,7 @@ This skill configures Claude for exploratory and productive data science / ML wo
 <!-- onboarding-agent:end -->
 ```
 
-If the delimited block already exists from a previous run (either the attributed form above or the legacy unattributed `<!-- onboarding-agent:start -->` form), replace only the content between the markers; leave the rest of the file untouched. Upgrade the opening marker to the attributed form while you are there — `/upgrade` depends on it for detection.
+If the delimited block already exists from a previous run (either the attributed form above or the legacy unattributed `<!-- onboarding-agent:start -->` form), replace only the content between the markers; leave the rest of the file untouched. Upgrade the opening marker to the attributed form while you are there — `/upgrade-setup` depends on it for detection.
 
 ## Step 1: Install Dependencies
 
@@ -318,7 +318,7 @@ Files created / updated:
   .gitignore                                   — raw data, notebook checkpoints, experiment artifacts
   data/{raw,interim,processed}/                — [created | skipped per user choice]
   .pre-commit-config.yaml                      — [created | skipped per user choice]
-  .claude/onboarding-meta.json                 — setup marker for /upgrade
+  .claude/onboarding-meta.json                 — setup marker for /upgrade-setup
 
 External skills:
   [✓ Superpowers installed via superpowers_method (superpowers_scope)]

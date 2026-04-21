@@ -39,7 +39,7 @@
     "skills/academic-writing-setup/SKILL.md",
     "skills/graphify-setup/SKILL.md",
     "skills/tipps/SKILL.md",
-    "skills/upgrade/SKILL.md",
+    "skills/upgrade-setup/SKILL.md",
     "skills/checkup/SKILL.md"
   ],
   "commands": [
@@ -56,7 +56,7 @@
     { "name": "academic-writing-setup", "skill": "academic-writing-setup" },
     { "name": "graphify-setup", "skill": "graphify-setup" },
     { "name": "tipps", "skill": "tipps" },
-    { "name": "upgrade", "skill": "upgrade" },
+    { "name": "upgrade-setup", "skill": "upgrade-setup" },
     { "name": "checkup", "skill": "checkup" }
   ]
 }

@@ -18,7 +18,7 @@ This skill configures Claude for content creation work.
 <!-- onboarding-agent:end -->
 ```
 
-If the delimited block already exists from a previous run, replace only the content between the markers; leave the rest untouched. Wrap generated `.gitignore` entries in `# onboarding-agent: content-creator — start` / `— end` markers so `/upgrade` can refresh them non-destructively.
+If the delimited block already exists from a previous run, replace only the content between the markers; leave the rest untouched. Wrap generated `.gitignore` entries in `# onboarding-agent: content-creator — start` / `— end` markers so `/upgrade-setup` can refresh them non-destructively.
 
 ## Step 1: Install Dependencies
 
@@ -103,7 +103,7 @@ Set `setup_slug: content-creator`, `skill_slug: content-creator-setup`. Resolve 
 Files created:
   CLAUDE.md                     — brand voice, platform preferences, and audience instructions
   .gitignore                    — large media file rules
-  .claude/onboarding-meta.json  — setup marker for /upgrade
+  .claude/onboarding-meta.json  — setup marker for /upgrade-setup
 
 External skills:
   [✓ Superpowers installed via superpowers_method (superpowers_scope)]

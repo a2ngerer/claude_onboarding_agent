@@ -11,7 +11,7 @@ It is safe to run standalone via `/graphify-setup`, OR it is delegated to from a
 
 **Language:** Use `detected_language` from handoff context, or detect from the user's first message and use it throughout. All generated file content stays in English.
 
-**Existing CLAUDE.md:** never silently overwritten. Graphify's pointer block lives inside an attributed delimited section (`<!-- onboarding-agent:start setup=<host_setup_slug> skill=graphify-setup section=graphify -->`). When this skill runs standalone, the `setup=` attribute is `graphify`. When delegated to from another host setup, the attribute matches that host — so `/upgrade` keeps every skill's block cleanly addressable.
+**Existing CLAUDE.md:** never silently overwritten. Graphify's pointer block lives inside an attributed delimited section (`<!-- onboarding-agent:start setup=<host_setup_slug> skill=graphify-setup section=graphify -->`). When this skill runs standalone, the `setup=` attribute is `graphify`. When delegated to from another host setup, the attribute matches that host — so `/upgrade-setup` keeps every skill's block cleanly addressable.
 
 ## Step 1: Detect handoff vs standalone
 
@@ -99,7 +99,7 @@ Set:
 
 Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`.
 
-Important: the meta-file's `skills_used` field is a list. The merge rule in `write-meta.md` dedupes and preserves first-seen order — so running graphify-setup on top of an existing setup APPENDS `graphify-setup` to `skills_used` without overwriting the primary `setup_type`. This is the intended behavior for `/upgrade` to later refresh graphify blocks alongside host-setup blocks.
+Important: the meta-file's `skills_used` field is a list. The merge rule in `write-meta.md` dedupes and preserves first-seen order — so running graphify-setup on top of an existing setup APPENDS `graphify-setup` to `skills_used` without overwriting the primary `setup_type`. This is the intended behavior for `/upgrade-setup` to later refresh graphify blocks alongside host-setup blocks.
 
 ## Step 6: Completion summary
 
