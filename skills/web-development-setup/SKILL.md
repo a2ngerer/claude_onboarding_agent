@@ -20,7 +20,7 @@ Use `coding-setup` for language-agnostic software projects (libraries, CLIs, gen
 <!-- onboarding-agent:end -->
 ```
 
-If the delimited block already exists from a previous run (either the attributed form above or the legacy unattributed `<!-- onboarding-agent:start -->` form), replace only the content between the markers; leave the rest of the file untouched. Upgrade the opening marker to the attributed form while you are there — `/upgrade` depends on it for detection.
+If the delimited block already exists from a previous run (either the attributed form above or the legacy unattributed `<!-- onboarding-agent:start -->` form), replace only the content between the markers; leave the rest of the file untouched. Upgrade the opening marker to the attributed form while you are there — `/upgrade-setup` depends on it for detection.
 
 ## Step 1: Install Dependencies
 
@@ -519,7 +519,7 @@ Files created / updated:
   .claude/settings.json                           — tool permissions for [stack summary]
   .gitignore                                      — node_modules, framework build outputs, env files, test artifacts (delimited section)
   .env.example                                    — [created | left untouched — already present]
-  .claude/onboarding-meta.json                    — setup marker for /upgrade
+  .claude/onboarding-meta.json                    — setup marker for /upgrade-setup
 
 External skills:
   [✓ Superpowers installed via superpowers_method (superpowers_scope)]

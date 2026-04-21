@@ -32,7 +32,7 @@ Not sure where to start? Run `/onboarding` and we'll figure it out with you. Or 
 | **A developer** shipping code | `/coding-setup` | Superpowers workflow, subagent roles, stack permissions |
 | **Building a web app** (frontend, backend, or full-stack) | `/web-development-setup` | Frontend, backend, or full-stack web app — framework-aware permissions, env-var hygiene, deploy-target pointers |
 | **A data scientist / ML engineer** | `/data-science-setup` | Notebook hygiene, experiment tracking, `data/raw→processed` layout, reproducibility |
-| **Building a personal wiki / second brain** | `/build-knowledge-base` | Karpathy-pattern wiki, optional Obsidian CLI subagent |
+| **Building a personal wiki / second brain** | `/knowledge-base-setup` | Karpathy-pattern wiki, optional Obsidian CLI subagent |
 | **Writing docs, emails, reports** | `/office-setup` | Writing style, document templates, company context |
 | **A researcher or academic** | `/research-setup` | Citation format, domain vocabulary, LaTeX-aware ignores |
 | **Writing a thesis, paper, or dissertation** | `/academic-writing-setup` | Thesis / paper / dissertation — LaTeX or Typst, Zotero, citation rules that prevent hallucinations |
@@ -79,7 +79,7 @@ curl -fsSL https://raw.githubusercontent.com/a2ngerer/claude_onboarding_agent/ma
 | `/coding-setup` | Installs [Superpowers](https://github.com/obra/superpowers), wires up brainstorm → plan → subagents → review → commit |
 | `/web-development-setup` | Framework-aware web-app setup — Next.js / React / Vue / Svelte / SolidJS / Astro / Remix + optional backend (Node/Bun/Python/Go). API conventions, component structure, env-var hygiene, deploy-target pointers |
 | `/data-science-setup` | Notebook workflow (Jupyter/marimo), experiment tracking (MLflow/W&B/DVC), reproducible `pyproject.toml`, `data/raw/interim/processed` layout, model-card pointers |
-| `/build-knowledge-base` | Builds a [Karpathy-pattern](https://github.com/forrestchang/andrej-karpathy-skills) wiki from your notes or codebase (+ optional [Obsidian](https://obsidian.md) CLI integration via dispatched subagent — no always-on MCP token cost) |
+| `/knowledge-base-setup` | Builds a [Karpathy-pattern](https://github.com/forrestchang/andrej-karpathy-skills) wiki from your notes or codebase (+ optional [Obsidian](https://obsidian.md) CLI integration via dispatched subagent — no always-on MCP token cost) |
 | `/office-setup` | Writing style, document preferences, company context |
 | `/research-setup` | Citation format, research domain, academic writing guidelines |
 | `/academic-writing-setup` | Thesis / paper / dissertation setup — LaTeX or Typst stack, Zotero + Better BibTeX, citation style, no-invented-citations rules, `sections/`/`bib/`/`figures/` scaffold |
@@ -87,9 +87,9 @@ curl -fsSL https://raw.githubusercontent.com/a2ngerer/claude_onboarding_agent/ma
 | `/devops-setup` | Cloud provider, IaC tool, CI/CD — safe infra workflow + agent roles |
 | `/design-setup` | Design tool, frontend stack, accessibility standard — UI guidelines without the generic AI look |
 | `/graphify-setup` | Installs [Graphify](https://github.com/safishamsi/graphify) (25-language tree-sitter + Markdown + PDF + media indexer). Registers `/graphify query / path / explain` and a PreToolUse hook consulted before file-search tool calls — cuts token cost on large codebases and mixed-media corpora. Safe to layer on top of any other setup |
-| `/tipps` | Audits your existing Claude setup — permissions, CLAUDE.md quality, git hygiene, tooling — and returns a prioritized improvement list |
-| `/upgrade` | Re-applies current best practices to an existing setup. Per-change diff preview, dry-run flag, timestamped backups, never touches content outside the plugin's delimited sections |
-| `/checkup` | Decides whether your existing setup should be rebuilt or selectively improved — then delegates. Pure router: runs `/tipps`, weighs findings + meta age + deprecated-model anchors, and hands off to `/onboarding --rebuild`, `/upgrade`, or a short "fine-as-is" summary |
+| `/audit-setup` | Audits your existing Claude setup — permissions, CLAUDE.md quality, git hygiene, tooling — and returns a prioritized improvement list |
+| `/upgrade-setup` | Re-applies current best practices to an existing setup. Per-change diff preview, dry-run flag, timestamped backups, never touches content outside the plugin's delimited sections |
+| `/checkup` | Decides whether your existing setup should be rebuilt or selectively improved — then delegates. Pure router: runs `/audit-setup`, weighs findings + meta age + deprecated-model anchors, and hands off to `/onboarding --rebuild`, `/upgrade-setup`, or a short "fine-as-is" summary |
 
 ---
 

@@ -18,7 +18,7 @@ This skill configures Claude for DevOps and infrastructure work.
 <!-- onboarding-agent:end -->
 ```
 
-If the delimited block already exists from a previous run, replace only the content between the markers; leave the rest untouched. Wrap generated `.gitignore` entries in `# onboarding-agent: devops — start` / `— end` markers so `/upgrade` can refresh them non-destructively.
+If the delimited block already exists from a previous run, replace only the content between the markers; leave the rest untouched. Wrap generated `.gitignore` entries in `# onboarding-agent: devops — start` / `— end` markers so `/upgrade-setup` can refresh them non-destructively.
 
 ## Step 1: Install Dependencies
 
@@ -198,7 +198,7 @@ Files created:
   AGENTS.md                     — infra-planner, infra-applier, security-reviewer
   .claude/settings.json         — tool permissions for [stack summary]
   .gitignore                    — IaC state files and secrets
-  .claude/onboarding-meta.json  — setup marker for /upgrade
+  .claude/onboarding-meta.json  — setup marker for /upgrade-setup
 
 External skills:
   [✓ Superpowers installed via superpowers_method (superpowers_scope)]

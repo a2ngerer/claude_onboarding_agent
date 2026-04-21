@@ -18,7 +18,7 @@ This skill configures Claude for UI/UX design and frontend work.
 <!-- onboarding-agent:end -->
 ```
 
-If the delimited block already exists from a previous run, replace only the content between the markers; leave the rest untouched. Wrap generated `.gitignore` entries in `# onboarding-agent: design — start` / `— end` markers so `/upgrade` can refresh them non-destructively.
+If the delimited block already exists from a previous run, replace only the content between the markers; leave the rest untouched. Wrap generated `.gitignore` entries in `# onboarding-agent: design — start` / `— end` markers so `/upgrade-setup` can refresh them non-destructively.
 
 ## Step 1: Install Dependencies
 
@@ -169,7 +169,7 @@ Files created:
   AGENTS.md                     — designer and accessibility-auditor role definitions
   .claude/settings.json         — tool permissions for [stack]
   .gitignore                    — design file and build rules
-  .claude/onboarding-meta.json  — setup marker for /upgrade
+  .claude/onboarding-meta.json  — setup marker for /upgrade-setup
 
 External skills:
   [✓ Superpowers installed via superpowers_method (superpowers_scope)]

@@ -24,7 +24,7 @@ All public repo artifacts — GitHub issues, PR titles/descriptions, commit mess
 ## Skill Authoring Rules
 - All SKILL.md content in English
 - Skills detect user language at runtime and respond accordingly
-- Superpowers is optional in all new skills — only `coding-setup` and `knowledge-base-builder` install it without asking
+- Superpowers is optional in all new skills — only `coding-setup` and `knowledge-base-setup` install it without asking
 - Every skill must handle failed external dependency installation gracefully
 - Never silently overwrite an existing CLAUDE.md — always extend with a new delimited section
 

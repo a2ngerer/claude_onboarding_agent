@@ -1,9 +1,9 @@
 ---
-name: tipps
+name: audit-setup
 description: Audit your current Claude setup and get a prioritized list of improvement suggestions — package manager hygiene, CLAUDE.md quality, permissions, git hygiene, MCP servers, and more.
 ---
 
-# Tipps — Claude Setup Audit
+# Audit Setup — Claude Setup Audit
 
 Audit the current Claude setup and print a prioritized, actionable list of improvement suggestions.
 

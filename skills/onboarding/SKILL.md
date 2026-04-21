@@ -106,7 +106,7 @@ If `graphify_candidate: true` from Step 2, also print a one-line aside under the
 9. DevOps / Cloud Engineering — CI/CD, Kubernetes, Terraform, cloud providers
 10. UI/UX Design — component design, Figma handoff, accessibility
 11. Knowledge Graph (Graphify) — install the `/graphify` command + PreToolUse hook for token-efficient search across code, docs, PDFs, and media
-12. Already set up — audit my current Claude configuration (`/tipps`)
+12. Already set up — audit my current Claude configuration (`/audit-setup`)
 13. Not sure — help me decide
 
 ---
@@ -144,7 +144,7 @@ Skill routing:
 - Coding Setup → invoke `coding-setup` skill
 - Web Development Setup → invoke `web-development-setup` skill
 - Data Science / ML → invoke `data-science-setup` skill
-- Knowledge Base → invoke `knowledge-base-builder` skill
+- Knowledge Base → invoke `knowledge-base-setup` skill
 - Office → invoke `office-setup` skill
 - Research → invoke `research-setup` skill
 - Academic Writing → invoke `academic-writing-setup` skill
@@ -152,9 +152,9 @@ Skill routing:
 - DevOps Setup → invoke `devops-setup` skill
 - UI/UX Design Setup → invoke `design-setup` skill
 - Knowledge Graph (Graphify) → invoke `graphify-setup` skill (standalone — `host_setup_slug: "graphify"`, `host_skill_slug: "graphify-setup"`)
-- Already set up (audit) → invoke `tipps` skill
+- Already set up (audit) → invoke `audit-setup` skill
 
-Step back completely. The setup skill handles everything from here. For the five host setups that offer Graphify conditionally (coding-setup, knowledge-base-builder, research-setup, data-science-setup, web-development-setup), the Graphify question appears AFTER the host setup's main questions, not here — those skills delegate to `skills/_shared/graphify-install.md` themselves.
+Step back completely. The setup skill handles everything from here. For the five host setups that offer Graphify conditionally (coding-setup, knowledge-base-setup, research-setup, data-science-setup, web-development-setup), the Graphify question appears AFTER the host setup's main questions, not here — those skills delegate to `skills/_shared/graphify-install.md` themselves.
 
 ## Step 6: Rebuild backup notice (only if `rebuild_mode: true` and Step 1b ran)
 

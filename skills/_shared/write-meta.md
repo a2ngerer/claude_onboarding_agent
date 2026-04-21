@@ -1,11 +1,11 @@
 # Write Upgrade Metadata
 
-This file is read by setup skills at the end of their flow. It writes (or merges into) `.claude/onboarding-meta.json` so `/upgrade` can later detect the setup and re-apply current best practices without touching user customizations.
+This file is read by setup skills at the end of their flow. It writes (or merges into) `.claude/onboarding-meta.json` so `/upgrade-setup` can later detect the setup and re-apply current best practices without touching user customizations.
 
 ## Inputs (set by the calling skill before reading this file)
 
 - `setup_slug` — one of `coding`, `data-science`, `design`, `knowledge-base`, `devops`, `content-creator`, `office`, `research`, `academic-writing`
-- `skill_slug` — the skill's directory name under `skills/` (e.g. `coding-setup`, `knowledge-base-builder`)
+- `skill_slug` — the skill's directory name under `skills/` (e.g. `coding-setup`, `knowledge-base-setup`)
 - `plugin_version` — read from the plugin's own `plugin.json` `"version"` field. Resolve it at runtime from `~/.claude/plugins/claude-onboarding-agent/.claude-plugin/plugin.json` or the project-local equivalent. If unreadable, use the string `"unknown"`.
 
 ## Protocol
@@ -47,7 +47,7 @@ Merging rule for `installed_at`:
 - If `existing_meta.installed_at` is set: keep it.
 - Otherwise: write the current ISO-8601 UTC timestamp (`YYYY-MM-DDTHH:MM:SSZ`).
 
-Always reset `upgraded_at` to `null` — only the `/upgrade` skill sets it.
+Always reset `upgraded_at` to `null` — only the `/upgrade-setup` skill sets it.
 
 ### Step M3 — Write
 
@@ -58,5 +58,5 @@ Ensure `./.claude/` exists (`mkdir -p` via Bash). Write the merged object to `./
 Tell the calling skill to mention the file in its completion summary, e.g.:
 
 ```
-  .claude/onboarding-meta.json — setup marker for /upgrade
+  .claude/onboarding-meta.json — setup marker for /upgrade-setup
 ```

@@ -18,7 +18,7 @@ This skill configures Claude for business and office work.
 <!-- onboarding-agent:end -->
 ```
 
-If the delimited block already exists from a previous run, replace only the content between the markers; leave the rest untouched. Wrap generated `.gitignore` entries in `# onboarding-agent: office — start` / `— end` markers so `/upgrade` can refresh them non-destructively.
+If the delimited block already exists from a previous run, replace only the content between the markers; leave the rest untouched. Wrap generated `.gitignore` entries in `# onboarding-agent: office — start` / `— end` markers so `/upgrade-setup` can refresh them non-destructively.
 
 ## Step 1: Install Dependencies
 
@@ -99,7 +99,7 @@ Set `setup_slug: office`, `skill_slug: office-setup`. Resolve `plugin_version` f
 Files created:
   CLAUDE.md                     — writing style, document preferences, and context instructions
   .gitignore                    — office temp file rules
-  .claude/onboarding-meta.json  — setup marker for /upgrade
+  .claude/onboarding-meta.json  — setup marker for /upgrade-setup
 
 External skills:
   [✓ Superpowers installed via superpowers_method (superpowers_scope)]

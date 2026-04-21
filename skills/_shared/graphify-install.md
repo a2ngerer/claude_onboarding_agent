@@ -1,6 +1,6 @@
 # Graphify Install Protocol
 
-This file is read by `graphify-setup` AND by host setup skills (coding-setup, knowledge-base-builder, research-setup, data-science-setup, web-development-setup) when the user opts into the Graphify knowledge-graph integration.
+This file is read by `graphify-setup` AND by host setup skills (coding-setup, knowledge-base-setup, research-setup, data-science-setup, web-development-setup) when the user opts into the Graphify knowledge-graph integration.
 
 Graphify (https://github.com/safishamsi/graphify) is an open-source knowledge-graph tool for AI coding assistants. It indexes code (25 languages via tree-sitter), Markdown, PDFs, diagrams, images, and audio/video into a local graph, and — once installed — registers a `/graphify` slash command and a PreToolUse hook that consults the graph before file-search tool calls, reducing token cost for the caller.
 
@@ -9,7 +9,7 @@ Follow every step in order. Never silently fall back to `pip install` — this r
 ## Inputs (set by the calling skill before reading this file)
 
 - `host_setup_slug` — one of `coding`, `data-science`, `knowledge-base`, `research`, `web-development`, or `graphify` when graphify-setup runs standalone. Used as the `setup=<slug>` attribute on the CLAUDE.md marker.
-- `host_skill_slug` — the directory name of the calling skill under `skills/` (`coding-setup`, `knowledge-base-builder`, …, or `graphify-setup`).
+- `host_skill_slug` — the directory name of the calling skill under `skills/` (`coding-setup`, `knowledge-base-setup`, …, or `graphify-setup`).
 - `run_initial_build` — boolean. If `true`, the protocol offers to run `graphify .` on the current project after install.
 - `install_git_hook` — boolean. If `true`, the protocol runs `graphify hook install` to auto-update the graph on commits.
 
@@ -116,7 +116,7 @@ Set `graphify_git_hook: yes|no|failed`.
 
 Resolve the target file: `./CLAUDE.md` in the current working directory.
 
-Never silently overwrite the whole file. Instead append — or replace-in-place — the following delimited section. The `setup=<host_setup_slug>` attribute lets the block sit under any host setup; the `skill=graphify-setup` attribute marks it as owned by the graphify skill so `/upgrade` can refresh it.
+Never silently overwrite the whole file. Instead append — or replace-in-place — the following delimited section. The `setup=<host_setup_slug>` attribute lets the block sit under any host setup; the `skill=graphify-setup` attribute marks it as owned by the graphify skill so `/upgrade-setup` can refresh it.
 
 ```
 <!-- onboarding-agent:start setup=<host_setup_slug> skill=graphify-setup section=graphify -->

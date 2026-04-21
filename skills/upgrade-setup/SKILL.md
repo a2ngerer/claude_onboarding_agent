@@ -1,16 +1,16 @@
 ---
-name: upgrade
+name: upgrade-setup
 description: Re-apply current best practices to an existing onboarding-agent setup. Detects the original setup, computes per-section diffs against the latest templates, asks for per-change confirmation with a unified-diff preview, backs up everything it will touch, and never touches content outside the plugin's delimited sections. Supports --dry-run.
 ---
 
-# Upgrade — Selective Best-Practice Refresh
+# Upgrade Setup — Selective Best-Practice Refresh
 
-Use this skill to bring an existing setup up to the current plugin's defaults **without destroying user customizations**. It is the non-audit counterpart to `/tipps`:
+Use this skill to bring an existing setup up to the current plugin's defaults **without destroying user customizations**. It is the non-audit counterpart to `/audit-setup`:
 
-| Skill     | Read-only | Applies changes | Per-change confirmation | Backup       |
-| --------- | --------- | --------------- | ----------------------- | ------------ |
-| `/tipps`  | yes       | no              | n/a                     | n/a          |
-| `/upgrade`| no        | yes             | yes (y/n/all/skip-rest) | yes          |
+| Skill           | Read-only | Applies changes | Per-change confirmation | Backup       |
+| --------------- | --------- | --------------- | ----------------------- | ------------ |
+| `/audit-setup`  | yes       | no              | n/a                     | n/a          |
+| `/upgrade-setup`| no        | yes             | yes (y/n/all/skip-rest) | yes          |
 
 This skill is a protocol. Run every pass in order. Do not skip passes, and do not apply changes before Pass 3 confirms each one.
 
@@ -62,10 +62,10 @@ If no meta file (or malformed), read `./CLAUDE.md`. Search for the first line ma
 <!--\s*onboarding-agent:start\s+setup=(?<setup>[a-z-]+)
 ```
 
-- If a match is found: set `detected_setup: <setup>`, `detected_skills: [<setup>-setup]` (or `knowledge-base-builder` / `academic-writing-setup` — use the exact directory name under `skills/`), `installed_version: "unknown"`, `meta_source: "marker"`.
+- If a match is found: set `detected_setup: <setup>`, `detected_skills: [<setup>-setup]` (or `knowledge-base-setup` / `academic-writing-setup` — use the exact directory name under `skills/`), `installed_version: "unknown"`, `meta_source: "marker"`.
 - If no match: no detection succeeded. Tell the user:
 
-  > "I could not detect an onboarding-agent setup in this project (no `.claude/onboarding-meta.json` and no `setup=...` marker in CLAUDE.md). Run `/onboarding` first to create one — `/upgrade` will then be able to refresh it without touching your custom content."
+  > "I could not detect an onboarding-agent setup in this project (no `.claude/onboarding-meta.json` and no `setup=...` marker in CLAUDE.md). Run `/onboarding` first to create one — `/upgrade-setup` will then be able to refresh it without touching your custom content."
 
   Stop the skill. Do not modify anything.
 
@@ -159,7 +159,7 @@ For each located section, compute a unified diff against the canonical current t
 
 ### Step 2.3 — Optional anchor-driven checks
 
-If `detected_setup` is one of {coding, data-science, devops, design} AND any of the candidate files contain a string matching a known Claude model-ID pattern, fetch the `claude-models` anchor via `skills/_shared/fetch-anchor.md` (embed the same fallback snapshot used by `/tipps`).
+If `detected_setup` is one of {coding, data-science, devops, design} AND any of the candidate files contain a string matching a known Claude model-ID pattern, fetch the `claude-models` anchor via `skills/_shared/fetch-anchor.md` (embed the same fallback snapshot used by `/audit-setup`).
 
 For every deprecated ID found, emit a separate proposed change with `rationale: "Deprecated Claude model ID — replace per claude-models anchor"` and a diff that substitutes the deprecated ID with the current-family equivalent (Opus → current Opus, Sonnet → current Sonnet, Haiku → current Haiku).
 
@@ -282,15 +282,15 @@ To restore everything to the pre-upgrade state:
   (this restores files in-place, overwriting what this upgrade wrote)
 
 Next:
-  - Run /tipps to audit the updated setup.
-  - Re-run /upgrade any time — it is idempotent and safe to repeat.
+  - Run /audit-setup to audit the updated setup.
+  - Re-run /upgrade-setup any time — it is idempotent and safe to repeat.
 ```
 
 If `applied_count == 0` (all rejected, or dry-run, or nothing found):
 
 - Do not print a backup folder path.
 - Do not print the restore command.
-- Still recommend `/tipps`.
+- Still recommend `/audit-setup`.
 
 ---
 
@@ -307,8 +307,8 @@ If `applied_count == 0` (all rejected, or dry-run, or nothing found):
 Where:
 
 - `<setup-slug>` ∈ {coding, data-science, design, knowledge-base, devops, content-creator, office, research, academic-writing}
-- `<skill-slug>` is the directory name under `skills/` (e.g. `coding-setup`, `knowledge-base-builder`, `academic-writing-setup`)
-- `<name>` identifies the logical section inside the file (e.g. `claude-md`, `workflow`, `guidelines`, `agents-roles`, `settings-allow`). Skills can pick descriptive names; `/upgrade` matches on the triple.
+- `<skill-slug>` is the directory name under `skills/` (e.g. `coding-setup`, `knowledge-base-setup`, `academic-writing-setup`)
+- `<name>` identifies the logical section inside the file (e.g. `claude-md`, `workflow`, `guidelines`, `agents-roles`, `settings-allow`). Skills can pick descriptive names; `/upgrade-setup` matches on the triple.
 
 **Backwards compatibility:** the old form without attributes (`<!-- onboarding-agent:start -->`) is still recognized as a legacy marker. On upgrade, the opening tag is rewritten to the attributed form as part of the change.
 

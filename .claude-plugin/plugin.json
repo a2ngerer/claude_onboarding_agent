@@ -31,15 +31,15 @@
     "skills/web-development-setup/SKILL.md",
     "skills/data-science-setup/SKILL.md",
     "skills/design-setup/SKILL.md",
-    "skills/knowledge-base-builder/SKILL.md",
+    "skills/knowledge-base-setup/SKILL.md",
     "skills/devops-setup/SKILL.md",
     "skills/content-creator-setup/SKILL.md",
     "skills/office-setup/SKILL.md",
     "skills/research-setup/SKILL.md",
     "skills/academic-writing-setup/SKILL.md",
     "skills/graphify-setup/SKILL.md",
-    "skills/tipps/SKILL.md",
-    "skills/upgrade/SKILL.md",
+    "skills/audit-setup/SKILL.md",
+    "skills/upgrade-setup/SKILL.md",
     "skills/checkup/SKILL.md"
   ],
   "commands": [
@@ -48,15 +48,15 @@
     { "name": "web-development-setup", "skill": "web-development-setup" },
     { "name": "data-science-setup", "skill": "data-science-setup" },
     { "name": "design-setup", "skill": "design-setup" },
-    { "name": "build-knowledge-base", "skill": "knowledge-base-builder" },
+    { "name": "knowledge-base-setup", "skill": "knowledge-base-setup" },
     { "name": "devops-setup", "skill": "devops-setup" },
     { "name": "content-creator-setup", "skill": "content-creator-setup" },
     { "name": "office-setup", "skill": "office-setup" },
     { "name": "research-setup", "skill": "research-setup" },
     { "name": "academic-writing-setup", "skill": "academic-writing-setup" },
     { "name": "graphify-setup", "skill": "graphify-setup" },
-    { "name": "tipps", "skill": "tipps" },
-    { "name": "upgrade", "skill": "upgrade" },
+    { "name": "audit-setup", "skill": "audit-setup" },
+    { "name": "upgrade-setup", "skill": "upgrade-setup" },
     { "name": "checkup", "skill": "checkup" }
   ]
 }
