@@ -6,8 +6,21 @@ sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 1
+version: 2
 ---
+
+## Recommended
+
+- `filesystem` — scoped filesystem access beyond the working directory
+- `git` — read git history, blame, diffs without shelling out
+- `github` — issues, PRs, reviews via the GitHub API
+- `obsidian` (official CLI + `obsidian-vault-keeper` subagent) — vault I/O without always-on tool schemas
+- `figma-context` — read Figma frames into context for UI work
+- `slack` — read channels, post messages
+- `linear` — issues and projects (official Linear MCP)
+- `gmail` / `calendar` — Google productivity via official MCPs where available
+
+Per-category details follow. Keep the set small: every installed MCP expands the tool-selection surface and the trust boundary.
 
 ## Coding
 
