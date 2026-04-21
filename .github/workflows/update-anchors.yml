@@ -23,23 +23,55 @@ jobs:
           prompt: |
             You are the anchors updater for this repo.
 
-            For each file in `docs/anchors/` (excluding `README.md`):
-            1. Read the file's YAML frontmatter `sources` list.
-            2. For each source URL, use `WebFetch` to get the current state of that page.
-            3. Diff the anchor body against what the sources say today.
-            4. If changes are warranted, rewrite the file:
-               - Keep the frontmatter schema exactly (name, description, last_updated, sources, version).
-               - Bump `version` by one.
-               - Set `last_updated` to today's UTC date (YYYY-MM-DD).
-               - Do NOT add URLs to `sources` that were not already there.
-            5. Respect the ≤ 100-line body limit documented in `docs/anchors/README.md`.
+            Step 1 — Load trend sources.
+            Read `docs/anchors/_trend-sources.md`. Parse its YAML frontmatter and
+            extract `sources[].url` and `sources[].covers`. If the file is missing
+            or its frontmatter is malformed, print an error and exit non-zero. Do
+            not fall back to canonical-only mode — the trend layer is required.
 
-            After editing, check `git status`:
-            - If any `docs/anchors/*.md` file changed, create a branch named
-              `chore/anchors-update-$(date -u +%Y-%m-%d)`, commit only the changed anchor
-              files, push, and open a PR against `main` using the body template at
-              `.github/PULL_REQUEST_TEMPLATE/anchor-update.md` with the diff summary filled in.
-            - If nothing changed, exit without creating a PR.
+            Step 2 — For each file in `docs/anchors/` (excluding `README.md` and
+            `_trend-sources.md`):
 
-            Never auto-merge. Never modify anything outside `docs/anchors/`.
+              2a Canonical pass:
+                - Read the file's YAML frontmatter `sources` list.
+                - For each source URL, use `WebFetch` to get the current state of
+                  that page.
+                - Diff the anchor body against what those sources say today.
+                - If factual updates are warranted, rewrite the file (body ≤ 100
+                  lines). Record this change as `pass: canonical`, along with the
+                  source URL that triggered it and a one-sentence rationale.
+
+              2b Trend pass:
+                - From the trend sources loaded in Step 1, select those whose
+                  `covers:` list includes this anchor's slug (the filename without
+                  `.md`).
+                - For each selected trend source, `WebFetch` it and scan for
+                  newly-mentioned tools, patterns, or workflows that fit this
+                  anchor's topic.
+                - If a newly-mentioned item warrants a body update (e.g. a new
+                  recommended MCP, a new subagent pattern), rewrite the file (body
+                  ≤ 100 lines). Record each such change as `pass: trend`, along
+                  with the trend source URL and a one-sentence rationale.
+
+            Step 3 — Per-rewrite invariants (enforce for every change):
+              - Frontmatter schema unchanged (`name`, `description`, `last_updated`,
+                `sources`, `version`).
+              - Bump `version` by one on any content change.
+              - Set `last_updated` to today's UTC date (YYYY-MM-DD).
+              - Do NOT add URLs to `sources` that were not already there.
+              - Do NOT modify any file outside `docs/anchors/`.
+
+            Step 4 — After editing, check `git status`:
+              - If any `docs/anchors/*.md` file changed: create a branch
+                `chore/anchors-update-$(date -u +%Y-%m-%d)`, commit only the changed
+                anchor files, push, and open a PR against `main` using the body
+                template at `.github/PULL_REQUEST_TEMPLATE/anchor-update.md`. Fill
+                in the "Per-change provenance" section with one block per changed
+                file listing pass type (canonical/trend), source URL, and
+                rationale.
+              - If nothing changed: exit without creating a PR.
+
+            Never auto-merge. Never modify anything outside `docs/anchors/`. Never
+            modify `_trend-sources.md` — trend-source changes are a separate human
+            PR.
           allowed_tools: "Read,Write,Edit,WebFetch,Bash(git:*),Bash(gh:*),Bash(date:*)"
