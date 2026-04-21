@@ -229,6 +229,17 @@ Detection and preview rules:
 - Any file in `.claude/agents/` not on the catalog is user-authored and never touched.
 - Subagent files are NOT added to `proposed_changes` for Pass 3 diff review — the opt-in happens as a single yes/no near the end of the preview. A "yes" dispatches the owning skill's emit step via `skills/_shared/emit-subagent.md` (which still honors collision-skip if the file appeared between preview and apply).
 
+### Step 2.4b — Hook entries (`.claude/settings.json`)
+
+For every skill in `detected_skills` that emits hooks (see catalog in `docs/superpowers/specs/2026-04-21-end-user-hooks-rollout-design.md`):
+
+1. Read `./.claude/settings.json`. If missing or corrupt: flag the hook-refresh as unavailable for this skill and continue — do not block other refresh work.
+2. Enumerate every entry in `settings.hooks.*[].hooks[]` where `_plugin == "claude-onboarding-agent"` AND `_skill == <detected_skill_slug>`. These are the plugin-owned entries for this skill.
+3. Compare against the current canonical hook-entries list from the skill's hook catalog. Produce a unified diff at the JSON-object level (add / modify / remove per entry).
+4. Add the diff as a per-section item in the Pass 3 confirmation list, next to CLAUDE.md and `.gitignore` items. The user can accept / skip it per section like any other refresh.
+
+Hook entries without the `_plugin` marker are considered user-authored and are never diffed or rewritten.
+
 ### Step 2.5 — Early exit when nothing to do
 
 If `proposed_changes` is empty, print:
@@ -314,6 +325,16 @@ If any single file write throws: STOP immediately. Do not attempt to continue. P
 ```
 
 Do not try to roll back on the fly. The backup folder is the recovery path.
+
+### Step 4.2b — Applying hook-entry refreshes
+
+If the user accepted the hook-entry refresh in Pass 3:
+
+1. Follow `skills/_shared/emit-hook.md` Steps H2–H6 with `skill_slug = <detected_skill_slug>` and `hook_entries` = the canonical list computed in Pass 2. The helper rewrites only entries whose `_plugin == "claude-onboarding-agent"` AND `_skill == <detected_skill_slug>`.
+2. The helper's remove-then-append procedure gives idempotent refresh without touching user-authored entries.
+3. Record the outcome in the Pass 5 summary.
+
+If rejected: leave the file untouched.
 
 ### Step 4.3 — Update the meta file
 
