@@ -138,49 +138,39 @@ How to apply: Remove unused skills via `/plugin uninstall <skill-name>`.
 
 ## Pass 5 — Realtime Anchors
 
-Fetch the `claude-models` anchor using the shared protocol at `skills/_shared/fetch-anchor.md` with `anchor_name: claude-models` and the embedded fallback below. If `fetch-anchor` returns `anchor_markdown: null` (no cache, no network, no fallback consumed), skip this pass silently.
+Read `./.claude/onboarding-meta.json` if present → `setup_type`. If the file is absent or malformed, skip this pass entirely (today's behavior for untracked projects is preserved by falling through).
 
-From the fetched anchor, parse the list of model IDs under the `## Deprecated` section.
+Read `skills/_shared/anchor-mapping.md` → extract the list of anchor slugs mapped to `setup_type` → `anchors_for_setup`. If the mapping yields no anchors (unknown setup_type), skip this pass.
 
-**Check 5.1 — Deprecated Claude model ID referenced** `[MEDIUM]`
-Condition: Any file among `CLAUDE.md`, `AGENTS.md`, and `.claude/settings.json` (restricted to files that exist and were already scanned in earlier passes) contains a string exactly matching one of the model IDs from the anchor's `## Deprecated` section.
-Finding title: "Deprecated Claude model ID referenced in config"
-Why: Deprecated model IDs have a retirement date and typically point to weaker models than the current family. Traffic to retired IDs starts failing once Anthropic completes deprecation.
-How to apply: Replace with the current equivalent from the anchor's `## Model IDs` table (e.g. `claude-opus-4-7` for the latest Opus, `claude-sonnet-4-6` for the latest Sonnet).
+For each `anchor_slug` in `anchors_for_setup`, fetch the anchor via `skills/_shared/fetch-anchor.md` (embedded fallback: use the snapshot declared in `skills/anchors/SKILL.md` for that slug). If `fetch-anchor` returns `anchor_markdown: null`, skip that slug and continue.
 
-### Pass 5 Fallback — Minimal claude-models snapshot
+Run the anchor-specific check defined below. Each check is `LOW` severity and produces at most one finding per anchor.
 
-Pass this as `fallback_content` to the `fetch-anchor` protocol so the skill still works offline:
+### Check 5.1 — `claude-models` deprecated-ID reference `[MEDIUM]`
 
-```markdown
----
-name: claude-models
-description: Minimal embedded fallback — Opus 4.7 / Sonnet 4.6 / Haiku 4.5 and known-deprecated IDs
-last_updated: 2026-04-21
-sources: []
-version: 1
----
+(Unchanged from prior behavior.) From the fetched `claude-models` anchor, parse the `## Deprecated` section into a list of deprecated model IDs. If any of the already-scanned files (`CLAUDE.md`, `AGENTS.md`, `.claude/settings.json`) contains a string exactly matching one of those IDs, emit a MEDIUM finding: "Deprecated Claude model ID referenced in config. Replace with the current equivalent from the anchor's `## Model IDs` table."
 
-## Model IDs
+### Check 5.2 — `mcp-servers` not in recommended list `[LOW]`
 
-| Tier   | Model ID                    |
-|--------|-----------------------------|
-| Opus   | claude-opus-4-7             |
-| Sonnet | claude-sonnet-4-6           |
-| Haiku  | claude-haiku-4-5-20251001   |
+Only runs if `.claude/settings.json` exists and has a non-empty `mcpServers` object. From the fetched `mcp-servers` anchor, parse the `## Recommended` section into a set of server names (each bullet's backticked identifier). For each key in `settings.json`'s `mcpServers` not present in that set, emit one LOW finding: "MCP server `<name>` is not on the current recommended list — review whether it still fits your setup."
 
-## Deprecated
+### Check 5.3 — `claude-tools` deprecated pattern present `[LOW]`
 
-- claude-3-opus-20240229
-- claude-3-sonnet-20240229
-- claude-3-haiku-20240307
-- claude-3-5-sonnet-20240620
-- claude-3-5-sonnet-20241022
-- claude-3-5-haiku-20241022
-- claude-2.1
-- claude-2.0
-- claude-instant-1.2
-```
+From the fetched `claude-tools` anchor, parse the `## Deprecated patterns` section into a list of pattern descriptors. Each bullet is expected to mention an exact file, key, or directory name in backticks. For each backticked name that the scan finds present in the repo (via `.claude/settings.json` keys or files under `.claude/`), emit one LOW finding: "`<pattern>` is marked deprecated in the current claude-tools anchor — migrate to the recommended alternative."
+
+### Check 5.4 — `subagents` anti-pattern reference `[LOW]`
+
+Only runs if the project has any subagent definition files under `.claude/agents/`. From the fetched `subagents` anchor, parse the `## Anti-patterns` section. For each anti-pattern, check whether any subagent definition file or `.claude/settings.json` reference matches the pattern (keyed on backticked names in the anti-pattern bullets). If matched, emit one LOW finding: "Subagent usage pattern `<name>` is flagged as an anti-pattern by the current subagents anchor."
+
+### Check 5.5 — `knowledge-base` layout deviation `[LOW]`
+
+Only runs if `setup_type == knowledge-base`. From the fetched `knowledge-base` anchor, parse the `## Recommended layout` section for the canonical folder names. Scan the top-level directory for folders. If the set of top-level folders in the project differs from the recommended layout (missing recommended folders, or non-recommended folders present), emit one LOW finding: "Vault layout does not match the current knowledge-base anchor recommendation."
+
+If the anchor lacks the required section at fetch time, the corresponding check is silently skipped.
+
+### Pass 5 Fallbacks
+
+The embedded fallback snapshots live in `skills/anchors/SKILL.md`. Read them from there rather than duplicating. (If running this skill standalone without the `/anchors` skill installed, the fetch-anchor network path is the only route — a check will silently skip on offline use.)
 
 ---
 

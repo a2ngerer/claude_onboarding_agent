@@ -40,7 +40,8 @@
     "skills/graphify-setup/SKILL.md",
     "skills/audit-setup/SKILL.md",
     "skills/upgrade-setup/SKILL.md",
-    "skills/checkup/SKILL.md"
+    "skills/checkup/SKILL.md",
+    "skills/anchors/SKILL.md"
   ],
   "commands": [
     { "name": "onboarding", "skill": "onboarding" },
@@ -57,6 +58,7 @@
     { "name": "graphify-setup", "skill": "graphify-setup" },
     { "name": "audit-setup", "skill": "audit-setup" },
     { "name": "upgrade-setup", "skill": "upgrade-setup" },
-    { "name": "checkup", "skill": "checkup" }
+    { "name": "checkup", "skill": "checkup" },
+    { "name": "anchors", "description": "Refresh anchor-derived marker sections in CLAUDE.md/AGENTS.md", "skill": "anchors" }
   ]
 }

@@ -191,13 +191,22 @@ The `allow_owned` list is the set of entries the onboarding-agent controls. On u
 
 For each located section, compute a unified diff against the canonical current template with 3 lines of context. If the diff is empty → skip (no change). If non-empty → add to `proposed_changes` as `{ change_id, setup_type, file, section, rationale, diff }`.
 
-### Step 2.3 — Optional anchor-driven checks
+#### Anchor-derived sections
 
-If `detected_setup` is one of {coding, data-science, devops, design} AND any of the candidate files contain a string matching a known Claude model-ID pattern, fetch the `claude-models` anchor via `skills/_shared/fetch-anchor.md` (embed the same fallback snapshot used by `/audit-setup`).
+Marker sections whose `section=` attribute starts with `anchor-` are **anchor-derived**, not plugin-template-derived. For these, compute the diff differently:
 
-For every deprecated ID found, emit a separate proposed change with `rationale: "Deprecated Claude model ID — replace per claude-models anchor"` and a diff that substitutes the deprecated ID with the current-family equivalent (Opus → current Opus, Sonnet → current Sonnet, Haiku → current Haiku).
+1. Extract the `anchor_slug` from the `section=anchor-<slug>` attribute.
+2. Fetch the anchor via `skills/_shared/fetch-anchor.md` (use the fallback snapshot from `skills/anchors/SKILL.md` for that slug).
+3. Mentally run `skills/_shared/render-anchor-section.md` Step R3 to extract the curated excerpt for that slug (same section-selection logic as the render protocol).
+4. Compute the unified diff between the on-disk marker body and the proposed excerpt body (3 lines of context).
 
-If the anchor is unavailable (`anchor_markdown: null`), skip this step silently — do not block the upgrade.
+The `proposed_changes` entry gets `rationale: "Anchor `<slug>` refresh — latest excerpt differs from on-disk body"`. The change behaves identically to template-derived changes in Pass 3 (same y/n/all/skip-rest prompt) and in Pass 4 (same write mechanism — only the body between markers changes).
+
+This means `/upgrade` now implicitly covers what `/anchors` does. `/anchors` remains the focused tool for users who only want to refresh the anchor parts.
+
+### Step 2.3 — (Removed)
+
+Anchor-driven checks (deprecated model IDs and similar) now live in `/tipps` Pass 5. Anchor section refreshes are handled by the anchor-derived branch of Step 2.2. Nothing to do here.
 
 ### Step 2.4 — Early exit when nothing to do
 

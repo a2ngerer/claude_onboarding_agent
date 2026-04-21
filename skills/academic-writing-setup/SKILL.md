@@ -161,7 +161,21 @@ Read `optional-integrations.md`. Emit the `.pre-commit-config.yaml` scaffold if 
 
 Set `setup_slug: academic-writing`, `skill_slug: academic-writing-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`.
 
-## Step 6: Completion Summary
+## Step 6: Render Anchor Sections
+
+Read `skills/_shared/anchor-mapping.md`. Locate the row for `setup_type: academic-writing`. For each anchor slug in that row:
+
+1. Call `skills/_shared/render-anchor-section.md` with:
+   - `setup_type: academic-writing`
+   - `skill_slug: academic-writing-setup`
+   - `anchor_slug: <slug>`
+   - `target_file: ./CLAUDE.md`
+   - `fallback_content: <embedded fallback from skills/anchors/SKILL.md for that slug>`
+2. If a `./AGENTS.md` file was generated earlier in this skill, repeat the call with `target_file: ./AGENTS.md`.
+
+Do not fail if any single `render-anchor-section.md` call returns `placeholder`. Collect rendered / placeholder slugs for the completion summary.
+
+## Step 7: Completion Summary
 
 ```
 ✓ Academic writing setup complete!
@@ -197,4 +211,5 @@ Next steps:
   1. Drop your institution's / venue's template (if any) into the project root.
   2. If using Zotero, wire the Better BibTeX auto-export to bib/references.bib.
   3. Start a new Claude session: "Draft the Methods section from the bullet points in sections/03-methods.tex" — Claude will respect the rules in CLAUDE.md.
+  - Run `/anchors` any time to refresh the anchor-derived sections. If any section was rendered as a placeholder due to offline mode, re-run `/anchors` once you are back online.
 ```

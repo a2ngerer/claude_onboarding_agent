@@ -279,4 +279,10 @@ Trigger the fallback when the subagent dispatch errors, returns no `audit-summar
 
 > "⚠ audit-collector unavailable — run `/audit-setup` manually to audit the new setup."
 
+## Step 8: Final hint about /anchors
+
+After the audit step (or after the setup completion summary if Step 7 was skipped), print one additional line (adapt to detected language):
+
+- Run `/anchors` any time after setup to refresh the anchor-derived best-practice sections. Setup already rendered an initial version; `/anchors` refreshes them against the latest upstream anchors.
+
 End.

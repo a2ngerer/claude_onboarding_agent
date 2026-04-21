@@ -188,7 +188,21 @@ Thumbs.db
 
 Set `setup_slug: devops`, `skill_slug: devops-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`.
 
-## Step 6: Completion Summary
+## Step 6: Render Anchor Sections
+
+Read `skills/_shared/anchor-mapping.md`. Locate the row for `setup_type: devops`. For each anchor slug in that row:
+
+1. Call `skills/_shared/render-anchor-section.md` with:
+   - `setup_type: devops`
+   - `skill_slug: devops-setup`
+   - `anchor_slug: <slug>`
+   - `target_file: ./CLAUDE.md`
+   - `fallback_content: <embedded fallback from skills/anchors/SKILL.md for that slug>`
+2. If a `./AGENTS.md` file was generated earlier in this skill, repeat the call with `target_file: ./AGENTS.md`.
+
+Do not fail if any single `render-anchor-section.md` call returns `placeholder`. Collect rendered / placeholder slugs for the completion summary.
+
+## Step 7: Completion Summary
 
 ```
 ✓ DevOps / Cloud setup complete!
@@ -212,4 +226,5 @@ Next steps:
   Example: "Review this Terraform plan for security issues"
   Example: "Generate a GitHub Actions workflow for this Node.js project"
   Example: "Help me migrate this deployment to Kubernetes"
+  - Run `/anchors` any time to refresh the anchor-derived sections. If any section was rendered as a placeholder due to offline mode, re-run `/anchors` once you are back online.
 ```

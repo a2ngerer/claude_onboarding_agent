@@ -90,6 +90,7 @@ curl -fsSL https://raw.githubusercontent.com/a2ngerer/claude_onboarding_agent/ma
 | `/audit-setup` | Audits your existing Claude setup — permissions, CLAUDE.md quality, git hygiene, tooling — and returns a prioritized improvement list |
 | `/upgrade-setup` | Re-applies current best practices to an existing setup. Per-change diff preview, dry-run flag, timestamped backups, never touches content outside the plugin's delimited sections |
 | `/checkup` | Decides whether your existing setup should be rebuilt or selectively improved — then delegates. Pure router: runs `/audit-setup`, weighs findings + meta age + deprecated-model anchors, and hands off to `/onboarding --rebuild`, `/upgrade-setup`, or a short "fine-as-is" summary |
+| `/anchors` | Refresh anchor-derived marker sections in CLAUDE.md/AGENTS.md against the latest upstream anchors. |
 
 ---
 
