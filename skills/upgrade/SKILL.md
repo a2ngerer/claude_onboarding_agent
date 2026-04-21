@@ -90,6 +90,14 @@ Detected setup:
   Mode:            <"dry-run (no changes will be written)" if dry_run else "live (changes require per-item confirmation)">
 ```
 
+### Step 1.5 — Legacy Layout Check
+
+Before diffing or previewing upgrade changes, check for legacy rule-file layouts:
+
+1. Read `skills/_shared/migrate-claude-instructions.md` and follow its **Detection** section.
+2. If detection triggers, run the full migration procedure from the helper (Preview → user decision → Execution). The migration preview and the upgrade preview are separate — show the migration preview first and let the user decide, then proceed.
+3. After the migration step completes, resume the normal upgrade flow. The rest of the upgrade diff will already reflect the post-migration layout.
+
 ---
 
 ## Pass 2 — Plan the changes
