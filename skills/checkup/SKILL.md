@@ -67,6 +67,16 @@ If `meta_present: false` AND `delimiters_present: false` AND `meta_corrupt` is n
 
 Exit without logging.
 
+### Step 1.4 — Legacy Layout Check
+
+Before deciding on rebuild vs. improve, check for legacy rule-file layouts:
+
+1. Read `skills/_shared/migrate-claude-instructions.md` and follow its **Detection** section.
+2. If detection triggers (the folder exists and `.migration-declined` does not), run the full migration procedure from the helper (Preview → user decision → Execution).
+3. After the migration step completes (either way), resume the normal checkup flow.
+
+Do not suppress the migration prompt within a session — re-offer on every `checkup` invocation until the user either migrates or writes `.migration-declined`.
+
 ---
 
 ## Stage 2 — Hard gates (deterministic)
