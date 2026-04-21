@@ -7,9 +7,61 @@ description: Guided onboarding orchestrator — scans your repo, infers your use
 
 Welcome. This skill scans your project, asks you one question, and then configures Claude exactly the way you need it.
 
+## Argument parsing
+
+The invocation may contain `--rebuild` anywhere in the argument string (as a flag, not a value).
+
+- If present: set `rebuild_mode: true`. Step 1a's early-exit is skipped; existing onboarding-agent-managed files are backed up first (see Step 1b), then the normal flow runs and produces fresh artifacts.
+- Otherwise: set `rebuild_mode: false`.
+
+Any other argument is ignored silently.
+
 ## Step 1: Detect Language
 
 Read the user's first message. Detect the language (e.g., English, German, Spanish, French). Respond in that language for the entire session. All generated file comments also use that language. Technical field names, tool names, and code remain in English regardless of detected language.
+
+## Step 1a: Detect existing setup (skip if `rebuild_mode: true`)
+
+Before scanning the repo for use-case signals, check whether an onboarding-agent setup is already present:
+
+- Read `./.claude/onboarding-meta.json` if it exists and parses as JSON. If `setup_type` is a recognized slug, capture `setup_type` and `installed_at`.
+- Otherwise, search for the regex `<!--\s*onboarding-agent:start` in `./CLAUDE.md`, `./AGENTS.md`, and the key `"_onboarding_agent"` in `./.claude/settings.json`. If any match, treat as "marker-only" detection (no meta file).
+
+If either a meta file or any marker is found, print (adapt to detected language):
+
+> "Existing onboarding-agent setup detected (type: `<setup_type>`, installed `<installed_at>`). Re-running `/onboarding` would overwrite or duplicate existing sections.
+>
+> Run `/checkup` to decide whether to rebuild or selectively improve this setup, or re-run `/onboarding --rebuild` to force a full rebuild (existing files will be backed up to `.claude/backups/<timestamp>/` first)."
+
+Exit here. Do not proceed to Step 2.
+
+If nothing is detected, or `rebuild_mode: true`, continue.
+
+## Step 1b: Backup before rebuild (only if `rebuild_mode: true`)
+
+Before any scanning or file generation, back up every onboarding-agent-managed file that currently exists in the repo. Skip this step silently if nothing matches.
+
+1. Compute `timestamp = <YYYYMMDD-HHMMSS>` in local time (single value for this invocation).
+2. Create the backup root via Bash: `mkdir -p .claude/backups/<timestamp>/`.
+3. For each of the following paths that exists on disk, copy it into the backup folder preserving the relative path:
+   - `./CLAUDE.md`
+   - `./AGENTS.md`
+   - `./.claude/settings.json`
+   - `./.claude/settings.local.json` (user-modified — never discard without a copy)
+   - `./.claude/onboarding-meta.json`
+   - `./claude_instructions/` (recursive — include every `.md` under it)
+
+   Use Bash `cp --parents` where available, otherwise `mkdir -p "$(dirname dest)"` and `cp` the file (or `cp -R` for directories).
+
+4. **Backup failure aborts onboarding.** If any copy fails, print:
+
+   > "⚠ Backup failed for `<path>`: `<error>`. Aborting onboarding before any file is touched. Nothing has been modified. Re-run once the cause is fixed, or back up manually and try again."
+
+   Exit. Do not proceed to Step 2.
+
+5. Store `rebuild_backup_path = .claude/backups/<timestamp>/` for the completion summary.
+
+After a successful backup, continue with Step 2 normally. The existing files are **not** deleted — setup skills will overwrite / extend them as they normally would. The backup is the user's restore point.
 
 ## Step 2: Scan the Repository
 
@@ -103,3 +155,18 @@ Skill routing:
 - Already set up (audit) → invoke `tipps` skill
 
 Step back completely. The setup skill handles everything from here. For the five host setups that offer Graphify conditionally (coding-setup, knowledge-base-builder, research-setup, data-science-setup, web-development-setup), the Graphify question appears AFTER the host setup's main questions, not here — those skills delegate to `skills/_shared/graphify-install.md` themselves.
+
+## Step 6: Rebuild backup notice (only if `rebuild_mode: true` and Step 1b ran)
+
+After the delegated setup skill prints its own completion summary, print one additional block so the user knows where the pre-rebuild state lives:
+
+```
+Rebuild complete. Pre-rebuild backup saved to:
+  <rebuild_backup_path>
+
+To restore everything to the pre-rebuild state:
+  cp -R <rebuild_backup_path>. ./
+  (this restores files in-place, overwriting what the rebuild wrote)
+```
+
+If Step 1b did not run (normal onboarding without `--rebuild`), omit this block entirely.
