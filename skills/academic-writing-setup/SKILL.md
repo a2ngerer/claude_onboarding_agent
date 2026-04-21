@@ -108,7 +108,35 @@ Ask these questions ONE AT A TIME. Wait for each answer before asking the next.
 7. "Optional: install Superpowers for structured brainstorming and multi-step writing plans? (yes / no)
    (Separate from the mandatory installation step above — only ask if not already installed.)"
 
-## Step 4: Generate Artifacts
+## Step 4: Offer Project-Local Subagent
+
+Read `skills/_shared/emit-subagent.md` and follow it with these inputs:
+
+- `slug`: `writing-style-auditor`
+- `purpose_blurb`: "Audit an academic passage for voice, tense, structure, and citation hygiene against the project's rules."
+- `frontmatter_description`: "Use to audit an academic passage (paragraph, section, or chapter draft) for voice, tense, section-structure compliance, and citation hygiene against the project's writing-style and citation rules. Dispatch when the user asks to review a paragraph, check style, verify citations, or 'audit this section'."
+- `tools_list`: `Read, Grep, Glob`
+- `rules_files`: `.claude/rules/writing-style.md, .claude/rules/citation-rules.md`
+- `body_markdown`:
+
+  ```
+  You are the Writing Style Auditor. You audit academic prose against the project's writing-style and citation rules.
+
+  ## Procedure
+  1. Identify the target passage (paragraph, section, or file).
+  2. Read writing-style.md (voice, tense, section rules) and citation-rules.md (.bib conventions, no-invented-citations).
+  3. Audit for: first-person violations if passive is required, tense drift, banned AI-slop patterns, missing or malformed citations, invented citation keys, overlong sentences if the style file prescribes a limit.
+  4. Return a structured verdict: target passage, findings with line reference and severity, concrete rewrite suggestions (describe, do not apply).
+
+  ## Rules
+  - Do not rewrite the passage. Describe the fix; let the caller apply it.
+  - Never invent a citation to fill a gap — flag the gap instead.
+  - If a rules file is missing, audit against general academic conventions and say so in the header.
+  ```
+
+Record the emit outcome for use in the completion summary (Step 8). If `emit_subagent: true`, add `"writing-style-auditor"` to the list passed to `skills/_shared/write-meta.md` in Step 6 as `subagents_installed`.
+
+## Step 5: Generate Artifacts
 
 For each file below, if it already exists extend rather than overwrite. Use `<!-- onboarding-agent:start -->` / `<!-- onboarding-agent:end -->` markers for CLAUDE.md; use `# onboarding-agent: academic-writing — start` / `# onboarding-agent: academic-writing — end` markers for `.gitignore`.
 
@@ -157,11 +185,11 @@ Read `gitignore-block.md` and append its block to the user's `.gitignore` (delim
 
 Read `optional-integrations.md`. Emit the `.pre-commit-config.yaml` scaffold if `chktex_available` or `vale_available` is true OR the user requested it, and print the matching missing-tool warnings. If Q3 = B, print the Overleaf + Git bridge instructions. If Q2 = A or B, print the template pointer note. Mention the knowledge-base bridge only when the user references an existing vault / wiki.
 
-## Step 5: Write Upgrade Metadata
+## Step 6: Write Upgrade Metadata
 
-Set `setup_slug: academic-writing`, `skill_slug: academic-writing-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`.
+Set `setup_slug: academic-writing`, `skill_slug: academic-writing-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. If Step 4 emitted the `writing-style-auditor` subagent, set `subagents_installed: ["writing-style-auditor"]`; otherwise leave it unset. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`.
 
-## Step 6: Render Anchor Sections
+## Step 7: Render Anchor Sections
 
 Read `skills/_shared/anchor-mapping.md`. Locate the row for `setup_type: academic-writing`. For each anchor slug in that row:
 
@@ -175,7 +203,7 @@ Read `skills/_shared/anchor-mapping.md`. Locate the row for `setup_type: academi
 
 Do not fail if any single `render-anchor-section.md` call returns `placeholder`. Collect rendered / placeholder slugs for the completion summary.
 
-## Step 7: Completion Summary
+## Step 8: Completion Summary
 
 ```
 ✓ Academic writing setup complete!
@@ -189,6 +217,7 @@ Files created / updated:
   main.tex or main.typ                   — [created skeleton | left untouched — already present]
   .gitignore                             — LaTeX/Typst artifact rules (delimited section)
   .pre-commit-config.yaml                — [emitted as instructions | skipped per user]
+  .claude/agents/writing-style-auditor.md — project-local subagent (auto-invoked) [only on yes path; if skipped existing: .claude/agents/writing-style-auditor.md (already existed — skipped; re-run /checkup --rebuild to regenerate); if no/later: Subagent writing-style-auditor not installed — re-run /academic-writing-setup to add it later.]
   .claude/onboarding-meta.json           — setup marker for /upgrade-setup
 
 External skills:
