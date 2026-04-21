@@ -46,9 +46,38 @@ Read `./.claude/onboarding-meta.json` if it exists. Expected shape (see `skills/
 - If the file exists but does not parse as JSON: set `meta_present: false`, `meta_corrupt: true`. (Treated by Stage 2 as a hard gate — rebuild.)
 - If the file is absent: set `meta_present: false`.
 
-### Step 1.2 — Delimiter scan (used when meta is absent)
+### Step 1.2 — Delimiter scan (used when meta is absent, via `repo-scanner` subagent)
 
-Only run this if `meta_present: false` AND `meta_corrupt` is not true. Scan these files if they exist:
+Only run this if `meta_present: false` AND `meta_corrupt` is not true.
+
+Dispatch a `repo-scanner` subagent (defined in `.claude/agents/repo-scanner.md`) to check whether plugin-owned delimiters exist in the user project.
+
+**Dispatch brief:**
+
+```
+Use the Agent tool with:
+  subagent_type: repo-scanner
+  description: "Check for plugin-owned delimiters in the current project"
+  prompt: |
+    Scan the project rooted at the current working directory for
+    onboarding-agent-owned delimiters. Return your standard
+    `repo-scan` fenced block. The caller only needs these fields:
+      - existing_claude_md
+      - existing_agents_md
+      - signals (any string matching "onboarding-agent" or
+        "_onboarding_agent" indicates a marker)
+Expected output: one `repo-scan` fenced block per the subagent's output contract.
+```
+
+Parse the returned report. Set `delimiters_present: true` if `existing_claude_md: true` OR `existing_agents_md: true` AND any signal references `onboarding-agent` / `_onboarding_agent`, otherwise `delimiters_present: false`.
+
+### Fallback (if the subagent fails)
+
+Trigger the fallback when the subagent dispatch errors, returns no `repo-scan` block after one retry, or returns a block with missing fields. On dispatch error, do not retry — fall back immediately. Print:
+
+> "⚠ repo-scanner subagent unavailable — falling back to inline delimiter scan."
+
+Then scan these files if they exist:
 
 - `./CLAUDE.md`
 - `./AGENTS.md`
@@ -117,27 +146,53 @@ If any gate fires, set `verdict: rebuild`, `hard_gate_fired: true`, `rationale: 
 
 ---
 
-## Stage 3 — Audit (invoke `/audit-setup`)
+## Stage 3 — Audit (via `audit-collector` subagent)
 
-### Step 3.1 — Check `/audit-setup` availability
+### Step 3.1 — Dispatch `audit-collector`
 
-Try to invoke the `audit-setup` skill. If it is not installed / not found / not available in this environment, print (adapt to detected language):
+Dispatch an `audit-collector` subagent (defined in `.claude/agents/audit-collector.md`) to run the audit skill and return a compact severity-bucketed summary.
 
-> "`/checkup` requires `/audit-setup`. Install the onboarding-agent plugin (or re-install it) and retry."
+**Dispatch brief:**
 
-Exit without logging. Do NOT proceed to Stage 4 without findings.
+```
+Use the Agent tool with:
+  subagent_type: audit-collector
+  description: "Run /audit-setup and summarize findings"
+  prompt: |
+    Invoke the audit skill named below and return your standard
+    `audit-summary` fenced block with severity-bucketed counts.
+    audit_skill: audit-setup
+    max_top_titles: 3
+Expected output: one `audit-summary` fenced block per the subagent's output contract.
+```
 
-### Step 3.2 — Run the audit
+Parse `total`, `high`, `medium`, `low`, `top_titles`. Store as `audit_findings: { total, high, medium, low, top_titles: [...] }`. Continue to Stage 4.
 
-Invoke the `audit-setup` skill inline. Capture the findings block it prints. Parse:
+If the returned block's `top_titles` begins with an `error:` entry (the subagent's documented error signal), treat it as a subagent failure and use the Fallback below.
 
-- Count total findings.
-- Severity distribution: `high_count`, `medium_count`, `low_count`.
-- Titles of the top 3 findings (in the sort order `/audit-setup` printed them — HIGH first).
+### Fallback (if the subagent fails)
 
-Store as `audit_findings: { total, high, medium, low, top_titles: [...] }`.
+Trigger the fallback when the subagent dispatch errors, returns no `audit-summary` block after one retry, or signals an error via `top_titles`. On dispatch error, do not retry — fall back immediately. Print:
 
-If `/audit-setup` returns its "nothing to improve" message (no findings at all), set `audit_findings: { total: 0, high: 0, medium: 0, low: 0, top_titles: [] }`.
+> "⚠ audit-collector unavailable — running /audit-setup inline."
+
+Then run the inline path as before:
+
+1. Try to invoke the `audit-setup` skill. If it is not installed / not found / not available in this environment, print (adapt to detected language):
+
+   > "`/checkup` requires `/audit-setup`. Install the onboarding-agent plugin (or re-install it) and retry."
+
+   Exit without logging. Do NOT proceed to Stage 4 without findings.
+
+2. Invoke the `audit-setup` skill inline. Capture the findings block it prints. Parse:
+
+   - Count total findings.
+   - Severity distribution: `high_count`, `medium_count`, `low_count`.
+   - Titles of the top 3 findings (in the sort order `/audit-setup` printed them — HIGH first).
+
+   Store as `audit_findings: { total, high, medium, low, top_titles: [...] }`.
+
+   If `/audit-setup` returns its "nothing to improve" message (no findings at all), set `audit_findings: { total: 0, high: 0, medium: 0, low: 0, top_titles: [] }`.
 
 ---
 
