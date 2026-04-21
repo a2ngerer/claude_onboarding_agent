@@ -156,7 +156,21 @@ Ask ONCE (adapt to detected language):
 
 Set `setup_slug: data-science`, `skill_slug: data-science-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`. If Step 5 installed Graphify, `skills_used` will include both `data-science-setup` and `graphify-setup`.
 
-## Step 7: Completion Summary
+## Step 7: Render Anchor Sections
+
+Read `skills/_shared/anchor-mapping.md`. Locate the row for `setup_type: data-science`. For each anchor slug in that row:
+
+1. Call `skills/_shared/render-anchor-section.md` with:
+   - `setup_type: data-science`
+   - `skill_slug: data-science-setup`
+   - `anchor_slug: <slug>`
+   - `target_file: ./CLAUDE.md`
+   - `fallback_content: <embedded fallback from skills/anchors/SKILL.md for that slug>`
+2. If a `./AGENTS.md` file was generated earlier in this skill, repeat the call with `target_file: ./AGENTS.md`.
+
+Do not fail if any single `render-anchor-section.md` call returns `placeholder`. Collect rendered / placeholder slugs to mention in the completion summary.
+
+## Step 8: Completion Summary
 
 ```
 ✓ Data Science / ML setup complete!
@@ -190,4 +204,5 @@ Next steps:
   3. Fill in `.claude/rules/evaluation-protocol.md` with your primary metric.
   4. Start a new Claude session: "Explore data/raw/<file> and propose a feature-engineering plan."
   5. [If Graphify installed] Try: /graphify query "which notebooks use <feature>?"
+  - Run `/anchors` any time to refresh the anchor-derived sections. If any section was rendered as a placeholder due to offline mode, re-run `/anchors` once you are back online.
 ```
