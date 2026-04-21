@@ -131,7 +131,34 @@ If Q3 (backend) = Python (FastAPI or Django), additionally probe `uv --version`.
 
 If Q3 (backend) = Go, probe `go version`. If missing, print ONCE: "⚠ `go` is not installed. Install from https://go.dev/dl/ — setup continues as instructions-only."
 
-## Step 6: Generate Artifacts
+## Step 6: Offer Project-Local Subagent
+
+Read `skills/_shared/emit-subagent.md` and follow it with these inputs:
+
+- `slug`: `component-auditor`
+- `purpose_blurb`: "Audit a component or an API route against the project's structure, routing, and naming conventions."
+- `frontmatter_description`: "Use to audit a React/Vue/Svelte component or an API route for the project's structure, routing, and naming conventions. Dispatch when the user asks 'does this component match our conventions', 'audit this route', or 'review this component'."
+- `tools_list`: `Read, Grep, Glob`
+- `rules_files`: `.claude/rules/component-structure.md, .claude/rules/api-conventions.md`
+- `body_markdown`:
+
+  ```
+  You are the Component Auditor. You audit a component file or an API route against the project's conventions.
+
+  ## Procedure
+  1. Identify the target file(s) from the caller's request.
+  2. Read the relevant rules files (component-structure.md for UI, api-conventions.md for routes).
+  3. Audit the target for: file location, naming, exports, prop/signature shape, colocation of styles/tests, routing convention, error-shape for APIs.
+  4. Return a structured verdict: target file(s), findings (severity: blocker / suggestion / nit) with file:line, recommended fixes (describe, do not apply).
+
+  ## Rules
+  - Do not write code. Describe fixes; do not apply them.
+  - If a rules file is missing, say so in your header and audit against the framework's idiomatic defaults.
+  ```
+
+Record the emit outcome (`emit_subagent`, `subagent_skipped_existing`, `subagent_deferred`) for use in the completion summary (Step 11). If `emit_subagent: true`, add `"component-auditor"` to the list passed to `skills/_shared/write-meta.md` in Step 9 as `subagents_installed`.
+
+## Step 7: Generate Artifacts
 
 For each file below, if it already exists extend rather than overwrite. Use `<!-- onboarding-agent:start setup=web-development skill=web-development-setup section=<name> -->` / `<!-- onboarding-agent:end -->` markers for CLAUDE.md; use `# onboarding-agent: web-development — start` / `# onboarding-agent: web-development — end` markers for `.gitignore`.
 
@@ -199,7 +226,7 @@ Adapt based on answers:
 
 Read `gitignore-block.md`. Append the `.gitignore` block at the end of the user's `.gitignore` (delimited markers; replace only the content between them if already present). If `.env.example` is missing, emit the `.env.example` scaffold from the same file.
 
-## Step 7: Optional Graphify Integration
+## Step 8: Optional Graphify Integration
 
 Ask ONCE (adapt to detected language):
 
@@ -210,14 +237,14 @@ Ask ONCE (adapt to detected language):
 > (yes / no / later)"
 
 - **yes** → set `host_setup_slug: "web-development"`, `host_skill_slug: "web-development-setup"`, `run_initial_build: true`, `install_git_hook: true`. Read `skills/_shared/graphify-install.md` and follow steps G1–G9 in order. The protocol writes the attributed CLAUDE.md section with `setup=web-development skill=graphify-setup section=graphify`.
-- **no** → set `graphify_installed: false` and skip to Step 8.
+- **no** → set `graphify_installed: false` and skip to Step 9.
 - **later** → invoke `skills/_shared/graphify-install.md` in "later" mode: skip G1–G7 and write only the short deferred pointer block. Set `graphify_installed: false`, `graphify_deferred: true`.
 
-## Step 8: Write Upgrade Metadata
+## Step 9: Write Upgrade Metadata
 
-Set `setup_slug: web-development`, `skill_slug: web-development-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`. If Step 7 installed Graphify, `skills_used` will include both `web-development-setup` and `graphify-setup`.
+Set `setup_slug: web-development`, `skill_slug: web-development-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. If Step 6 emitted the `component-auditor` subagent, set `subagents_installed: ["component-auditor"]`; otherwise leave it unset. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`. If Step 8 installed Graphify, `skills_used` will include both `web-development-setup` and `graphify-setup`.
 
-## Step 9: Render Anchor Sections
+## Step 10: Render Anchor Sections
 
 Read `skills/_shared/anchor-mapping.md`. Locate the row for `setup_type: web-development`. For each anchor slug in that row:
 
@@ -231,7 +258,7 @@ Read `skills/_shared/anchor-mapping.md`. Locate the row for `setup_type: web-dev
 
 Do not fail if any single `render-anchor-section.md` call returns `placeholder`. Collect rendered / placeholder slugs for the completion summary.
 
-## Step 10: Completion Summary
+## Step 11: Completion Summary
 
 ```
 ✓ Web Development setup complete!
@@ -246,6 +273,7 @@ Files created / updated:
   .claude/settings.json                           — tool permissions for [stack summary]
   .gitignore                                      — node_modules, framework build outputs, env files, test artifacts (delimited section)
   .env.example                                    — [created | left untouched — already present]
+  .claude/agents/component-auditor.md             — project-local subagent (auto-invoked) [only on yes path; if skipped existing: .claude/agents/component-auditor.md (already existed — skipped; re-run /checkup --rebuild to regenerate); if no/later: Subagent component-auditor not installed — re-run /web-development-setup to add it later.]
   .claude/onboarding-meta.json                    — setup marker for /upgrade-setup
 
 External skills:

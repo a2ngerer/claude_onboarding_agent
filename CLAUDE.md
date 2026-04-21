@@ -82,6 +82,30 @@ Consumers parse the contracted fenced block from the reply and validate every ex
 - Subagents writing user files — reserved for a future spec.
 - Consumer skills invoking subagents without parsing the contracted output — "run it and hope" is not acceptable.
 
+## Subagent Emission (End-User Subagents)
+
+When a setup skill generates a project-local subagent (`.claude/agents/<slug>.md`), apply these rules:
+
+**Catalog (v1 — plugin-owned filenames):**
+
+| Slug | Owning Skill | Tools |
+|---|---|---|
+| `code-reviewer` | coding-setup | Bash, Read, Grep, Glob |
+| `component-auditor` | web-development-setup | Read, Grep, Glob |
+| `notebook-auditor` | data-science-setup | Read, Grep, Glob, Bash |
+| `writing-style-auditor` | academic-writing-setup | Read, Grep, Glob |
+| `obsidian-vault-keeper` | knowledge-base-builder | Bash, Read, Glob, Grep |
+
+**Topic exclusivity:** Each slug has exactly one owning skill. Two skills never write the same filename. Adding a new subagent requires a spec update, not an ad-hoc skill change.
+
+**Opt-in:** Except for `obsidian-vault-keeper` (gated on Obsidian-CLI availability), every emission is preceded by an opt-in prompt. See `skills/_shared/emit-subagent.md` for the canonical prompt.
+
+**Collision policy:** Skip the write if the target file already exists; log `Skipped .claude/agents/<slug>.md (already exists)`. Explicit regeneration is only via `checkup --rebuild` or `upgrade`.
+
+**Description rules:** The frontmatter `description:` field starts with `Use to …` or `Use when …`, names concrete trigger phrases, and stays under three sentences. Filenames are kebab-case, noun-led, and never prefixed by the owning skill.
+
+**File ownership:** The plugin owns only the filenames in the catalog above. Any other file in `.claude/agents/` is user-authored and never touched.
+
 ## SKILL.md Modularization
 
 A SKILL.md file requires modularization when it exceeds **300 lines**. Files in the 200–300 band are audited on edit but not forced. Files under 200 lines stay inline.

@@ -7,6 +7,18 @@ This file is read by setup skills at the end of their flow. It writes (or merges
 - `setup_slug` — one of `coding`, `data-science`, `design`, `knowledge-base`, `devops`, `content-creator`, `office`, `research`, `academic-writing`
 - `skill_slug` — the skill's directory name under `skills/` (e.g. `coding-setup`, `knowledge-base-setup`)
 - `plugin_version` — read from the plugin's own `plugin.json` `"version"` field. Resolve it at runtime from `~/.claude/plugins/claude-onboarding-agent/.claude-plugin/plugin.json` or the project-local equivalent. If unreadable, use the string `"unknown"`.
+- `subagents_installed` — optional. List of project-local subagent slugs this invocation installed (e.g. `["code-reviewer"]`). Passed by skills that invoke `skills/_shared/emit-subagent.md`. Omit or pass `[]` when the skill installed no subagents.
+
+## Schema
+
+The JSON file shape written by this helper:
+
+- `setup_type: string` — primary setup slug (first one to run).
+- `skills_used: string[]` — directory names under `skills/` that have contributed. Union-merged across runs.
+- `plugin_version: string` — resolved from the plugin's `plugin.json`; `"unknown"` if unresolvable.
+- `installed_at: string` — ISO-8601 UTC timestamp of the first write.
+- `upgraded_at: string | null` — set only by `/upgrade-setup`.
+- `subagents_installed: string[]` — slugs of project-local subagents installed by the plugin (e.g., `"code-reviewer"`, `"component-auditor"`). Union-merged across runs. Omitted from the object if the calling skill did not pass `subagents_installed` AND no prior file had the key.
 
 ## Protocol
 
@@ -28,7 +40,8 @@ Produce the new meta object:
   "skills_used": [<merged list>],
   "plugin_version": "<plugin_version>",
   "installed_at": "<existing_meta.installed_at OR now ISO-8601 UTC>",
-  "upgraded_at": null
+  "upgraded_at": null,
+  "subagents_installed": [<merged list>]
 }
 ```
 
@@ -37,6 +50,14 @@ Merging rules for `skills_used`:
 - If `existing_meta` is null: `skills_used = [<skill_slug>]`.
 - If `existing_meta.skills_used` exists and is a list: `skills_used = dedupe(existing_meta.skills_used + [<skill_slug>])`, preserving first-seen order.
 - If `existing_meta.skills_used` is missing or the wrong type: `skills_used = [<skill_slug>]`.
+
+Merging rules for `subagents_installed`:
+
+- Start with `prior = existing_meta.subagents_installed` if it exists and is a list; otherwise `prior = []`.
+- Start with `incoming = subagents_installed` (the input passed by the calling skill) if it exists and is a list; otherwise `incoming = []`.
+- `subagents_installed = dedupe(prior + incoming)`, preserving first-seen order.
+- If the resulting list is empty AND `existing_meta` did not have the key, omit the `subagents_installed` key from the written object (keep the file minimal).
+- If the resulting list is non-empty OR `existing_meta` already had the key, always write the key (even if empty) — once a project records subagent ownership, the field stays.
 
 Merging rule for `setup_type`:
 
