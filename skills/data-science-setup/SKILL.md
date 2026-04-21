@@ -286,11 +286,25 @@ repos:
 
 If `pre-commit` is not installed, print: "Run `uv add --dev pre-commit && uv run pre-commit install` to activate the hooks."
 
-## Step 5: Write Upgrade Metadata
+## Step 5: Optional Graphify Integration
 
-Set `setup_slug: data-science`, `skill_slug: data-science-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`.
+Ask ONCE (adapt to detected language):
 
-## Step 6: Completion Summary
+> "Install Graphify knowledge-graph integration now?
+>
+> Graphify indexes your project (Python code via tree-sitter for 25 languages, Markdown docs, Jupyter notebooks' text content, PDFs of papers, diagrams, images) into a local graph, registers a `/graphify` slash command, and adds a PreToolUse hook that consults the graph BEFORE Claude runs Grep / Glob / Read. Useful on larger ML repos with many experiments and notes. See https://github.com/safishamsi/graphify.
+>
+> (yes / no / later)"
+
+- **yes** → set `host_setup_slug: "data-science"`, `host_skill_slug: "data-science-setup"`, `run_initial_build: true`, `install_git_hook: true`. Read `skills/_shared/graphify-install.md` and follow steps G1–G9 in order. The protocol writes the attributed CLAUDE.md section with `setup=data-science skill=graphify-setup section=graphify`.
+- **no** → set `graphify_installed: false` and skip to Step 6.
+- **later** → invoke `skills/_shared/graphify-install.md` in "later" mode: skip G1–G7 and write only the short deferred pointer block. Set `graphify_installed: false`, `graphify_deferred: true`.
+
+## Step 6: Write Upgrade Metadata
+
+Set `setup_slug: data-science`, `skill_slug: data-science-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`. If Step 5 installed Graphify, `skills_used` will include both `data-science-setup` and `graphify-setup`.
+
+## Step 7: Completion Summary
 
 ```
 ✓ Data Science / ML setup complete!
@@ -315,9 +329,13 @@ Environment:
   [✓ uv detected]
   [⚠ uv missing — install from https://docs.astral.sh/uv/getting-started/installation/ before running the listed uv commands]
 
+Graphify (knowledge graph):
+  [✓ installed via <installer>, /graphify + PreToolUse hook registered | ⚠ installed but hook not verified — run /graphify in a new session | — skipped: <reason> | — deferred: run /graphify-setup when ready | — not offered]
+
 Next steps:
   1. If Python: run the `uv add` commands printed above in your project root.
   2. Fill in `claude_instructions/data-schema.md` with your real datasets.
   3. Fill in `claude_instructions/evaluation-protocol.md` with your primary metric.
   4. Start a new Claude session: "Explore data/raw/<file> and propose a feature-engineering plan."
+  5. [If Graphify installed] Try: /graphify query "which notebooks use <feature>?"
 ```

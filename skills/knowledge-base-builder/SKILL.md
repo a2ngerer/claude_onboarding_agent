@@ -251,11 +251,25 @@ Thumbs.db
 .claude/settings.local.json
 ```
 
-## Step 4: Write Upgrade Metadata
+## Step 4: Optional Graphify Integration
 
-Set `setup_slug: knowledge-base`, `skill_slug: knowledge-base-builder`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`.
+A knowledge base is exactly the kind of corpus Graphify is designed for — interlinked Markdown notes and their raw/ sources. Ask ONCE (adapt to detected language):
 
-## Step 5: Completion Summary
+> "Install Graphify knowledge-graph integration now?
+>
+> Graphify indexes your `raw/` (PDFs, Markdown, code, diagrams, images, audio/video — 25 languages via tree-sitter) and `wiki/` folders into a local graph, registers a `/graphify` slash command, and adds a PreToolUse hook that consults the graph BEFORE Claude runs Grep / Glob / Read. This cuts token cost substantially on large knowledge bases. See https://github.com/safishamsi/graphify.
+>
+> (yes / no / later)"
+
+- **yes** → set `host_setup_slug: "knowledge-base"`, `host_skill_slug: "knowledge-base-builder"`, `run_initial_build: true` (strongly recommended for a KB — the graph is most of the value), `install_git_hook: true` if the target folder is under git. Read `skills/_shared/graphify-install.md` and follow steps G1–G9 in order. The protocol writes the attributed CLAUDE.md section with `setup=knowledge-base skill=graphify-setup section=graphify`.
+- **no** → set `graphify_installed: false` and skip to Step 5.
+- **later** → invoke `skills/_shared/graphify-install.md` in "later" mode: skip G1–G7 and write only the short deferred pointer block (`"Knowledge graph: run /graphify-setup when ready."`). Set `graphify_installed: false`, `graphify_deferred: true`.
+
+## Step 5: Write Upgrade Metadata
+
+Set `setup_slug: knowledge-base`, `skill_slug: knowledge-base-builder`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`. If Step 4 installed Graphify, `skills_used` will automatically pick up `graphify-setup` via the shared protocol's own write-meta call — this step records `knowledge-base-builder` alongside it.
+
+## Step 6: Completion Summary
 
 ```
 ✓ Knowledge Base setup complete!
@@ -278,8 +292,12 @@ External skills:
    / ⚠ Obsidian CLI unavailable — using plain markdown files
    / — not requested]
 
+Graphify (knowledge graph):
+  [✓ installed via <installer>, /graphify + PreToolUse hook registered | ⚠ installed but hook not verified — run /graphify in a new session | — skipped: <reason> | — deferred: run /graphify-setup when ready | — not offered]
+
 Next steps:
   Drop files into [target]/raw/
   Start a new Claude session and say: "Ingest the files in raw/ and build the wiki"
   [if obsidian_cli_available] For vault ops, just ask — Claude will dispatch the obsidian-vault-keeper agent automatically.
+  [if graphify_installed] Try: /graphify query "which notes mention <topic>?"
 ```

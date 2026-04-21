@@ -39,6 +39,7 @@ Not sure where to start? Run `/onboarding` and we'll figure it out with you. Or 
 | **Creating content** (YouTube, blog, social) | `/content-creator-setup` | Brand voice, platform presets, audience profile |
 | **Running infra / DevOps** | `/devops-setup` | Cloud + IaC + CI config, safe-by-default infra workflow |
 | **Designing UIs** | `/design-setup` | Design tool + frontend stack, UI guidelines, no generic AI looks |
+| **Already set up, but Claude burns tokens searching large repos / docs / PDFs** | `/graphify-setup` | Local [Graphify](https://github.com/safishamsi/graphify) knowledge-graph index + `/graphify` slash command + PreToolUse hook (consulted before Grep/Glob/Read) — layers on top of any other setup |
 
 ---
 
@@ -85,6 +86,7 @@ curl -fsSL https://raw.githubusercontent.com/a2ngerer/claude_onboarding_agent/ma
 | `/content-creator-setup` | Brand voice, platform preferences, audience context |
 | `/devops-setup` | Cloud provider, IaC tool, CI/CD — safe infra workflow + agent roles |
 | `/design-setup` | Design tool, frontend stack, accessibility standard — UI guidelines without the generic AI look |
+| `/graphify-setup` | Installs [Graphify](https://github.com/safishamsi/graphify) (25-language tree-sitter + Markdown + PDF + media indexer). Registers `/graphify query / path / explain` and a PreToolUse hook consulted before file-search tool calls — cuts token cost on large codebases and mixed-media corpora. Safe to layer on top of any other setup |
 | `/tipps` | Audits your existing Claude setup — permissions, CLAUDE.md quality, git hygiene, tooling — and returns a prioritized improvement list |
 | `/upgrade` | Re-applies current best practices to an existing setup. Per-change diff preview, dry-run flag, timestamped backups, never touches content outside the plugin's delimited sections |
 
@@ -141,6 +143,7 @@ Every setup skill creates a tailored `CLAUDE.md` with context and instructions s
 | Content | ✓ + brand voice | — | — | ✓ media files | Superpowers (optional) |
 | DevOps | ✓ + infra workflow | ✓ 3 roles | ✓ stack permissions | ✓ IaC state, secrets | Superpowers (optional) |
 | Design | ✓ + UI guidelines | ✓ 2 roles | ✓ stack permissions | ✓ design assets | Superpowers (optional) |
+| Graphify | ✓ + delimited pointer block (`/graphify query / path / explain`) | — | Graphify registers its own PreToolUse hook via `graphify install` | — | `graphifyy` (Python package via `uv tool install`, `pipx` fallback) |
 
 ### The coding workflow (powered by Superpowers)
 

@@ -486,11 +486,25 @@ NODE_ENV=development
 # AUTH_SECRET=
 ```
 
-## Step 7: Write Upgrade Metadata
+## Step 7: Optional Graphify Integration
 
-Set `setup_slug: web-development`, `skill_slug: web-development-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`.
+Ask ONCE (adapt to detected language):
 
-## Step 8: Completion Summary
+> "Install Graphify knowledge-graph integration now?
+>
+> Graphify indexes your web project (TS/JS/Python/Go code via tree-sitter for 25 languages, Markdown docs, JSON schemas, images, OpenAPI specs) into a local graph, registers a `/graphify` slash command, and adds a PreToolUse hook that consults the graph BEFORE Claude runs Grep / Glob / Read. Particularly useful on large monorepos with many routes, components, and server modules. See https://github.com/safishamsi/graphify.
+>
+> (yes / no / later)"
+
+- **yes** → set `host_setup_slug: "web-development"`, `host_skill_slug: "web-development-setup"`, `run_initial_build: true`, `install_git_hook: true`. Read `skills/_shared/graphify-install.md` and follow steps G1–G9 in order. The protocol writes the attributed CLAUDE.md section with `setup=web-development skill=graphify-setup section=graphify`.
+- **no** → set `graphify_installed: false` and skip to Step 8.
+- **later** → invoke `skills/_shared/graphify-install.md` in "later" mode: skip G1–G7 and write only the short deferred pointer block. Set `graphify_installed: false`, `graphify_deferred: true`.
+
+## Step 8: Write Upgrade Metadata
+
+Set `setup_slug: web-development`, `skill_slug: web-development-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`. If Step 7 installed Graphify, `skills_used` will include both `web-development-setup` and `graphify-setup`.
+
+## Step 9: Completion Summary
 
 ```
 ✓ Web Development setup complete!
@@ -517,9 +531,13 @@ Environment:
   [✓ uv detected | ⚠ uv missing — https://docs.astral.sh/uv/getting-started/installation/]   (only if Python backend)
   [✓ go detected | ⚠ go missing — https://go.dev/dl/]                                         (only if Go backend)
 
+Graphify (knowledge graph):
+  [✓ installed via <installer>, /graphify + PreToolUse hook registered | ⚠ installed but hook not verified — run /graphify in a new session | — skipped: <reason> | — deferred: run /graphify-setup when ready | — not offered]
+
 Next steps:
   1. Run the printed install commands (or create the project via the scaffolder, then `cd` in).
   2. Copy `.env.example` to `.env.local` and fill in your real values.
   3. Wire your deploy target's secret store (Vercel / Netlify / Cloudflare / Fly) — see claude_instructions/env-vars.md.
   4. Start a new Claude session: "Generate an initial [route / component / API handler] following the conventions in claude_instructions/." Claude will respect the rules in CLAUDE.md.
+  5. [If Graphify installed] Try: /graphify query "where does the auth middleware live?"
 ```

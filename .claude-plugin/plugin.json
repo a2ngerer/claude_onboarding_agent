@@ -37,6 +37,7 @@
     "skills/office-setup/SKILL.md",
     "skills/research-setup/SKILL.md",
     "skills/academic-writing-setup/SKILL.md",
+    "skills/graphify-setup/SKILL.md",
     "skills/tipps/SKILL.md",
     "skills/upgrade/SKILL.md"
   ],
@@ -52,6 +53,7 @@
     { "name": "office-setup", "skill": "office-setup" },
     { "name": "research-setup", "skill": "research-setup" },
     { "name": "academic-writing-setup", "skill": "academic-writing-setup" },
+    { "name": "graphify-setup", "skill": "graphify-setup" },
     { "name": "tipps", "skill": "tipps" },
     { "name": "upgrade", "skill": "upgrade" }
   ]
