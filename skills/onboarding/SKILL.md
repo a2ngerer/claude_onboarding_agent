@@ -49,7 +49,7 @@ Before any scanning or file generation, back up every onboarding-agent-managed f
    - `./.claude/settings.json`
    - `./.claude/settings.local.json` (user-modified — never discard without a copy)
    - `./.claude/onboarding-meta.json`
-   - `./claude_instructions/` (recursive — include every `.md` under it)
+   - `./.claude/rules/` (recursive — include every `.md` under it)
 
    Use Bash `cp --parents` where available, otherwise `mkdir -p "$(dirname dest)"` and `cp` the file (or `cp -R` for directories).
 
