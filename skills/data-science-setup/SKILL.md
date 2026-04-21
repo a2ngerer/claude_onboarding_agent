@@ -79,7 +79,34 @@ Ask these questions ONE AT A TIME. Wait for each answer before asking the next.
 
 6. "Should Claude enforce notebook hygiene — strip outputs on commit, run `nbqa` for lint/format? (yes / no)"
 
-## Step 4: Generate Artifacts
+## Step 4: Offer Project-Local Subagent
+
+Read `skills/_shared/emit-subagent.md` and follow it with these inputs:
+
+- `slug`: `notebook-auditor`
+- `purpose_blurb`: "Audit a notebook or training script for reproducibility — seed setting, split integrity, leakage, baseline logging."
+- `frontmatter_description`: "Use to review a notebook or training script for reproducibility — seed setting, train/val/test split integrity, data leakage, baseline logging, metric correctness. Dispatch when the user asks to review a notebook, check an experiment, audit reproducibility, or 'verify the split'."
+- `tools_list`: `Read, Grep, Glob, Bash`
+- `rules_files`: `.claude/rules/evaluation-protocol.md, .claude/rules/data-schema.md`
+- `body_markdown`:
+
+  ```
+  You are the Notebook Auditor. You audit a notebook or training script for reproducibility and correctness against the project's evaluation protocol and data schema.
+
+  ## Procedure
+  1. Identify the target notebook/script.
+  2. Read evaluation-protocol.md (metrics, splits, baselines) and data-schema.md (datasets, columns, lineage).
+  3. Audit for: missing seed setting, split leakage (test in train, temporal leakage), metric mismatch with protocol, missing baseline, hardcoded paths that break re-runs, missing environment pinning.
+  4. Return a structured verdict: target file, findings with cell/line reference, severity, and recommended fix.
+
+  ## Rules
+  - Do not re-run the notebook. Read-only audit unless the caller explicitly requests execution.
+  - If a rules file is missing, audit against standard ML reproducibility defaults and say so in the header.
+  ```
+
+Record the emit outcome for use in the completion summary (Step 9). If `emit_subagent: true`, add `"notebook-auditor"` to the list passed to `skills/_shared/write-meta.md` in Step 7 as `subagents_installed`.
+
+## Step 5: Generate Artifacts
 
 Generate the following files. For each, if the file already exists, extend rather than overwrite (see "Existing CLAUDE.md" rule at the top; apply the same delimited-section principle to `.gitignore` by appending a new `# onboarding-agent: data-science` block).
 
@@ -138,7 +165,7 @@ Read `gitignore-block.md` and append its block to the user's `.gitignore` (delim
 
 Read `notebook-hygiene.md` and emit its `.pre-commit-config.yaml` section plus the `pre-commit install` instruction.
 
-## Step 5: Optional Graphify Integration
+## Step 6: Optional Graphify Integration
 
 Ask ONCE (adapt to detected language):
 
@@ -149,14 +176,14 @@ Ask ONCE (adapt to detected language):
 > (yes / no / later)"
 
 - **yes** → set `host_setup_slug: "data-science"`, `host_skill_slug: "data-science-setup"`, `run_initial_build: true`, `install_git_hook: true`. Read `skills/_shared/graphify-install.md` and follow steps G1–G9 in order. The protocol writes the attributed CLAUDE.md section with `setup=data-science skill=graphify-setup section=graphify`.
-- **no** → set `graphify_installed: false` and skip to Step 6.
+- **no** → set `graphify_installed: false` and skip to Step 7.
 - **later** → invoke `skills/_shared/graphify-install.md` in "later" mode: skip G1–G7 and write only the short deferred pointer block. Set `graphify_installed: false`, `graphify_deferred: true`.
 
-## Step 6: Write Upgrade Metadata
+## Step 7: Write Upgrade Metadata
 
-Set `setup_slug: data-science`, `skill_slug: data-science-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`. If Step 5 installed Graphify, `skills_used` will include both `data-science-setup` and `graphify-setup`.
+Set `setup_slug: data-science`, `skill_slug: data-science-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. If Step 4 emitted the `notebook-auditor` subagent, set `subagents_installed: ["notebook-auditor"]`; otherwise leave it unset. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`. If Step 6 installed Graphify, `skills_used` will include both `data-science-setup` and `graphify-setup`.
 
-## Step 7: Render Anchor Sections
+## Step 8: Render Anchor Sections
 
 Read `skills/_shared/anchor-mapping.md`. Locate the row for `setup_type: data-science`. For each anchor slug in that row:
 
@@ -170,7 +197,7 @@ Read `skills/_shared/anchor-mapping.md`. Locate the row for `setup_type: data-sc
 
 Do not fail if any single `render-anchor-section.md` call returns `placeholder`. Collect rendered / placeholder slugs to mention in the completion summary.
 
-## Step 8: Completion Summary
+## Step 9: Completion Summary
 
 ```
 ✓ Data Science / ML setup complete!
@@ -184,6 +211,7 @@ Files created / updated:
   .gitignore                                   — raw data, notebook checkpoints, experiment artifacts
   data/{raw,interim,processed}/                — [created | skipped per user choice]
   .pre-commit-config.yaml                      — [created | skipped per user choice]
+  .claude/agents/notebook-auditor.md           — project-local subagent (auto-invoked) [only on yes path; if skipped existing: .claude/agents/notebook-auditor.md (already existed — skipped; re-run /checkup --rebuild to regenerate); if no/later: Subagent notebook-auditor not installed — re-run /data-science-setup to add it later.]
   .claude/onboarding-meta.json                 — setup marker for /upgrade-setup
 
 External skills:
