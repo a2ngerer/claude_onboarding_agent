@@ -20,6 +20,15 @@ This skill configures Claude for exploratory and productive data science / ML wo
 
 If the delimited block already exists from a previous run (either the attributed form above or the legacy unattributed `<!-- onboarding-agent:start -->` form), replace only the content between the markers; leave the rest of the file untouched. Upgrade the opening marker to the attributed form while you are there — `/upgrade-setup` depends on it for detection.
 
+## Supporting Files
+
+Read these on-demand at the step that invokes them. Do not read eagerly.
+
+- `rule-file-templates.md` — bodies of the `.claude/rules/*.md` files (Step 4)
+- `stack-scaffolds.md` — `pyproject.toml`, `uv add` commands, `.claude/settings.json` permissions, directory scaffold (Step 4)
+- `gitignore-block.md` — the `.gitignore` block (Step 4)
+- `notebook-hygiene.md` — `.pre-commit-config.yaml` for nbstripout + nbqa (Step 4)
+
 ## Step 1: Install Dependencies
 
 Read `skills/_shared/installation-protocol.md` and follow it for each dependency below.
@@ -83,8 +92,8 @@ Generate the following files. For each, if the file already exists, extend rathe
 Stack: [Q1 answer]. Notebooks: [Q2 answer]. ML framework: [Q3 answer]. Experiment tracking: [Q4 answer].
 
 ## Key Pointers
-- Data schema and column semantics: `claude_instructions/data-schema.md`
-- Evaluation protocol and metrics: `claude_instructions/evaluation-protocol.md`
+- Data schema and column semantics: `.claude/rules/data-schema.md`
+- Evaluation protocol and metrics: `.claude/rules/evaluation-protocol.md`
 - Model cards live under `models/<name>/MODEL_CARD.md`
 
 ## Workflow Rules
@@ -99,192 +108,35 @@ Stack: [Q1 answer]. Notebooks: [Q2 answer]. ML framework: [Q3 answer]. Experimen
 Superpowers is installed. Use `superpowers:brainstorming` before non-trivial modeling changes and `superpowers:writing-plans` for multi-step experiments.
 ```
 
-Keep this file short (≤ 30 lines). Details belong in `claude_instructions/*.md`.
+Keep this file short (≤ 30 lines). Details belong in `.claude/rules/*.md`.
 
-### claude_instructions/data-schema.md
+### .claude/rules/data-schema.md
 
-```markdown
-# Data Schema
+Read `rule-file-templates.md` and write its `data-schema` section to `.claude/rules/data-schema.md`. Skip the write if the file already exists.
 
-Document one row per table/dataset. Claude reads this to answer questions about columns, units, and joins without guessing.
+### .claude/rules/evaluation-protocol.md
 
-| Dataset | Location | Grain | Key columns | Notes |
-|---|---|---|---|---|
-| example | data/raw/example.parquet | one row per user-day | user_id, date | PII — do not ship externally |
+Read `rule-file-templates.md` and write its `evaluation-protocol` section to `.claude/rules/evaluation-protocol.md`. Skip the write if the file already exists.
 
-## Column semantics
-- `user_id` — stable across time; never re-used.
-- `date` — UTC, ISO 8601.
-- (extend as the project grows)
+### pyproject.toml and uv add commands (only if Q1 includes Python and `uv_available: true`)
 
-## Data lineage
-- `data/raw/` — immutable source data. Never modified in place.
-- `data/interim/` — cleaned, joined, not yet feature-engineered.
-- `data/processed/` — model-ready features. Regenerable from raw + code.
-```
+Read `stack-scaffolds.md`. Emit its `pyproject.toml` section. Print the install commands from the "uv add commands by answer" section, selecting bullets that match Q2 / Q3 / Q4 / Q6. Never execute `uv add` without explicit user consent. If `uv_available: false`, print the commands as a manual checklist.
 
-### claude_instructions/evaluation-protocol.md
+### .claude/settings.json
 
-```markdown
-# Evaluation Protocol
-
-## Metrics
-- Primary: [fill in — e.g. AUC-ROC, RMSE, F1]
-- Secondary / diagnostic: [fill in]
-
-## Splits
-- Train / validation / test split strategy: [time-based | random | group-based]
-- Seed: fixed (see CLAUDE.md).
-- Leakage checks: list any columns that must be excluded from features.
-
-## Baselines
-- Always report a trivial baseline (mean/mode/last-value) alongside any model.
-- A new model is only considered better if it beats the baseline on the primary metric AND does not regress any secondary metric by more than [threshold].
-
-## Reporting
-- Log metrics to [Q4 tracker] under a named experiment.
-- Include a confusion matrix / residual plot for every reported run.
-- Save the trained model artifact with a hash of the training data and code commit.
-```
-
-### pyproject.toml (only if Q1 includes Python AND `uv_available: true`)
-
-Emit a minimal scaffold and instruct the user to run the install commands. Do NOT run `uv add` automatically without explicit user consent.
-
-```toml
-[project]
-name = "your-project"
-version = "0.1.0"
-requires-python = ">=3.11"
-dependencies = []
-
-[tool.uv]
-dev-dependencies = []
-```
-
-Then print the recommended install commands based on answers:
-
-- Always: `uv add pandas polars numpy pyarrow scikit-learn`
-- If Q2 = Jupyter: `uv add jupyterlab ipykernel`
-- If Q2 = marimo: `uv add marimo`
-- If Q3 = PyTorch: `uv add torch` (remind the user to check https://pytorch.org for the correct CUDA build)
-- If Q3 = JAX: `uv add "jax[cpu]"` (or `jax[cuda12]` with extra index URL — link to JAX install docs)
-- If Q3 = TensorFlow: `uv add tensorflow`
-- If Q4 = MLflow: `uv add mlflow`
-- If Q4 = Weights & Biases: `uv add wandb`
-- If Q4 = DVC: `uv add dvc`
-- If Q6 = yes (notebook hygiene): `uv add --dev nbqa ruff black nbstripout pre-commit`
-
-If `uv_available: false`, print these as a manual checklist instead of executing them.
-
-### .claude/settings.json (Python stacks)
-
-Create or extend `.claude/settings.json` with stack-appropriate permissions:
-
-```json
-{
-  "permissions": {
-    "allow": [
-      "Bash(git *)",
-      "Bash(uv *)",
-      "Bash(python *)",
-      "Bash(pytest *)",
-      "Bash(jupyter *)",
-      "Bash(nbqa *)",
-      "Bash(nbstripout *)",
-      "Bash(pre-commit *)"
-    ]
-  }
-}
-```
-
-Adapt based on answers:
-- Q2 = marimo → add `"Bash(marimo *)"`
-- Q4 = MLflow → add `"Bash(mlflow *)"`
-- Q4 = Weights & Biases → add `"Bash(wandb *)"`
-- Q4 = DVC → add `"Bash(dvc *)"`
-- Q1 = R → add `"Bash(Rscript *)"`, `"Bash(R *)"` instead of the uv/python entries
-- Q1 = Julia → add `"Bash(julia *)"` instead
-
-If an existing `settings.json` exists, merge into its `permissions.allow` list (dedupe) rather than overwriting.
+Read `stack-scaffolds.md`. Create or extend `.claude/settings.json` using the "base permissions" section, then merge in the adaptations from "per-answer adaptations" that match Q1 / Q2 / Q4. If the file already exists, merge into its `permissions.allow` list (dedupe), do not overwrite.
 
 ### Directory scaffold (only if Q5 = yes)
 
-Create:
-
-```
-data/
-  raw/.gitkeep
-  interim/.gitkeep
-  processed/.gitkeep
-models/.gitkeep
-notebooks/.gitkeep
-```
-
-Add a `data/README.md` explaining the three-folder convention (raw = immutable, interim = cleaned, processed = model-ready).
+Read `stack-scaffolds.md` and create the directories and `data/README.md` from its "Directory scaffold" section.
 
 ### .gitignore
 
-Append a delimited block at the end. If the marker block already exists, replace it.
-
-```gitignore
-# onboarding-agent: data-science — start
-# Raw and processed data (only if Q5 = yes)
-data/raw/*
-!data/raw/.gitkeep
-data/interim/*
-!data/interim/.gitkeep
-data/processed/*
-!data/processed/.gitkeep
-
-# Notebook checkpoints and local state
-.ipynb_checkpoints/
-*.nbconvert.ipynb
-.jupyter/
-
-# Experiment artifacts
-mlruns/
-wandb/
-.dvc/cache/
-.dvc/tmp/
-
-# Model artifacts (re-generable — keep model cards, not weights)
-models/**/*.pt
-models/**/*.bin
-models/**/*.onnx
-models/**/*.joblib
-models/**/*.pkl
-
-# Python
-__pycache__/
-.venv/
-*.pyc
-dist/
-.env
-
-# Claude local settings
-.claude/settings.local.json
-# onboarding-agent: data-science — end
-```
+Read `gitignore-block.md` and append its block to the user's `.gitignore` (delimited markers; replace only the content between them if already present).
 
 ### Notebook hygiene (only if Q6 = yes)
 
-Emit a `.pre-commit-config.yaml` scaffold and instruct the user to run `pre-commit install` once:
-
-```yaml
-repos:
-  - repo: https://github.com/kynan/nbstripout
-    rev: 0.7.1
-    hooks:
-      - id: nbstripout
-  - repo: https://github.com/nbQA-dev/nbQA
-    rev: 1.8.5
-    hooks:
-      - id: nbqa-ruff
-      - id: nbqa-black
-```
-
-If `pre-commit` is not installed, print: "Run `uv add --dev pre-commit && uv run pre-commit install` to activate the hooks."
+Read `notebook-hygiene.md` and emit its `.pre-commit-config.yaml` section plus the `pre-commit install` instruction.
 
 ## Step 5: Optional Graphify Integration
 
@@ -311,8 +163,8 @@ Set `setup_slug: data-science`, `skill_slug: data-science-setup`. Resolve `plugi
 
 Files created / updated:
   CLAUDE.md                                    — pointers + workflow rules (delimited section)
-  claude_instructions/data-schema.md           — datasets, columns, lineage
-  claude_instructions/evaluation-protocol.md   — metrics, splits, baselines, reporting
+  .claude/rules/data-schema.md                 — datasets, columns, lineage
+  .claude/rules/evaluation-protocol.md         — metrics, splits, baselines, reporting
   pyproject.toml                               — [created | skipped — uv missing | skipped — non-Python stack]
   .claude/settings.json                        — tool permissions for [stack summary]
   .gitignore                                   — raw data, notebook checkpoints, experiment artifacts
@@ -334,8 +186,8 @@ Graphify (knowledge graph):
 
 Next steps:
   1. If Python: run the `uv add` commands printed above in your project root.
-  2. Fill in `claude_instructions/data-schema.md` with your real datasets.
-  3. Fill in `claude_instructions/evaluation-protocol.md` with your primary metric.
+  2. Fill in `.claude/rules/data-schema.md` with your real datasets.
+  3. Fill in `.claude/rules/evaluation-protocol.md` with your primary metric.
   4. Start a new Claude session: "Explore data/raw/<file> and propose a feature-engineering plan."
   5. [If Graphify installed] Try: /graphify query "which notebooks use <feature>?"
 ```

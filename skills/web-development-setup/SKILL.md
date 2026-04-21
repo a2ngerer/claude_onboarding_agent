@@ -22,6 +22,15 @@ Use `coding-setup` for language-agnostic software projects (libraries, CLIs, gen
 
 If the delimited block already exists from a previous run (either the attributed form above or the legacy unattributed `<!-- onboarding-agent:start -->` form), replace only the content between the markers; leave the rest of the file untouched. Upgrade the opening marker to the attributed form while you are there — `/upgrade-setup` depends on it for detection.
 
+## Supporting Files
+
+Read these on-demand at the step that invokes them. Do not read eagerly.
+
+- `rule-file-templates.md` — bodies of the `.claude/rules/*.md` files (Step 6)
+- `framework-defaults.md` — Q1/Q2-conditional styling and deploy-target matrix (Step 4), plus public env-var prefix table
+- `gitignore-block.md` — the `.gitignore` block and `.env.example` scaffold (Step 6)
+- `document-skeletons.md` — `package.json`, `pyproject.toml`, and per-stack install commands (Step 6)
+
 ## Step 1: Install Dependencies
 
 Read `skills/_shared/installation-protocol.md` and follow it for each dependency below.
@@ -98,22 +107,7 @@ Ask these questions ONE AT A TIME. Wait for each answer before asking the next.
 
 ## Step 4: Derive Implied Defaults (do NOT ask)
 
-To keep the interview ≤ 7 questions, infer the following from Q2 / Q1 rather than asking:
-
-| Framework (Q2) | Implied styling | Deploy-target pointer | Extra notes |
-|---|---|---|---|
-| Next.js | Tailwind CSS + CSS Modules | Vercel (primary) / self-hosted Node | App Router assumed; `NEXT_PUBLIC_*` env convention |
-| React (Vite) | Tailwind CSS | Netlify / Cloudflare Pages / Vercel | Client-only by default |
-| Vue / Nuxt | Tailwind CSS or scoped `<style>` | Netlify / Vercel | Nuxt has its own server routes |
-| Svelte / SvelteKit | Tailwind or component-scoped CSS | Cloudflare / Vercel / Netlify | Adapter chosen at build time |
-| SolidJS | Tailwind CSS | Cloudflare / Vercel | |
-| Astro | Scoped `<style>` + Tailwind for design systems | Netlify / Cloudflare Pages / Vercel | Islands architecture |
-| Remix | Tailwind CSS | Cloudflare / Vercel / Fly.io | Loaders / actions do server work |
-| None (backend-only) | n/a | Fly.io / Railway / self-hosted / Lambda | No styling stack |
-
-For Q1 = static site: deploy-target defaults to Netlify / Cloudflare Pages / GitHub Pages.
-
-Record the implied styling + deploy target as `styling_stack` and `deploy_target_hint` — they go into CLAUDE.md pointers but are not asked as separate questions.
+Read `framework-defaults.md`. Use the matrix there to derive `styling_stack` and `deploy_target_hint` from Q1 and Q2. These are NOT asked as separate questions.
 
 ## Step 5: Verify Package Manager Tooling
 
@@ -143,239 +137,27 @@ For each file below, if it already exists extend rather than overwrite. Use `<!-
 
 ### CLAUDE.md (≤ 30 lines — pointers only)
 
-```markdown
-# Claude Instructions — Web Development
+Read `document-skeletons.md` and write its `CLAUDE.md` section to `CLAUDE.md` (as a delimited block if the file already exists). Fill in the `[Q…]`, `[styling_stack]`, `[deploy_target_hint]`, and conditional blocks based on the interview answers.
 
-## Project Context
-Type: [Q1]. Framework: [Q2]. Backend: [Q3 or "n/a"]. Package manager: [Q4]. TypeScript: [Q5]. Tests: [Q6]. Lint/format: [Q7].
-Implied styling: [styling_stack]. Likely deploy target: [deploy_target_hint].
+### .claude/rules/api-conventions.md
 
-## Key Pointers
-- Route conventions, error shape, auth header: `claude_instructions/api-conventions.md`
-- Component structure, server vs client split, colocation: `claude_instructions/component-structure.md`
-- Env var handling and secrets hygiene: `claude_instructions/env-vars.md`
+Read `rule-file-templates.md` and write its `api-conventions` section to `.claude/rules/api-conventions.md`. Skip the write if the file already exists (log `Skipped .claude/rules/api-conventions.md (already exists)`).
 
-## Workflow Rules
-- Package manager: always use [Q4] — never mix managers in the same repo. Commit the lockfile.
-- TypeScript: [strict / non-strict / off] — match the tsconfig; do not weaken it to fix a type error.
-- Tests live next to source (`Component.tsx` + `Component.test.tsx`) for unit tests; [Q6 = Playwright/Cypress] e2e tests live under `e2e/`.
-- Secrets: never hardcode, never commit `.env.local`. Client-exposed values must use the framework's public prefix.
-- [If Q3 = Python backend] Python deps via `uv add` — never `pip install`.
+### .claude/rules/component-structure.md
 
-[Include ONLY if superpowers_installed is true]
-## Superpowers
-Superpowers is installed. Use `superpowers:brainstorming` before non-trivial feature work and `superpowers:writing-plans` for multi-page or multi-route changes.
-```
+Read `rule-file-templates.md` and write its `component-structure` section to `.claude/rules/component-structure.md`. Skip the write if the file already exists.
 
-Keep this file short (≤ 30 lines). Details belong in `claude_instructions/*.md`.
+### .claude/rules/env-vars.md
 
-### claude_instructions/api-conventions.md
+Read `rule-file-templates.md` and write its `env-vars` section to `.claude/rules/env-vars.md`. Skip the write if the file already exists.
 
-```markdown
-# API Conventions
+### package.json and install commands
 
-## Route layout
-- REST-style resources: `GET /api/v1/<resource>`, `GET /api/v1/<resource>/:id`, `POST /api/v1/<resource>`, `PATCH /api/v1/<resource>/:id`, `DELETE /api/v1/<resource>/:id`.
-- Version in the path (`/api/v1/…`) so breaking changes can coexist. Never version via query string.
-- Framework-specific layout:
-  - Next.js: route handlers under `app/api/<resource>/route.ts` (App Router) or `pages/api/<resource>.ts` (Pages Router). Prefer the App Router for new projects.
-  - Remix: loaders/actions colocated with the route file.
-  - SvelteKit: `+server.ts` colocated with the route.
-  - Standalone Node/Bun/Python/Go: one route module per resource, grouped under `src/routes/` or `app/routes/`.
+Read `document-skeletons.md`. If `package.json` is missing and Q1 ≠ backend-only-Python-or-Go, emit the scaffold from the `package.json` section with `<pm>` expanded from Q4. Print the install commands from the "Install commands by stack" section matching Q2 / Q5 / Q6 / Q7. NEVER execute install commands without explicit user consent. If `pm_available: false`, print the commands as a manual checklist.
 
-## Error response shape
-Every error returns a consistent JSON body:
+### pyproject.toml (only if Q3 = Python backend and `uv_available: true`)
 
-```json
-{
-  "error": {
-    "code": "string_snake_case_code",
-    "message": "Human-readable message for UI display",
-    "details": { "field": "optional field-level info" }
-  }
-}
-```
-
-- HTTP status mirrors the class (400 validation, 401 unauthenticated, 403 forbidden, 404 not found, 409 conflict, 422 unprocessable, 500 server).
-- Never leak stack traces or DB errors to the client — log them server-side with a request id, return only `code` + safe `message`.
-
-## Auth header convention
-- Bearer tokens: `Authorization: Bearer <token>`.
-- Session cookies: `HttpOnly`, `Secure`, `SameSite=Lax` (strict for same-site-only flows).
-- Never accept tokens from query strings; never log full tokens.
-
-## Request validation
-- Node / Bun: use `zod` or `valibot` to parse request bodies; reject with 400 + the error shape above.
-- Python FastAPI: use Pydantic models — FastAPI handles validation and OpenAPI generation automatically.
-- Python Django: use DRF serializers or `django-ninja` (Pydantic-based) for API endpoints.
-- Go: use `encoding/json` + explicit struct tags; add validator.v10 for field-level rules.
-
-## OpenAPI / schema
-- FastAPI: OpenAPI at `/docs` (Swagger) and `/redoc` — keep it enabled in development, disable in production if the API is private.
-- Node backends: generate OpenAPI from `zod` schemas via `zod-openapi`, serve at `/docs`.
-- Commit the generated `openapi.json` / `openapi.yaml` so Claude can read it when helping with client code.
-
-## Rate limiting and idempotency
-- Rate limit public endpoints by IP + user id.
-- For POST/PATCH on money-like or side-effecting resources, accept an `Idempotency-Key` header and store recent keys for 24h.
-```
-
-### claude_instructions/component-structure.md
-
-```markdown
-# Component Structure
-
-## File layout
-- One component per file. Filename matches the default export: `UserCard.tsx` exports `UserCard`.
-- Colocation: tests, styles, and helpers live next to the component.
-  ```
-  components/UserCard/
-    UserCard.tsx
-    UserCard.test.tsx
-    UserCard.module.css        # or .stories.tsx if Storybook is used
-    index.ts                    # re-exports UserCard
-  ```
-- Shared primitives live under `components/ui/` (buttons, inputs, dialogs).
-- Feature-specific components live under `features/<feature>/components/` or `app/<route>/components/` for Next.js App Router.
-
-## Atomic vs container split
-- **Presentational** components: stateless, take props, render UI. No direct API calls, no `useRouter`, no `useSession`.
-- **Container** components: own data fetching, side effects, routing. They compose presentational components.
-- The rule Claude should follow: if a component reaches for a data source or a global hook, it is a container — put it under `features/<name>/` or `app/<route>/`, not `components/ui/`.
-
-## Next.js App Router: server vs client components
-- Default is **server component**. Do not add `"use client"` unless the component uses state, effects, refs, or browser-only APIs.
-- Server components can read secrets, hit the database directly, and import server-only modules.
-- Client components must NEVER import server-only code (env vars without `NEXT_PUBLIC_`, `fs`, DB drivers). The bundler will leak them into the browser.
-- Passing server data to client components: serialize through props — no class instances, no functions, no `Date` (send ISO strings).
-
-## React / non-Next frameworks
-- Hooks live in `hooks/useThing.ts` — one hook per file, name starts with `use`.
-- Context providers live in `providers/` — one provider per file, named `XProvider`.
-
-## Vue / Svelte / Solid
-- Single-file components with scoped styles by default.
-- Shared composables (Vue) / stores (Svelte) / signals (Solid) live under `composables/` / `stores/` / `signals/` respectively.
-
-## Astro
-- `.astro` components are server-rendered by default. Use `client:load` / `client:idle` / `client:visible` directives sparingly — islands, not SPAs.
-
-## Naming
-- Components: `PascalCase`. Hooks: `useCamelCase`. Utilities: `camelCase`. Constants: `SCREAMING_SNAKE_CASE`.
-- Test files: `X.test.tsx` (unit) or `X.e2e.ts` (Playwright/Cypress, under `e2e/`).
-
-## What Claude should NOT do
-- Do not create a `utils.ts` dumping ground — group helpers by domain.
-- Do not add a layer of abstraction (HOC, render-prop, wrapper hook) unless two concrete call sites already need it.
-- Do not convert server components to client components to "fix" a compile error — fix the import instead.
-```
-
-### claude_instructions/env-vars.md
-
-```markdown
-# Env Var Handling
-
-## File layout
-- `.env` — committed defaults for non-secret values (e.g. `NODE_ENV=development`, public URLs).
-- `.env.local` — local secrets and overrides. **Never committed.** Listed in `.gitignore`.
-- `.env.production` — production values. Committed only if it contains no secrets (pure references), otherwise managed via the deploy target's secret store.
-- `.env.test` — values used by the test runner. Safe to commit if they point to local fixtures.
-
-## Framework conventions for client-exposed values
-A value placed in an env file is NOT automatically safe to ship to the browser — each framework uses a prefix to mark a value as public. Anything without the prefix stays server-only.
-
-| Framework | Public prefix | Where it runs |
-|---|---|---|
-| Next.js | `NEXT_PUBLIC_` | Inlined into the client bundle at build time |
-| Vite / React-Vite / SolidJS | `VITE_` | Inlined into the client bundle at build time |
-| Astro | `PUBLIC_` | Inlined at build time |
-| Nuxt | `NUXT_PUBLIC_` (runtimeConfig.public) | Exposed via `useRuntimeConfig().public` |
-| SvelteKit | `PUBLIC_` | Imported from `$env/static/public` |
-| Remix | No prefix — pass via loader | Loader returns data to the client explicitly |
-
-**The rule Claude must follow:** any secret (API key, DB URL, auth secret) that lacks the framework's public prefix MUST NOT appear in a client component or client-side import chain. If the user asks to "use `STRIPE_SECRET_KEY` in the checkout button", Claude refuses and suggests a server route + fetch instead.
-
-## Reading env vars
-- Node / Bun: `process.env.FOO` (Node) or `Bun.env.FOO`. Validate with `zod` or `valibot` at startup — fail fast if required vars are missing.
-- Python: read via `os.environ["FOO"]` with a default; prefer `pydantic-settings` for typed config.
-- Go: `os.Getenv("FOO")` with an explicit validation pass at startup.
-
-## What Claude should NOT do
-- Never print secrets in logs — not even masked.
-- Never write a secret into `CLAUDE.md`, `README.md`, or any committed file.
-- Never hardcode an API key "just for testing" — use `.env.local` even for one-off scripts.
-- Never add a new env var without also adding it to `.env.example` (with a placeholder value) so teammates know it exists.
-
-## Deploy-target hints
-- **Vercel**: secrets via Project → Settings → Environment Variables. Pull locally with `vercel env pull .env.local`.
-- **Netlify**: secrets via Site settings → Environment variables or `netlify env:set`.
-- **Cloudflare Pages / Workers**: `wrangler secret put FOO` for server-side; plain vars via `wrangler.toml` or the dashboard.
-- **Self-hosted / Docker**: inject via the orchestrator (systemd `EnvironmentFile=`, docker-compose `env_file:`, k8s `Secret` mounted as env).
-- **Fly.io**: `fly secrets set FOO=bar` — applies on next deploy.
-```
-
-### package.json (minimal, only if none exists AND Q1 ≠ backend-only-Python-or-Go)
-
-If `package.json` already exists, leave it untouched and only print the recommended install commands. If it does not exist and the stack needs one, emit a minimal scaffold based on Q4:
-
-```json
-{
-  "name": "your-project",
-  "version": "0.1.0",
-  "private": true,
-  "type": "module",
-  "packageManager": "<Q4>@<latest>",
-  "scripts": {
-    "dev": "...",
-    "build": "...",
-    "test": "...",
-    "lint": "...",
-    "format": "..."
-  }
-}
-```
-
-Then print the recommended install commands (NEVER execute without explicit user consent):
-
-- Q2 = Next.js: `<pm> create next-app@latest .` (or `<pm> add next react react-dom` into an existing folder)
-- Q2 = React (Vite): `<pm> create vite@latest . -- --template react-ts`
-- Q2 = Vue / Nuxt: `<pm> create nuxt@latest .` or `<pm> create vite@latest . -- --template vue-ts`
-- Q2 = Svelte / SvelteKit: `<pm> create svelte@latest .`
-- Q2 = SolidJS: `<pm> create solid@latest .`
-- Q2 = Astro: `<pm> create astro@latest .`
-- Q2 = Remix: `<pm> create remix@latest .`
-- Q6 = Vitest: `<pm> add -D vitest @vitest/ui jsdom @testing-library/react @testing-library/jest-dom`
-- Q6 = Jest: `<pm> add -D jest @types/jest ts-jest @testing-library/react`
-- Q6 = Playwright: `<pm> dlx playwright install` after `<pm> add -D @playwright/test`
-- Q6 = Cypress: `<pm> add -D cypress`
-- Q7 = ESLint + Prettier: `<pm> add -D eslint prettier eslint-config-prettier`
-- Q7 = Biome: `<pm> add -D @biomejs/biome` + `<pm> biome init`
-- Q5 = TypeScript (A or B): `<pm> add -D typescript @types/node`
-
-Where `<pm>` expands to `pnpm`, `npm`, `yarn`, or `bun` based on Q4. Use `pnpm dlx` / `npx` / `yarn dlx` / `bunx` for one-shot runners.
-
-If `pm_available: false`, print these as a manual checklist instead of recommending execution.
-
-### pyproject.toml (only if Q3 = Python backend AND `uv_available: true`)
-
-Emit a minimal scaffold and print `uv add` commands — never execute them without consent.
-
-```toml
-[project]
-name = "your-backend"
-version = "0.1.0"
-requires-python = ">=3.11"
-dependencies = []
-
-[tool.uv]
-dev-dependencies = []
-```
-
-- Q3 = FastAPI: `uv add fastapi uvicorn[standard] pydantic pydantic-settings`
-- Q3 = Django: `uv add django django-ninja pydantic-settings`
-- Dev: `uv add --dev pytest pytest-asyncio httpx ruff`
-
-If `uv` is missing, print the commands as instructions only.
+Read `document-skeletons.md` and emit its `pyproject.toml` section plus the `uv add` commands. If `uv_available: false`, print as instructions only.
 
 ### .claude/settings.json
 
@@ -413,78 +195,9 @@ Adapt based on answers:
 - Q2 = Astro → add `"Bash(astro *)"`
 - Deploy-target CLIs (emit the matching one from `deploy_target_hint`): `"Bash(vercel *)"`, `"Bash(netlify *)"`, `"Bash(wrangler *)"`, `"Bash(fly *)"`
 
-### .gitignore
+### .gitignore and .env.example
 
-Append a delimited block at the end. If the marker block already exists, replace only the content between the markers.
-
-```gitignore
-# onboarding-agent: web-development — start
-# Node / package managers
-node_modules/
-.pnpm-store/
-.npm/
-.yarn/cache/
-.yarn/install-state.gz
-
-# Framework build output
-dist/
-build/
-.next/
-.nuxt/
-.output/
-.astro/
-.svelte-kit/
-.turbo/
-.vercel/
-.netlify/
-.wrangler/
-
-# Env files (NEVER commit local secrets)
-.env
-.env.local
-.env.*.local
-
-# Test artifacts
-coverage/
-.nyc_output/
-playwright-report/
-test-results/
-cypress/videos/
-cypress/screenshots/
-
-# TypeScript / tooling caches
-*.tsbuildinfo
-.eslintcache
-.cache/
-
-# Editor / OS noise
-.DS_Store
-Thumbs.db
-
-# Claude local settings
-.claude/settings.local.json
-# onboarding-agent: web-development — end
-```
-
-Note: `.env.example` (without `.local`) is intentionally NOT ignored — it serves as the committed template listing every required variable with placeholder values.
-
-### Optional: .env.example scaffold
-
-If `.env.example` is missing, emit a minimal one based on the stack:
-
-```
-# Copy to .env.local and fill in real values. Never commit secrets.
-NODE_ENV=development
-
-# Public, client-exposed values (pick the prefix that matches your framework)
-# NEXT_PUBLIC_APP_URL=http://localhost:3000
-# VITE_APP_URL=http://localhost:5173
-# PUBLIC_APP_URL=http://localhost:4321
-
-# Server-only secrets (DO NOT expose to the client)
-# DATABASE_URL=
-# AUTH_SECRET=
-```
+Read `gitignore-block.md`. Append the `.gitignore` block at the end of the user's `.gitignore` (delimited markers; replace only the content between them if already present). If `.env.example` is missing, emit the `.env.example` scaffold from the same file.
 
 ## Step 7: Optional Graphify Integration
 
@@ -511,9 +224,9 @@ Set `setup_slug: web-development`, `skill_slug: web-development-setup`. Resolve 
 
 Files created / updated:
   CLAUDE.md                                       — pointers + workflow rules (delimited section)
-  claude_instructions/api-conventions.md          — route layout, error shape, auth, OpenAPI
-  claude_instructions/component-structure.md      — atomic/container split, server vs client, colocation
-  claude_instructions/env-vars.md                 — public-prefix rules, deploy-target secret stores
+  .claude/rules/api-conventions.md                — route layout, error shape, auth, OpenAPI
+  .claude/rules/component-structure.md            — atomic/container split, server vs client, colocation
+  .claude/rules/env-vars.md                       — public-prefix rules, deploy-target secret stores
   package.json                                    — [created scaffold | left untouched — already present | skipped — backend-only Python/Go]
   pyproject.toml                                  — [created | skipped — not a Python backend | skipped — uv missing]
   .claude/settings.json                           — tool permissions for [stack summary]
@@ -537,7 +250,7 @@ Graphify (knowledge graph):
 Next steps:
   1. Run the printed install commands (or create the project via the scaffolder, then `cd` in).
   2. Copy `.env.example` to `.env.local` and fill in your real values.
-  3. Wire your deploy target's secret store (Vercel / Netlify / Cloudflare / Fly) — see claude_instructions/env-vars.md.
-  4. Start a new Claude session: "Generate an initial [route / component / API handler] following the conventions in claude_instructions/." Claude will respect the rules in CLAUDE.md.
+  3. Wire your deploy target's secret store (Vercel / Netlify / Cloudflare / Fly) — see .claude/rules/env-vars.md.
+  4. Start a new Claude session: "Generate an initial [route / component / API handler] following the conventions in .claude/rules/." Claude will respect the rules in CLAUDE.md.
   5. [If Graphify installed] Try: /graphify query "where does the auth middleware live?"
 ```

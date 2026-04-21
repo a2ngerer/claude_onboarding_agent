@@ -22,6 +22,15 @@ Use this skill when the project is primarily a LaTeX or Typst document, not a li
 
 If the delimited block already exists from a previous run (either the attributed form above or the legacy unattributed `<!-- onboarding-agent:start -->` form), replace only the content between the markers; leave the rest of the file untouched. Upgrade the opening marker to the attributed form — `/upgrade-setup` depends on it for detection.
 
+## Supporting Files
+
+Read these on-demand at the step that invokes them. Do not read eagerly.
+
+- `rule-file-templates.md` — bodies of the `.claude/rules/*.md` files (Step 4)
+- `document-skeletons.md` — directory scaffold, `main.tex`, `main.typ`, `bib/references.bib` (Step 4)
+- `gitignore-block.md` — the `.gitignore` block (Step 4)
+- `optional-integrations.md` — `.pre-commit-config.yaml`, Overleaf instructions, template pointer, KB bridge (Step 4)
+
 ## Step 1: Install Dependencies
 
 Read `skills/_shared/installation-protocol.md` and follow it for each dependency below.
@@ -112,8 +121,8 @@ For each file below, if it already exists extend rather than overwrite. Use `<!-
 Discipline: [Q1]. Output type: [Q2]. Stack: [Q3]. Citation style: [Q4]. Language: [Q5]. Reference manager: [Q6].
 
 ## Key Pointers
-- Writing style (voice, tense per section, sentence length): `claude_instructions/writing-style.md`
-- Citation rules and `.bib` conventions: `claude_instructions/citation-rules.md`
+- Writing style (voice, tense per section, sentence length): `.claude/rules/writing-style.md`
+- Citation rules and `.bib` conventions: `.claude/rules/citation-rules.md`
 - Document structure: `sections/` (chapters / sections), `figures/`, `data/`, `bib/references.bib`
 
 ## Non-negotiable Rules
@@ -126,299 +135,27 @@ Discipline: [Q1]. Output type: [Q2]. Stack: [Q3]. Citation style: [Q4]. Language
 Superpowers is installed. Use `superpowers:brainstorming` before starting a chapter, and `superpowers:writing-plans` for multi-section revisions.
 ```
 
-Keep this file short (≤ 30 lines). All detail lives in `claude_instructions/*.md`.
+Keep this file short (≤ 30 lines). All detail lives in `.claude/rules/*.md`.
 
-### claude_instructions/writing-style.md
+### .claude/rules/writing-style.md
 
-```markdown
-# Writing Style
+Read `rule-file-templates.md` and write its `writing-style` section to `.claude/rules/writing-style.md`. Skip the write if the file already exists.
 
-## Voice
-- Prefer active voice for clarity. Example: "We measured X" rather than "X was measured".
-- Humanities conventions (Q1 = B) may favor passive or third-person constructions — follow the user's lead if they correct an edit.
+### .claude/rules/citation-rules.md
 
-## Tense by section
-- Abstract: present for the contribution, past for what was done. ("We propose X. We evaluated X on …")
-- Introduction: present (the problem is X; this work contributes Y).
-- Related work: present or present perfect ("Smith proposes", "Several studies have shown").
-- Methods: past, passive or active depending on discipline ("We trained a model" / "The model was trained").
-- Results: past ("The model achieved 92% accuracy").
-- Discussion: present ("These results suggest").
-- Conclusion: present / future ("We conclude that …; future work will …").
+Read `rule-file-templates.md` and write its `citation-rules` section to `.claude/rules/citation-rules.md`. Skip the write if the file already exists.
 
-## Sentence length
-- Target 15–25 words for a typical sentence. Break anything above 35 words.
-- Avoid stacked subordinate clauses. One main idea per sentence.
+### Document scaffold and skeletons
 
-## Section-specific rules
-- Abstract: self-contained, no citations, no undefined abbreviations, ≤ 250 words (adjust per venue).
-- Methods: reproducible. A reader must be able to replicate without reading the rest of the paper.
-- Results: describe, do not interpret. Interpretation belongs in Discussion.
-- Discussion: explicitly address limitations and threats to validity.
-
-## What Claude should NOT do
-- Do not silently "improve" technical terms by swapping synonyms — terminology is load-bearing.
-- Do not reorder citations unless asked.
-- Do not change mathematical notation, variable names, or theorem labels without explicit instruction.
-- Do not translate the manuscript between languages unless explicitly asked.
-```
-
-### claude_instructions/citation-rules.md
-
-```markdown
-# Citation Rules
-
-## Non-negotiable
-**Every citation must resolve to an existing entry in `bib/references.bib`.** Claude must not:
-- Invent a citation key, DOI, ISBN, arXiv ID, or URL.
-- Guess an author's name, year, journal, or page number.
-- Cite from memory when the source is not in `references.bib`.
-
-If a needed source is missing, Claude asks the user:
-> "I need to cite <topic>. Can you add the BibTeX entry to `bib/references.bib`, or paste the citation details so I can prepare the entry for you to verify?"
-
-## Preferred citation commands
-- LaTeX (Q3 = A/B/C): use `\cite{key}` for neutral citation, `\citep{key}` / `\citet{key}` if the document uses natbib/biblatex-apa, `\autocite{key}` for biblatex.
-- Typst (Q3 = D): use `@key` or `#cite(<key>)` — match whatever the template defines.
-
-## `.bib` entry conventions (Q6 = Zotero)
-- Primary tool: Zotero with the **Better BibTeX** plugin — https://retorque.re/zotero-better-bibtex/
-- Configure Better BibTeX to use the citekey format: `auth.lower + year + shorttitle3_3`
-  (e.g. `smith2023deeplearning`). Keys must be stable — never rename a key once used in the manuscript.
-- Auto-export the project collection to `bib/references.bib` (Better BibTeX → Export → Keep Updated).
-- Commit `references.bib` to git. Do NOT commit Zotero's internal database.
-
-## `.bib` entry conventions (Q6 = manual or other manager)
-- Keys follow `authoryearkeyword` lowercase (`smith2023transformer`). No spaces, no accents.
-- Always include: `author`, `title`, `year`. For articles add `journal`, `volume`, `number`, `pages`, `doi`. For conference papers add `booktitle`, `pages`, `doi`. For books add `publisher`, `address`.
-- Prefer DOI over URL. If only a URL is available, add `urldate = {YYYY-MM-DD}`.
-
-## When Claude drafts text
-- If a claim needs a source and no matching `.bib` entry exists, insert a placeholder like `\cite{TODO-author-topic-year}` and list the placeholder in the response so the user can fill it in. Never invent the key.
-- When summarizing a paper already in `references.bib`, quote selectively and keep direct quotations below 25 words; use block quotes for longer excerpts and always include the page number.
-```
-
-### Directory scaffold
-
-Create the following structure in the user's project root. If a directory already exists, leave it untouched.
-
-For LaTeX stacks (Q3 = A, B, or C):
-
-```
-sections/.gitkeep
-figures/.gitkeep
-data/.gitkeep
-bib/references.bib        — seeded with a single commented-out example entry
-main.tex                  — minimal skeleton (documentclass, input of sections, biblatex/natbib config)
-```
-
-For Typst stack (Q3 = D):
-
-```
-sections/.gitkeep
-figures/.gitkeep
-data/.gitkeep
-bib/references.bib        — Typst reads BibTeX too; keep the same name for portability
-main.typ                  — minimal skeleton with #bibliography("bib/references.bib") and the chosen style
-```
-
-Do not scaffold any directory that already exists. Never overwrite `main.tex` or `main.typ` — if present, print: "Found existing main.[tex|typ] — left untouched. The structure under sections/ / figures/ / data/ / bib/ was added around it."
-
-### `main.tex` skeleton (LaTeX stacks only)
-
-```latex
-% Onboarding-agent generated skeleton — replace with your template as needed.
-\documentclass[11pt,a4paper]{article}
-
-% Language — adjust for Q5
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage[english]{babel} % change to 'ngerman' for DE
-
-% Bibliography — biblatex is preferred over bibtex/natbib for new projects.
-% Style is set to match Q4. Override here if your venue requires a different .bst/.bbx.
-\usepackage[style=<biblatex-style>,backend=biber]{biblatex}
-\addbibresource{bib/references.bib}
-
-\title{Working title}
-\author{Your Name}
-
-\begin{document}
-\maketitle
-
-\input{sections/00-abstract.tex}
-\input{sections/01-introduction.tex}
-% \input{sections/02-related-work.tex}
-% \input{sections/03-methods.tex}
-% \input{sections/04-results.tex}
-% \input{sections/05-discussion.tex}
-% \input{sections/06-conclusion.tex}
-
-\printbibliography
-\end{document}
-```
-
-Replace `<biblatex-style>` using the Q4 answer:
-- APA → `apa`
-- IEEE → `ieee`
-- Vancouver → `vancouver` (load `biblatex-vancouver` package)
-- Chicago → `chicago-authordate`
-- Springer / Nature → `nature`
-- ACM → `acmnumeric`
-- Other → leave as a comment and ask the user for the correct style name.
-
-Seed `sections/00-abstract.tex` and `sections/01-introduction.tex` as empty stubs with a one-line comment:
-
-```latex
-% 00-abstract.tex — self-contained summary, ≤ 250 words, no citations.
-```
-
-```latex
-% 01-introduction.tex — problem statement and this work's contribution.
-```
-
-### `main.typ` skeleton (Typst only)
-
-```typ
-// Onboarding-agent generated skeleton — replace with your template as needed.
-#set document(title: "Working title", author: "Your Name")
-#set text(lang: "en") // change to "de" for DE
-
-#align(center, text(17pt)[*Working title*])
-#align(center, [Your Name])
-
-= Abstract
-#include "sections/00-abstract.typ"
-
-= Introduction
-#include "sections/01-introduction.typ"
-
-#bibliography("bib/references.bib", style: "<csl-style>")
-```
-
-Replace `<csl-style>` based on Q4:
-- APA → `apa`
-- IEEE → `ieee`
-- Vancouver → `vancouver`
-- Chicago → `chicago-author-date`
-- ACM → `association-for-computing-machinery`
-- Springer / Nature → `springer-basic-author-date` (ask the user to confirm)
-
-### `bib/references.bib`
-
-Create if missing, with a single commented-out example so users see the expected format:
-
-```bibtex
-% References live here. Keep one entry per source. Do not commit Zotero database files.
-% Example:
-% @article{smith2023transformer,
-%   author  = {Smith, Jane and Doe, John},
-%   title   = {On the scalability of transformer architectures},
-%   journal = {Journal of Machine Learning Research},
-%   year    = {2023},
-%   volume  = {24},
-%   number  = {42},
-%   pages   = {1--34},
-%   doi     = {10.1000/jmlr.2023.42},
-% }
-```
+Read `document-skeletons.md`. Create the directory scaffold (LaTeX layout if Q3 ∈ {A, B, C}; Typst layout if Q3 = D); leave any already-existing directory untouched. If `main.tex` is missing and Q3 ∈ {A, B, C}, emit the `main.tex` skeleton from the same file with `<biblatex-style>` substituted per Q4. If `main.typ` is missing and Q3 = D, emit the `main.typ` skeleton with `<csl-style>` substituted per Q4. If `bib/references.bib` is missing, emit the commented-example entry.
 
 ### .gitignore
 
-Append a delimited block at the end. If the marker block already exists, replace only the content between the markers.
+Read `gitignore-block.md` and append its block to the user's `.gitignore` (delimited markers; replace only the content between them if already present).
 
-```gitignore
-# onboarding-agent: academic-writing — start
-# LaTeX build artifacts
-*.aux
-*.bbl
-*.bcf
-*.blg
-*.fdb_latexmk
-*.fls
-*.log
-*.out
-*.run.xml
-*.synctex.gz
-*.toc
-*.lof
-*.lot
-*.nav
-*.snm
-*.vrb
-_minted-*/
-pdf-build/
+### Optional integrations
 
-# Typst build artifacts
-*.typ.pdf
-
-# Editor / OS noise
-.DS_Store
-Thumbs.db
-
-# Claude local settings
-.claude/settings.local.json
-# onboarding-agent: academic-writing — end
-```
-
-Note: the compiled manuscript PDF (`main.pdf` / similar) is intentionally NOT ignored by default — many supervisors want the built artifact in git. If the user prefers to ignore it, they can add `main.pdf` manually.
-
-### Optional: `.pre-commit-config.yaml` (chktex + vale)
-
-If `chktex_available` or `vale_available` is true, OR if the user wants these enabled regardless, emit the following scaffold. Do NOT install anything automatically — print it as instructions.
-
-```yaml
-# Optional writing-quality hooks. Activate with: pre-commit install
-repos:
-  - repo: local
-    hooks:
-      - id: chktex
-        name: chktex (LaTeX linter)
-        entry: chktex -q -n1 -n3 -n8 -n24 -n25
-        language: system
-        files: \.tex$
-        # Skip if chktex is not installed; the hook will fail loudly rather than silently.
-      - id: vale
-        name: vale (prose linter)
-        entry: vale --minAlertLevel=warning
-        language: system
-        files: \.(tex|typ|md)$
-```
-
-Additionally print:
-
-- If `chktex_available` is false: "⚠ `chktex` not detected — install it via your TeX distribution (it ships with TeX Live and MacTeX)."
-- If `vale_available` is false: "⚠ `vale` not detected — install from https://vale.sh/docs/vale-cli/installation/ (Homebrew: `brew install vale`). A minimal `.vale.ini` is not generated here; run `vale sync` after picking a style package such as `write-good` or `Microsoft`."
-
-If any helper ever needs Python (e.g. `pygmentize` for the LaTeX `minted` package), recommend installing via `uv tool run pygmentize` rather than `pip install Pygments`.
-
-### Optional: Overleaf + Git bridge (only if Q3 = B)
-
-Print these instructions; do not automate:
-
-```
-Overleaf pushes and pulls through a standard Git remote.
-
-1. In Overleaf, open the project → Menu → Git → copy the HTTPS URL.
-2. In this repo:
-     git remote add overleaf <url>
-     git fetch overleaf
-     git merge overleaf/master --allow-unrelated-histories
-3. Generate an Overleaf Git token (Account Settings → Git Integration) and cache it in your OS keychain.
-4. Treat Overleaf as a secondary remote: push to GitHub first, then to Overleaf. Resolve conflicts locally.
-5. Keep `bib/references.bib` authoritative on your machine (Better BibTeX auto-export). Do not edit references inside Overleaf.
-```
-
-### Optional: Template pointer (only if Q2 = A thesis OR B paper)
-
-Add a short note to the completion summary (do not generate a template file):
-
-- Thesis (Q2 = A): "University-specific thesis templates are usually supplied by your institution. Drop the template files into the project root; the generated `sections/` / `bib/` / `figures/` layout is compatible with most templates. Common examples: TUM, ETH, MIT, LaTeX `classicthesis`."
-- Paper (Q2 = B): "Common venue templates: IEEE (`IEEEtran.cls`), ACM (`acmart.cls`), Springer (`svjour3.cls`), Elsevier (`elsarticle.cls`). Drop the class file into the project root and replace `\documentclass{article}` in `main.tex` accordingly."
-
-### Optional: Knowledge-base bridge (mention only)
-
-If the user mentions they already ran `knowledge-base-setup` (or a `wiki/` or `notes/` folder exists), tell them: "Claude can read your existing Obsidian vault / wiki notes as research input while drafting — point to them in `claude_instructions/writing-style.md` or by prefixing prompts with the relevant note path."
+Read `optional-integrations.md`. Emit the `.pre-commit-config.yaml` scaffold if `chktex_available` or `vale_available` is true OR the user requested it, and print the matching missing-tool warnings. If Q3 = B, print the Overleaf + Git bridge instructions. If Q2 = A or B, print the template pointer note. Mention the knowledge-base bridge only when the user references an existing vault / wiki.
 
 ## Step 5: Write Upgrade Metadata
 
@@ -431,8 +168,8 @@ Set `setup_slug: academic-writing`, `skill_slug: academic-writing-setup`. Resolv
 
 Files created / updated:
   CLAUDE.md                              — pointers + non-negotiable rules (delimited section)
-  claude_instructions/writing-style.md   — voice, tense per section, section rules
-  claude_instructions/citation-rules.md  — no-invented-citations rule, .bib conventions
+  .claude/rules/writing-style.md         — voice, tense per section, section rules
+  .claude/rules/citation-rules.md        — no-invented-citations rule, .bib conventions
   sections/, figures/, data/, bib/       — [created | skipped — already existed]
   bib/references.bib                     — [created with commented example | left untouched]
   main.tex or main.typ                   — [created skeleton | left untouched — already present]
