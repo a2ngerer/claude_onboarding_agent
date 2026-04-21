@@ -28,6 +28,7 @@
   "skills": [
     "skills/onboarding/SKILL.md",
     "skills/coding-setup/SKILL.md",
+    "skills/data-science-setup/SKILL.md",
     "skills/design-setup/SKILL.md",
     "skills/knowledge-base-builder/SKILL.md",
     "skills/devops-setup/SKILL.md",
@@ -39,6 +40,7 @@
   "commands": [
     { "name": "onboarding", "skill": "onboarding" },
     { "name": "coding-setup", "skill": "coding-setup" },
+    { "name": "data-science-setup", "skill": "data-science-setup" },
     { "name": "design-setup", "skill": "design-setup" },
     { "name": "build-knowledge-base", "skill": "knowledge-base-builder" },
     { "name": "devops-setup", "skill": "devops-setup" },
