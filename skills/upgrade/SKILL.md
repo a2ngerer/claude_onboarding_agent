@@ -118,7 +118,7 @@ For each skill in `detected_skills`, read its `SKILL.md` from the plugin install
 - `./AGENTS.md` (if the skill generates one)
 - `./.gitignore`
 - `./.claude/settings.json` (if the skill generates one)
-- `./claude_instructions/*.md` (if the skill generates any — data-science, academic-writing)
+- `./.claude/rules/*.md` (if the skill generates any — data-science, academic-writing, web-development, knowledge-base-builder)
 
 Skip any candidate file that does not exist on disk. Do not create new files here — Pass 2 is diff-only.
 
@@ -126,7 +126,7 @@ Skip any candidate file that does not exist on disk. Do not create new files her
 
 Inside each candidate file, locate every delimited section owned by the onboarding-agent:
 
-**Markdown files** (`CLAUDE.md`, `AGENTS.md`, `claude_instructions/*.md`):
+**Markdown files** (`CLAUDE.md`, `AGENTS.md`, `.claude/rules/*.md`):
 
 ```
 <!-- onboarding-agent:start setup=<type> skill=<slug> section=<name> -->
@@ -234,7 +234,7 @@ For every unique file in the accepted-changes set, copy the current on-disk cont
 
 - `./CLAUDE.md` → `./.claude/backups/<timestamp>/CLAUDE.md`
 - `./.gitignore` → `./.claude/backups/<timestamp>/.gitignore`
-- `./claude_instructions/writing-style.md` → `./.claude/backups/<timestamp>/claude_instructions/writing-style.md`
+- `./.claude/rules/writing-style.md` → `./.claude/backups/<timestamp>/.claude/rules/writing-style.md`
 - `./.claude/settings.json` → `./.claude/backups/<timestamp>/.claude/settings.json`
 
 Use Bash `cp --parents` where available, otherwise `mkdir -p` the parent and `cp` the file.
