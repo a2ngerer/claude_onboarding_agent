@@ -158,7 +158,21 @@ Ask ONCE (adapt to detected language):
 
 Set `setup_slug: coding`, `skill_slug: coding-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`. If Step 5 installed Graphify, `skills_used` will automatically pick up `graphify-setup` via the shared protocol's own write-meta call — this step records `coding-setup` alongside it.
 
-## Step 7: Completion Summary
+## Step 7: Render Anchor Sections
+
+Read `skills/_shared/anchor-mapping.md`. Locate the row for `setup_type: coding`. For each anchor slug in that row:
+
+1. Call `skills/_shared/render-anchor-section.md` with:
+   - `setup_type: coding`
+   - `skill_slug: coding-setup`
+   - `anchor_slug: <slug>`
+   - `target_file: ./CLAUDE.md`
+   - `fallback_content: <embedded fallback from skills/anchors/SKILL.md for that slug>`
+2. If a `./AGENTS.md` file was generated earlier in this skill, repeat the call with `target_file: ./AGENTS.md`.
+
+Do not fail if any single `render-anchor-section.md` call returns `placeholder` — that is the designed offline path. Collect the list of rendered / placeholder slugs to mention in the completion summary.
+
+## Step 8: Completion Summary
 
 ```
 ✓ Coding setup complete! Here's what was configured:
@@ -183,4 +197,5 @@ Next steps:
   Start a new Claude session and run: /superpowers:using-superpowers
   Then try: /superpowers:brainstorming "describe your first feature"
   [If Graphify installed] Try: /graphify query "where does auth happen in this repo?"
+  - Run `/anchors` any time to refresh the anchor-derived sections. If any section was rendered as a placeholder due to offline mode, re-run `/anchors` once you are back online.
 ```
