@@ -27,6 +27,7 @@ All public repo artifacts — GitHub issues, PR titles/descriptions, commit mess
 - Superpowers is optional in all new skills — only `coding-setup` and `knowledge-base-setup` install it without asking
 - Every skill must handle failed external dependency installation gracefully
 - Never silently overwrite an existing CLAUDE.md — always extend with a new delimited section
+- Setup skills that emit end-user hooks MUST delegate file handling to `skills/_shared/emit-hook.md` and MUST mark every emitted entry with `"_plugin": "claude-onboarding-agent"` and `"_skill": "<slug>"`. See `docs/superpowers/specs/2026-04-21-end-user-hooks-rollout-design.md` for the hook catalog.
 
 ## Subagent Authoring Rules
 
