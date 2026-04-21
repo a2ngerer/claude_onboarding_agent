@@ -12,13 +12,13 @@ This skill configures Claude for exploratory and productive data science / ML wo
 **Existing CLAUDE.md:** If `existing_claude_md: true` in handoff context, or if `CLAUDE.md` already exists in the filesystem, DO NOT overwrite it. Append a new delimited section at the end of the file:
 
 ```
-<!-- onboarding-agent:start -->
+<!-- onboarding-agent:start setup=data-science skill=data-science-setup section=claude-md -->
 ## Claude Onboarding Agent — Data Science Setup
 ...generated content...
 <!-- onboarding-agent:end -->
 ```
 
-If the delimited block already exists from a previous run, replace only the content between the markers; leave the rest of the file untouched.
+If the delimited block already exists from a previous run (either the attributed form above or the legacy unattributed `<!-- onboarding-agent:start -->` form), replace only the content between the markers; leave the rest of the file untouched. Upgrade the opening marker to the attributed form while you are there — `/upgrade` depends on it for detection.
 
 ## Step 1: Install Dependencies
 
@@ -286,7 +286,11 @@ repos:
 
 If `pre-commit` is not installed, print: "Run `uv add --dev pre-commit && uv run pre-commit install` to activate the hooks."
 
-## Step 5: Completion Summary
+## Step 5: Write Upgrade Metadata
+
+Set `setup_slug: data-science`, `skill_slug: data-science-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`.
+
+## Step 6: Completion Summary
 
 ```
 ✓ Data Science / ML setup complete!
@@ -300,6 +304,7 @@ Files created / updated:
   .gitignore                                   — raw data, notebook checkpoints, experiment artifacts
   data/{raw,interim,processed}/                — [created | skipped per user choice]
   .pre-commit-config.yaml                      — [created | skipped per user choice]
+  .claude/onboarding-meta.json                 — setup marker for /upgrade
 
 External skills:
   [✓ Superpowers installed via superpowers_method (superpowers_scope)]

@@ -9,7 +9,16 @@ This skill configures Claude for UI/UX design and frontend work.
 
 **Language:** Use `detected_language` from handoff context, or detect from the user's first message and use it throughout.
 
-**Existing CLAUDE.md:** If `existing_claude_md: true` in handoff context, or if CLAUDE.md exists in the filesystem, extend it by appending a new section (`## Claude Onboarding Agent — Design Setup`) rather than overwriting.
+**Existing CLAUDE.md:** If `existing_claude_md: true` in handoff context, or if CLAUDE.md exists in the filesystem, DO NOT overwrite it. Append a new delimited section at the end of the file:
+
+```
+<!-- onboarding-agent:start setup=design skill=design-setup section=claude-md -->
+## Claude Onboarding Agent — Design Setup
+...generated content...
+<!-- onboarding-agent:end -->
+```
+
+If the delimited block already exists from a previous run, replace only the content between the markers; leave the rest untouched. Wrap generated `.gitignore` entries in `# onboarding-agent: design — start` / `— end` markers so `/upgrade` can refresh them non-destructively.
 
 ## Step 1: Install Dependencies
 
@@ -146,16 +155,21 @@ Thumbs.db
 .claude/settings.local.json
 ```
 
-## Step 5: Completion Summary
+## Step 5: Write Upgrade Metadata
+
+Set `setup_slug: design`, `skill_slug: design-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`.
+
+## Step 6: Completion Summary
 
 ```
 ✓ UI/UX Design setup complete!
 
 Files created:
-  CLAUDE.md             — design context, accessibility standard ([Q4]), UI guidelines
-  AGENTS.md             — designer and accessibility-auditor role definitions
-  .claude/settings.json — tool permissions for [stack]
-  .gitignore            — design file and build rules
+  CLAUDE.md                     — design context, accessibility standard ([Q4]), UI guidelines
+  AGENTS.md                     — designer and accessibility-auditor role definitions
+  .claude/settings.json         — tool permissions for [stack]
+  .gitignore                    — design file and build rules
+  .claude/onboarding-meta.json  — setup marker for /upgrade
 
 External skills:
   [✓ Superpowers installed via superpowers_method (superpowers_scope)]

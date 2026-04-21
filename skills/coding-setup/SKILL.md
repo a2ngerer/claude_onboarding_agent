@@ -9,7 +9,16 @@ This skill sets up Claude Code for professional software development using a pro
 
 **Language:** If a HANDOFF_CONTEXT is present, use `detected_language`. Otherwise detect language from the user's first message and use it throughout.
 
-**Existing CLAUDE.md:** If `existing_claude_md: true` in handoff context, or if CLAUDE.md exists in the filesystem, extend it by appending a new section (`## Claude Onboarding Agent — Coding Setup`) rather than overwriting.
+**Existing CLAUDE.md:** If `existing_claude_md: true` in handoff context, or if CLAUDE.md exists in the filesystem, DO NOT overwrite it. Append a new delimited section at the end of the file:
+
+```
+<!-- onboarding-agent:start setup=coding skill=coding-setup section=claude-md -->
+## Claude Onboarding Agent — Coding Setup
+...generated content...
+<!-- onboarding-agent:end -->
+```
+
+If the delimited block already exists from a previous run, replace only the content between the markers; leave the rest of the file untouched. Use the same marker pattern (`# onboarding-agent: coding — start` / `— end`) around generated `.gitignore` blocks so `/upgrade` can refresh them non-destructively.
 
 ## Step 1: Install Dependencies
 
@@ -131,16 +140,21 @@ On failure for any skill: warn clearly ("⚠ Could not install [skill] — skipp
 
 Add the list of successfully installed optional skills to the Completion Summary under a new line: `Optional community skills: [list or "none selected"]`
 
-## Step 5: Completion Summary
+## Step 5: Write Upgrade Metadata
+
+Set `setup_slug: coding`, `skill_slug: coding-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`.
+
+## Step 6: Completion Summary
 
 ```
 ✓ Coding setup complete! Here's what was configured:
 
 Files created:
-  CLAUDE.md            — project context + [workflow instructions / ⚠ omitted — Superpowers not installed]
-  AGENTS.md            — coder, reviewer, and git-agent role definitions
-  .claude/settings.json — tool permissions for [stack]
-  .gitignore           — [stack]-appropriate ignore rules
+  CLAUDE.md                     — project context + [workflow instructions / ⚠ omitted — Superpowers not installed]
+  AGENTS.md                     — coder, reviewer, and git-agent role definitions
+  .claude/settings.json         — tool permissions for [stack]
+  .gitignore                    — [stack]-appropriate ignore rules
+  .claude/onboarding-meta.json  — setup marker for /upgrade
 
 External skills:
   [✓ Superpowers installed via superpowers_method (superpowers_scope)]

@@ -9,7 +9,16 @@ This skill configures Claude for DevOps and infrastructure work.
 
 **Language:** Use `detected_language` from handoff context, or detect from the user's first message and use it throughout.
 
-**Existing CLAUDE.md:** If `existing_claude_md: true` in handoff context, or if CLAUDE.md exists in the filesystem, extend it by appending a new section (`## Claude Onboarding Agent — DevOps Setup`) rather than overwriting.
+**Existing CLAUDE.md:** If `existing_claude_md: true` in handoff context, or if CLAUDE.md exists in the filesystem, DO NOT overwrite it. Append a new delimited section at the end of the file:
+
+```
+<!-- onboarding-agent:start setup=devops skill=devops-setup section=claude-md -->
+## Claude Onboarding Agent — DevOps Setup
+...generated content...
+<!-- onboarding-agent:end -->
+```
+
+If the delimited block already exists from a previous run, replace only the content between the markers; leave the rest untouched. Wrap generated `.gitignore` entries in `# onboarding-agent: devops — start` / `— end` markers so `/upgrade` can refresh them non-destructively.
 
 ## Step 1: Install Dependencies
 
@@ -175,16 +184,21 @@ Thumbs.db
 .claude/settings.local.json
 ```
 
-## Step 5: Completion Summary
+## Step 5: Write Upgrade Metadata
+
+Set `setup_slug: devops`, `skill_slug: devops-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`.
+
+## Step 6: Completion Summary
 
 ```
 ✓ DevOps / Cloud setup complete!
 
 Files created:
-  CLAUDE.md             — infrastructure context + safety guidelines
-  AGENTS.md             — infra-planner, infra-applier, security-reviewer
-  .claude/settings.json — tool permissions for [stack summary]
-  .gitignore            — IaC state files and secrets
+  CLAUDE.md                     — infrastructure context + safety guidelines
+  AGENTS.md                     — infra-planner, infra-applier, security-reviewer
+  .claude/settings.json         — tool permissions for [stack summary]
+  .gitignore                    — IaC state files and secrets
+  .claude/onboarding-meta.json  — setup marker for /upgrade
 
 External skills:
   [✓ Superpowers installed via superpowers_method (superpowers_scope)]

@@ -14,13 +14,13 @@ Use this skill when the project is primarily a LaTeX or Typst document, not a li
 **Existing CLAUDE.md:** If `existing_claude_md: true` in handoff context, or if `CLAUDE.md` already exists in the filesystem, DO NOT overwrite it. Append a new delimited section at the end of the file:
 
 ```
-<!-- onboarding-agent:start -->
+<!-- onboarding-agent:start setup=academic-writing skill=academic-writing-setup section=claude-md -->
 ## Claude Onboarding Agent — Academic Writing Setup
 ...generated content...
 <!-- onboarding-agent:end -->
 ```
 
-If the delimited block already exists from a previous run, replace only the content between the markers; leave the rest of the file untouched.
+If the delimited block already exists from a previous run (either the attributed form above or the legacy unattributed `<!-- onboarding-agent:start -->` form), replace only the content between the markers; leave the rest of the file untouched. Upgrade the opening marker to the attributed form — `/upgrade` depends on it for detection.
 
 ## Step 1: Install Dependencies
 
@@ -420,7 +420,11 @@ Add a short note to the completion summary (do not generate a template file):
 
 If the user mentions they already ran `knowledge-base-builder` (or a `wiki/` or `notes/` folder exists), tell them: "Claude can read your existing Obsidian vault / wiki notes as research input while drafting — point to them in `claude_instructions/writing-style.md` or by prefixing prompts with the relevant note path."
 
-## Step 5: Completion Summary
+## Step 5: Write Upgrade Metadata
+
+Set `setup_slug: academic-writing`, `skill_slug: academic-writing-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`.
+
+## Step 6: Completion Summary
 
 ```
 ✓ Academic writing setup complete!
@@ -434,6 +438,7 @@ Files created / updated:
   main.tex or main.typ                   — [created skeleton | left untouched — already present]
   .gitignore                             — LaTeX/Typst artifact rules (delimited section)
   .pre-commit-config.yaml                — [emitted as instructions | skipped per user]
+  .claude/onboarding-meta.json           — setup marker for /upgrade
 
 External skills:
   [✓ Superpowers installed via superpowers_method (superpowers_scope)]
