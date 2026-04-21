@@ -147,6 +147,14 @@ Optional: connect [Obsidian](https://obsidian.md) via the official Obsidian CLI,
 
 ---
 
+## Realtime anchors
+
+Some best practices change faster than plugin releases — current Claude model IDs, recommended Python tooling, the MCP server landscape. To keep skills accurate without requiring users to reinstall the plugin, this repo ships a set of short, auto-updated reference snapshots under [`docs/anchors/`](docs/anchors/).
+
+Skills fetch anchors at runtime from a pinned `raw.githubusercontent.com` URL via the shared [`skills/_shared/fetch-anchor.md`](skills/_shared/fetch-anchor.md) protocol (24h cache, embedded offline fallback). A daily GitHub Action researches the sources listed in each anchor and opens a PR for human review — anchors are never auto-merged. Format details: [`docs/anchors/README.md`](docs/anchors/README.md).
+
+---
+
 ## Language support
 
 All skills detect your language automatically from your first message and respond accordingly. Supported: English, German, Spanish, French, and any other language Claude Code supports.
