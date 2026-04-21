@@ -35,6 +35,7 @@
     "skills/content-creator-setup/SKILL.md",
     "skills/office-setup/SKILL.md",
     "skills/research-setup/SKILL.md",
+    "skills/academic-writing-setup/SKILL.md",
     "skills/tipps/SKILL.md"
   ],
   "commands": [
@@ -47,6 +48,7 @@
     { "name": "content-creator-setup", "skill": "content-creator-setup" },
     { "name": "office-setup", "skill": "office-setup" },
     { "name": "research-setup", "skill": "research-setup" },
+    { "name": "academic-writing-setup", "skill": "academic-writing-setup" },
     { "name": "tipps", "skill": "tipps" }
   ]
 }

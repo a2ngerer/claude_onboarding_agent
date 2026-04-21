@@ -34,6 +34,7 @@ Not sure where to start? Run `/onboarding` and we'll figure it out with you. Or 
 | **Building a personal wiki / second brain** | `/build-knowledge-base` | Karpathy-pattern wiki, optional Obsidian CLI subagent |
 | **Writing docs, emails, reports** | `/office-setup` | Writing style, document templates, company context |
 | **A researcher or academic** | `/research-setup` | Citation format, domain vocabulary, LaTeX-aware ignores |
+| **Writing a thesis, paper, or dissertation** | `/academic-writing-setup` | Thesis / paper / dissertation — LaTeX or Typst, Zotero, citation rules that prevent hallucinations |
 | **Creating content** (YouTube, blog, social) | `/content-creator-setup` | Brand voice, platform presets, audience profile |
 | **Running infra / DevOps** | `/devops-setup` | Cloud + IaC + CI config, safe-by-default infra workflow |
 | **Designing UIs** | `/design-setup` | Design tool + frontend stack, UI guidelines, no generic AI looks |
@@ -78,6 +79,7 @@ curl -fsSL https://raw.githubusercontent.com/a2ngerer/claude_onboarding_agent/ma
 | `/build-knowledge-base` | Builds a [Karpathy-pattern](https://github.com/forrestchang/andrej-karpathy-skills) wiki from your notes or codebase (+ optional [Obsidian](https://obsidian.md) CLI integration via dispatched subagent — no always-on MCP token cost) |
 | `/office-setup` | Writing style, document preferences, company context |
 | `/research-setup` | Citation format, research domain, academic writing guidelines |
+| `/academic-writing-setup` | Thesis / paper / dissertation setup — LaTeX or Typst stack, Zotero + Better BibTeX, citation style, no-invented-citations rules, `sections/`/`bib/`/`figures/` scaffold |
 | `/content-creator-setup` | Brand voice, platform preferences, audience context |
 | `/devops-setup` | Cloud provider, IaC tool, CI/CD — safe infra workflow + agent roles |
 | `/design-setup` | Design tool, frontend stack, accessibility standard — UI guidelines without the generic AI look |
@@ -131,6 +133,7 @@ Every setup skill creates a tailored `CLAUDE.md` with context and instructions s
 | Knowledge Base | ✓ + Karpathy pattern | ✓ `.claude/agents/obsidian-vault-keeper.md` (optional) | — | ✓ | Superpowers + Karpathy |
 | Office | ✓ + writing style | — | — | ✓ | Superpowers (optional) |
 | Research | ✓ + citation format | — | — | ✓ LaTeX | Superpowers (optional) |
+| Academic Writing | ✓ + non-negotiable citation rules (pointers to `claude_instructions/writing-style.md`, `citation-rules.md`) | — | — | ✓ LaTeX / Typst build artifacts | Superpowers (optional) |
 | Content | ✓ + brand voice | — | — | ✓ media files | Superpowers (optional) |
 | DevOps | ✓ + infra workflow | ✓ 3 roles | ✓ stack permissions | ✓ IaC state, secrets | Superpowers (optional) |
 | Design | ✓ + UI guidelines | ✓ 2 roles | ✓ stack permissions | ✓ design assets | Superpowers (optional) |
