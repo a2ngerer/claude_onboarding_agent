@@ -134,6 +134,17 @@ Finding title: "Installed skill may not match your project type"
 Why: Unused setup skills add noise to Claude's context without providing value.
 How to apply: Remove unused skills via `/plugin uninstall <skill-name>`.
 
+**Check 4.4 — Use case suggests MCP that is not registered** `[LOW]`
+Condition: `.claude/onboarding-meta.json` records `setup_slug` in {`coding`, `web-development`, `design`, `office`} AND the corresponding recommended MCP (per spec 2026-04-21-mcp-server-integration-design.md) is NOT in `claude mcp list`.
+Mapping:
+- `coding` → `github` (only if project has a GitHub remote)
+- `web-development` → `github` (only if project has a GitHub remote)
+- `design` → `figma-context` (only if the recorded design tool is Figma; skip otherwise)
+- `office` → `gmail`, `google-calendar`, `google-drive` — flag only the ones whose trigger conditions match the recorded office Q1 answer
+Finding title: "Declared use case suggests MCP server(s) that are not registered"
+Why: The setup skill offered these MCPs at onboarding time; the user may have declined or deferred. Informational reminder, not an error.
+How to apply: Re-run the relevant setup skill to re-offer, or run the `claude mcp add` command directly (see the anchor doc at `docs/anchors/mcp-servers.md`).
+
 ---
 
 ## Pass 5 — Realtime Anchors

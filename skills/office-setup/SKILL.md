@@ -45,7 +45,43 @@ Ask one at a time:
 3. "Is there any company, team, or project context that Claude should always keep in mind? (Optional — press Enter to skip)
    Example: 'We are a SaaS company selling to enterprise HR teams' or 'I work in legal compliance at a bank'"
 
-## Step 3: Generate Artifacts
+## Step 3: Offer Google Workspace MCPs (conditional)
+
+Read `skills/_shared/offer-mcp.md` once. Then run it for each MCP below in order, skipping any whose trigger condition is false.
+
+### Gmail
+
+- `mcp_slug`: `gmail`
+- `trigger_condition`: Q1 answer is "A) Emails and messages" OR "D) All of the above".
+- `capability_line`: "Read, search, and send email from your Gmail inbox."
+- `install_command`: the current install command from `docs/anchors/mcp-servers.md` under "Productivity" (prefer the official Google Gmail MCP if listed; else the community `gmail-mcp-server` noted in the anchor).
+- `auth_type`: `oauth`
+- `auth_detail`: "Google OAuth — reads your Gmail inbox per the scopes shown on the consent screen."
+- `pointer_link`: see anchor doc.
+
+### Google Calendar
+
+- `mcp_slug`: `google-calendar`
+- `trigger_condition`: same as Gmail (Q1 = A or D). Offer Calendar only if Gmail was offered.
+- `capability_line`: "Read and create calendar events."
+- `install_command`: from `docs/anchors/mcp-servers.md`.
+- `auth_type`: `oauth`
+- `auth_detail`: "Google OAuth — reads/writes your Google Calendar per the consent screen scopes."
+- `pointer_link`: see anchor doc.
+
+### Google Drive
+
+- `mcp_slug`: `google-drive`
+- `trigger_condition`: Q1 answer is "B) Reports and proposals" OR "D) All of the above".
+- `capability_line`: "Read and search documents in your Google Drive."
+- `install_command`: from `docs/anchors/mcp-servers.md`.
+- `auth_type`: `oauth`
+- `auth_detail`: "Google OAuth — reads your Google Drive per the consent screen scopes."
+- `pointer_link`: see anchor doc.
+
+Record `gmail_installed`, `google-calendar_installed`, `google-drive_installed` in skill state.
+
+## Step 4: Generate Artifacts
 
 ### CLAUDE.md
 
@@ -70,6 +106,12 @@ Primary document types: [answer from Q1]
 [Include ONLY if superpowers_installed is true]
 ## Superpowers
 Superpowers is installed. For complex multi-step tasks (research + structure + write), use superpowers:brainstorming to plan the approach before drafting.
+
+[Include ONLY if any of gmail_installed / gmail_deferred / google-calendar_installed / google-calendar_deferred / google-drive_installed / google-drive_deferred is true — emitted per skills/_shared/offer-mcp.md Step 5, one bullet per installed or deferred MCP]
+## Configured MCP servers
+- gmail: [see _shared/offer-mcp.md Step 5 for the exact per-state line format]
+- google-calendar: [see _shared/offer-mcp.md Step 5 for the exact per-state line format]
+- google-drive: [see _shared/offer-mcp.md Step 5 for the exact per-state line format]
 ```
 
 ### .gitignore
@@ -87,11 +129,11 @@ Thumbs.db
 .claude/settings.local.json
 ```
 
-## Step 4: Write Upgrade Metadata
+## Step 5: Write Upgrade Metadata
 
 Set `setup_slug: office`, `skill_slug: office-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`.
 
-## Step 5: Render Anchor Sections
+## Step 6: Render Anchor Sections
 
 Read `skills/_shared/anchor-mapping.md`. Locate the row for `setup_type: office`. For each anchor slug in that row:
 
@@ -105,7 +147,7 @@ Read `skills/_shared/anchor-mapping.md`. Locate the row for `setup_type: office`
 
 Do not fail if any single `render-anchor-section.md` call returns `placeholder`. Collect rendered / placeholder slugs for the completion summary.
 
-## Step 6: Completion Summary
+## Step 7: Completion Summary
 
 ```
 ✓ Office setup complete!
@@ -119,6 +161,9 @@ External skills:
   [✓ Superpowers installed via superpowers_method (superpowers_scope)]
   [skipped — install later with: /plugin install superpowers@claude-plugins-official]
   [⚠ Superpowers installation failed — install manually: https://github.com/obra/superpowers]
+
+MCP servers:
+  [up to three lines — one per considered MCP (gmail, google-calendar, google-drive) — formatted per skills/_shared/offer-mcp.md Step 6; omit any line whose trigger condition was false]
 
 Next steps:
   Start a new Claude session and say: "Draft an email to [recipient] about [topic]"

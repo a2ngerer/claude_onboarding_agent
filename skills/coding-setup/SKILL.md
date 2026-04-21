@@ -62,9 +62,25 @@ Read `skills/_shared/emit-subagent.md` and follow it with these inputs:
   - Cite file:line for every finding.
   ```
 
-Record the emit outcome (`emit_subagent`, `subagent_skipped_existing`, `subagent_deferred`) for use in the completion summary (Step 9). If `emit_subagent: true`, add `"code-reviewer"` to the list passed to `skills/_shared/write-meta.md` in Step 7 as `subagents_installed`.
+Record the emit outcome (`emit_subagent`, `subagent_skipped_existing`, `subagent_deferred`) for use in the completion summary (Step 10). If `emit_subagent: true`, add `"code-reviewer"` to the list passed to `skills/_shared/write-meta.md` in Step 8 as `subagents_installed`.
 
-## Step 4: Generate Artifacts
+## Step 4: Offer GitHub MCP (conditional)
+
+Read `skills/_shared/offer-mcp.md` and follow it with these parameters:
+
+- `mcp_slug`: `github`
+- `trigger_condition`: project is git-initialized AND has a GitHub remote. Check via Bash:
+  `git remote -v 2>/dev/null | grep -q 'github.com' && echo YES || echo NO`
+  If `NO`, skip this step entirely — no prompt, no CLAUDE.md change.
+- `capability_line`: "Access GitHub issues, PRs, and reviews directly via the GitHub API instead of shelling out to `gh`."
+- `install_command`: `claude mcp add github npx -- -y @modelcontextprotocol/server-github`
+- `auth_type`: `api_token`
+- `auth_detail`: `GITHUB_PERSONAL_ACCESS_TOKEN` (generate at https://github.com/settings/tokens — scope `repo` for private repos, else `public_repo`)
+- `pointer_link`: `https://github.com/modelcontextprotocol/servers/tree/main/src/github`
+
+Record `github_installed` in skill state for use by the CLAUDE.md generator and completion summary.
+
+## Step 5: Generate Artifacts
 
 Generate the following files automatically:
 
@@ -97,6 +113,10 @@ Follow this iterative workflow for all features and bug fixes:
 ## Testing
 - Write tests before implementation (TDD).
 - Tests must run against real dependencies — avoid mocks unless unavoidable.
+
+[Include ONLY if github_installed is true OR github_deferred is true — emitted per skills/_shared/offer-mcp.md Step 5]
+## Configured MCP servers
+- github: [see _shared/offer-mcp.md Step 5 for the exact per-state line format]
 ```
 
 Adapt the "Project Context" section based on the detected stack:
@@ -149,7 +169,7 @@ Generate a `.gitignore` appropriate for the detected stack. Always include `.cla
 - Rust: `target/`, `.claude/settings.local.json`
 - Generic fallback: `.env`, `*.log`, `.DS_Store`, `.claude/settings.local.json`
 
-## Step 5: Optional Community Skills
+## Step 6: Optional Community Skills
 
 > "Would you like to install additional community skills?
 >
@@ -168,7 +188,7 @@ On failure for any skill: warn clearly ("⚠ Could not install [skill] — skipp
 
 Add the list of successfully installed optional skills to the Completion Summary under a new line: `Optional community skills: [list or "none selected"]`
 
-## Step 6: Optional Graphify Integration
+## Step 7: Optional Graphify Integration
 
 Ask ONCE (adapt to detected language):
 
@@ -179,14 +199,14 @@ Ask ONCE (adapt to detected language):
 > (yes / no / later)"
 
 - **yes** → set `host_setup_slug: "coding"`, `host_skill_slug: "coding-setup"`, `run_initial_build: true`, `install_git_hook: true`. Read `skills/_shared/graphify-install.md` and follow steps G1–G9 in order. The shared protocol handles prerequisites (Python >= 3.10, `uv` or `pipx`), install (`uv tool install graphifyy` preferred, `pipx install graphifyy` fallback — never `pip install`), `graphify install`, hook verification, optional initial build + git hook, and appends the attributed CLAUDE.md section with `setup=coding skill=graphify-setup section=graphify`. Record the protocol's output variables for the completion summary.
-- **no** → do not mention Graphify further. Set `graphify_installed: false` and skip to Step 7.
+- **no** → do not mention Graphify further. Set `graphify_installed: false` and skip to Step 8.
 - **later** → invoke `skills/_shared/graphify-install.md` in "later" mode: skip Steps G1–G7 and only write the short deferred pointer block into CLAUDE.md (`"Knowledge graph: run /graphify-setup when ready."`). Set `graphify_installed: false`, `graphify_deferred: true`.
 
-## Step 7: Write Upgrade Metadata
+## Step 8: Write Upgrade Metadata
 
-Set `setup_slug: coding`, `skill_slug: coding-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. If Step 3 emitted the `code-reviewer` subagent, set `subagents_installed: ["code-reviewer"]`; otherwise leave it unset (the helper treats it as an empty list). Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`. If Step 6 installed Graphify, `skills_used` will automatically pick up `graphify-setup` via the shared protocol's own write-meta call — this step records `coding-setup` alongside it.
+Set `setup_slug: coding`, `skill_slug: coding-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. If Step 3 emitted the `code-reviewer` subagent, set `subagents_installed: ["code-reviewer"]`; otherwise leave it unset (the helper treats it as an empty list). Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`. If Step 7 installed Graphify, `skills_used` will automatically pick up `graphify-setup` via the shared protocol's own write-meta call — this step records `coding-setup` alongside it.
 
-## Step 8: Render Anchor Sections
+## Step 9: Render Anchor Sections
 
 Read `skills/_shared/anchor-mapping.md`. Locate the row for `setup_type: coding`. For each anchor slug in that row:
 
@@ -200,7 +220,7 @@ Read `skills/_shared/anchor-mapping.md`. Locate the row for `setup_type: coding`
 
 Do not fail if any single `render-anchor-section.md` call returns `placeholder` — that is the designed offline path. Collect the list of rendered / placeholder slugs to mention in the completion summary.
 
-## Step 9: Completion Summary
+## Step 10: Completion Summary
 
 ```
 ✓ Coding setup complete! Here's what was configured:
@@ -221,6 +241,9 @@ Optional community skills: [list of installed skills, or "none selected"]
 
 Graphify (knowledge graph):
   [✓ installed via <installer>, /graphify + PreToolUse hook registered | ⚠ installed but hook not verified — run /graphify in a new session | — skipped: <reason> | — deferred: run /graphify-setup when ready | — not offered]
+
+MCP servers:
+  [one line per MCP considered, formatted per skills/_shared/offer-mcp.md Step 6 — omit if github trigger condition was false]
 
 Next steps:
   Start a new Claude session and run: /superpowers:using-superpowers

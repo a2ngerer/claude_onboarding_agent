@@ -68,7 +68,21 @@ For each selected skill, run: `/plugin install <skill>@claude-plugins-official`
 
 On failure: warn and continue. Store successfully installed skills as `optional_skills_installed`.
 
-## Step 4: Generate Artifacts
+## Step 4: Offer Figma MCP (conditional)
+
+Read `skills/_shared/offer-mcp.md` and follow it with these parameters:
+
+- `mcp_slug`: `figma-context`
+- `trigger_condition`: Q1 answer is "A) Figma". If the user picked another tool, skip this step entirely.
+- `capability_line`: "Read Figma frames directly into Claude's context for UI-to-code work."
+- `install_command`: the install command from `docs/anchors/mcp-servers.md` under "Design" (currently: see https://github.com/GLips/Figma-Context-MCP — use the README's documented `claude mcp add` form at registration time; adapt if the anchor is updated).
+- `auth_type`: `api_token`
+- `auth_detail`: `FIGMA_API_TOKEN` (generate at https://www.figma.com/developers/api#access-tokens — scope: read-only is sufficient)
+- `pointer_link`: `https://github.com/GLips/Figma-Context-MCP`
+
+Record `figma-context_installed` in skill state.
+
+## Step 5: Generate Artifacts
 
 ### CLAUDE.md
 
@@ -90,6 +104,10 @@ Tool: [Q1 answer] | Stack: [Q2 answer] | Workflow: [Q3 answer] | Accessibility: 
 [Include ONLY if superpowers_installed is true]
 ## Superpowers
 Superpowers is installed. For design exploration and component planning, use superpowers:brainstorming to compare directions before generating code.
+
+[Include ONLY if figma-context_installed is true OR figma-context_deferred is true — emitted per skills/_shared/offer-mcp.md Step 5]
+## Configured MCP servers
+- figma-context: [see _shared/offer-mcp.md Step 5 for the exact per-state line format]
 ```
 
 Adapt based on Q2 (stack):
@@ -155,11 +173,11 @@ Thumbs.db
 .claude/settings.local.json
 ```
 
-## Step 5: Write Upgrade Metadata
+## Step 6: Write Upgrade Metadata
 
 Set `setup_slug: design`, `skill_slug: design-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`.
 
-## Step 6: Render Anchor Sections
+## Step 7: Render Anchor Sections
 
 Read `skills/_shared/anchor-mapping.md`. Locate the row for `setup_type: design`. For each anchor slug in that row:
 
@@ -173,7 +191,7 @@ Read `skills/_shared/anchor-mapping.md`. Locate the row for `setup_type: design`
 
 Do not fail if any single `render-anchor-section.md` call returns `placeholder`. Collect rendered / placeholder slugs for the completion summary.
 
-## Step 7: Completion Summary
+## Step 8: Completion Summary
 
 ```
 ✓ UI/UX Design setup complete!
@@ -191,6 +209,9 @@ External skills:
   [⚠ Superpowers installation failed — install manually: https://github.com/obra/superpowers]
 
 Optional community skills: [list of installed skills, or "none selected"]
+
+MCP servers:
+  [one line per MCP considered, formatted per skills/_shared/offer-mcp.md Step 6 — omit if figma-context trigger condition was false]
 
 Next steps:
   Start a new Claude session and paste a design description or Figma spec.
