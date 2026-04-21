@@ -115,14 +115,14 @@ Create two files in the current repo (not inside the vault):
 ```markdown
 ---
 name: obsidian-vault-keeper
-description: Use to read, write, search, move, or delete notes in the user's Obsidian vault via the official Obsidian CLI. Dispatch this agent for any operation that should touch the vault — it reads claude_instructions/obsidian-cli.md for the command reference and runs `obsidian …` via Bash. Returns a compact summary, not raw note contents (unless asked).
+description: Use to read, write, search, move, or delete notes in the user's Obsidian vault via the official Obsidian CLI. Dispatch this agent for any operation that should touch the vault — it reads .claude/rules/obsidian-cli.md for the command reference and runs `obsidian …` via Bash. Returns a compact summary, not raw note contents (unless asked).
 tools: Bash, Read, Glob, Grep
 ---
 
 You are the Obsidian Vault Keeper. You perform read/write operations on the user's Obsidian vault using the official Obsidian CLI.
 
 ## Before your first command
-Read `claude_instructions/obsidian-cli.md` for the full command reference and output formats.
+Read `.claude/rules/obsidian-cli.md` for the full command reference and output formats.
 
 ## Rules
 - Use the `obsidian` CLI via Bash exclusively. Never edit vault files with Edit/Write — wikilinks and backlinks depend on Obsidian's own APIs (e.g. `obsidian move` rewrites links, a plain `mv` does not).
@@ -140,7 +140,7 @@ Read `claude_instructions/obsidian-cli.md` for the full command reference and ou
 - Writing outside the vault path (use normal tools for that).
 ```
 
-**b) `claude_instructions/obsidian-cli.md`** — read-on-demand CLI reference. Keeps CLAUDE.md lean (point-don't-dump).
+**b) `.claude/rules/obsidian-cli.md`** — read-on-demand CLI reference. Keeps CLAUDE.md lean (point-don't-dump).
 
 ```markdown
 # Obsidian CLI Reference
@@ -226,7 +226,7 @@ When documenting code:
 ## Obsidian
 [Include if obsidian_cli_available is true]
 Obsidian vault ops run through the `obsidian-vault-keeper` subagent (see `.claude/agents/obsidian-vault-keeper.md`). **Always dispatch that agent via the Agent tool** for reads, writes, searches, moves, or deletes on the vault — do not shell out to `obsidian` directly from this thread and do not edit vault files with Edit/Write.
-Command reference: `claude_instructions/obsidian-cli.md` (read-on-demand; the subagent handles this automatically).
+Command reference: `.claude/rules/obsidian-cli.md` (read-on-demand; the subagent handles this automatically).
 Why a subagent: keeps CLI schema out of the main context window, so chats that don't touch the vault cost zero Obsidian tokens.
 
 [Include if obsidian_cli_available is false]
@@ -281,7 +281,7 @@ Files created:
   [target]/wiki/README.md                — how to use your knowledge base
   [if obsidian_cli_available]
     .claude/agents/obsidian-vault-keeper.md — subagent that owns vault I/O
-    claude_instructions/obsidian-cli.md     — CLI command reference (read-on-demand)
+    .claude/rules/obsidian-cli.md     — CLI command reference (read-on-demand)
   .gitignore                             — excludes large source files
   .claude/onboarding-meta.json           — setup marker for /upgrade
 

@@ -112,8 +112,8 @@ For each file below, if it already exists extend rather than overwrite. Use `<!-
 Discipline: [Q1]. Output type: [Q2]. Stack: [Q3]. Citation style: [Q4]. Language: [Q5]. Reference manager: [Q6].
 
 ## Key Pointers
-- Writing style (voice, tense per section, sentence length): `claude_instructions/writing-style.md`
-- Citation rules and `.bib` conventions: `claude_instructions/citation-rules.md`
+- Writing style (voice, tense per section, sentence length): `.claude/rules/writing-style.md`
+- Citation rules and `.bib` conventions: `.claude/rules/citation-rules.md`
 - Document structure: `sections/` (chapters / sections), `figures/`, `data/`, `bib/references.bib`
 
 ## Non-negotiable Rules
@@ -126,9 +126,9 @@ Discipline: [Q1]. Output type: [Q2]. Stack: [Q3]. Citation style: [Q4]. Language
 Superpowers is installed. Use `superpowers:brainstorming` before starting a chapter, and `superpowers:writing-plans` for multi-section revisions.
 ```
 
-Keep this file short (≤ 30 lines). All detail lives in `claude_instructions/*.md`.
+Keep this file short (≤ 30 lines). All detail lives in `.claude/rules/*.md`.
 
-### claude_instructions/writing-style.md
+### .claude/rules/writing-style.md
 
 ```markdown
 # Writing Style
@@ -163,7 +163,7 @@ Keep this file short (≤ 30 lines). All detail lives in `claude_instructions/*.
 - Do not translate the manuscript between languages unless explicitly asked.
 ```
 
-### claude_instructions/citation-rules.md
+### .claude/rules/citation-rules.md
 
 ```markdown
 # Citation Rules
@@ -418,7 +418,7 @@ Add a short note to the completion summary (do not generate a template file):
 
 ### Optional: Knowledge-base bridge (mention only)
 
-If the user mentions they already ran `knowledge-base-builder` (or a `wiki/` or `notes/` folder exists), tell them: "Claude can read your existing Obsidian vault / wiki notes as research input while drafting — point to them in `claude_instructions/writing-style.md` or by prefixing prompts with the relevant note path."
+If the user mentions they already ran `knowledge-base-builder` (or a `wiki/` or `notes/` folder exists), tell them: "Claude can read your existing Obsidian vault / wiki notes as research input while drafting — point to them in `.claude/rules/writing-style.md` or by prefixing prompts with the relevant note path."
 
 ## Step 5: Write Upgrade Metadata
 
@@ -431,8 +431,8 @@ Set `setup_slug: academic-writing`, `skill_slug: academic-writing-setup`. Resolv
 
 Files created / updated:
   CLAUDE.md                              — pointers + non-negotiable rules (delimited section)
-  claude_instructions/writing-style.md   — voice, tense per section, section rules
-  claude_instructions/citation-rules.md  — no-invented-citations rule, .bib conventions
+  .claude/rules/writing-style.md   — voice, tense per section, section rules
+  .claude/rules/citation-rules.md  — no-invented-citations rule, .bib conventions
   sections/, figures/, data/, bib/       — [created | skipped — already existed]
   bib/references.bib                     — [created with commented example | left untouched]
   main.tex or main.typ                   — [created skeleton | left untouched — already present]

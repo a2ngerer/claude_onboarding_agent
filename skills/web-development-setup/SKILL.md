@@ -151,9 +151,9 @@ Type: [Q1]. Framework: [Q2]. Backend: [Q3 or "n/a"]. Package manager: [Q4]. Type
 Implied styling: [styling_stack]. Likely deploy target: [deploy_target_hint].
 
 ## Key Pointers
-- Route conventions, error shape, auth header: `claude_instructions/api-conventions.md`
-- Component structure, server vs client split, colocation: `claude_instructions/component-structure.md`
-- Env var handling and secrets hygiene: `claude_instructions/env-vars.md`
+- Route conventions, error shape, auth header: `.claude/rules/api-conventions.md`
+- Component structure, server vs client split, colocation: `.claude/rules/component-structure.md`
+- Env var handling and secrets hygiene: `.claude/rules/env-vars.md`
 
 ## Workflow Rules
 - Package manager: always use [Q4] — never mix managers in the same repo. Commit the lockfile.
@@ -167,9 +167,9 @@ Implied styling: [styling_stack]. Likely deploy target: [deploy_target_hint].
 Superpowers is installed. Use `superpowers:brainstorming` before non-trivial feature work and `superpowers:writing-plans` for multi-page or multi-route changes.
 ```
 
-Keep this file short (≤ 30 lines). Details belong in `claude_instructions/*.md`.
+Keep this file short (≤ 30 lines). Details belong in `.claude/rules/*.md`.
 
-### claude_instructions/api-conventions.md
+### .claude/rules/api-conventions.md
 
 ```markdown
 # API Conventions
@@ -220,7 +220,7 @@ Every error returns a consistent JSON body:
 - For POST/PATCH on money-like or side-effecting resources, accept an `Idempotency-Key` header and store recent keys for 24h.
 ```
 
-### claude_instructions/component-structure.md
+### .claude/rules/component-structure.md
 
 ```markdown
 # Component Structure
@@ -270,7 +270,7 @@ Every error returns a consistent JSON body:
 - Do not convert server components to client components to "fix" a compile error — fix the import instead.
 ```
 
-### claude_instructions/env-vars.md
+### .claude/rules/env-vars.md
 
 ```markdown
 # Env Var Handling
@@ -511,9 +511,9 @@ Set `setup_slug: web-development`, `skill_slug: web-development-setup`. Resolve 
 
 Files created / updated:
   CLAUDE.md                                       — pointers + workflow rules (delimited section)
-  claude_instructions/api-conventions.md          — route layout, error shape, auth, OpenAPI
-  claude_instructions/component-structure.md      — atomic/container split, server vs client, colocation
-  claude_instructions/env-vars.md                 — public-prefix rules, deploy-target secret stores
+  .claude/rules/api-conventions.md          — route layout, error shape, auth, OpenAPI
+  .claude/rules/component-structure.md      — atomic/container split, server vs client, colocation
+  .claude/rules/env-vars.md                 — public-prefix rules, deploy-target secret stores
   package.json                                    — [created scaffold | left untouched — already present | skipped — backend-only Python/Go]
   pyproject.toml                                  — [created | skipped — not a Python backend | skipped — uv missing]
   .claude/settings.json                           — tool permissions for [stack summary]
@@ -537,7 +537,7 @@ Graphify (knowledge graph):
 Next steps:
   1. Run the printed install commands (or create the project via the scaffolder, then `cd` in).
   2. Copy `.env.example` to `.env.local` and fill in your real values.
-  3. Wire your deploy target's secret store (Vercel / Netlify / Cloudflare / Fly) — see claude_instructions/env-vars.md.
-  4. Start a new Claude session: "Generate an initial [route / component / API handler] following the conventions in claude_instructions/." Claude will respect the rules in CLAUDE.md.
+  3. Wire your deploy target's secret store (Vercel / Netlify / Cloudflare / Fly) — see .claude/rules/env-vars.md.
+  4. Start a new Claude session: "Generate an initial [route / component / API handler] following the conventions in .claude/rules/." Claude will respect the rules in CLAUDE.md.
   5. [If Graphify installed] Try: /graphify query "where does the auth middleware live?"
 ```

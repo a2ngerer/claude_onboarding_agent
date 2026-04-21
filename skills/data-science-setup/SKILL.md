@@ -83,8 +83,8 @@ Generate the following files. For each, if the file already exists, extend rathe
 Stack: [Q1 answer]. Notebooks: [Q2 answer]. ML framework: [Q3 answer]. Experiment tracking: [Q4 answer].
 
 ## Key Pointers
-- Data schema and column semantics: `claude_instructions/data-schema.md`
-- Evaluation protocol and metrics: `claude_instructions/evaluation-protocol.md`
+- Data schema and column semantics: `.claude/rules/data-schema.md`
+- Evaluation protocol and metrics: `.claude/rules/evaluation-protocol.md`
 - Model cards live under `models/<name>/MODEL_CARD.md`
 
 ## Workflow Rules
@@ -99,9 +99,9 @@ Stack: [Q1 answer]. Notebooks: [Q2 answer]. ML framework: [Q3 answer]. Experimen
 Superpowers is installed. Use `superpowers:brainstorming` before non-trivial modeling changes and `superpowers:writing-plans` for multi-step experiments.
 ```
 
-Keep this file short (≤ 30 lines). Details belong in `claude_instructions/*.md`.
+Keep this file short (≤ 30 lines). Details belong in `.claude/rules/*.md`.
 
-### claude_instructions/data-schema.md
+### .claude/rules/data-schema.md
 
 ```markdown
 # Data Schema
@@ -123,7 +123,7 @@ Document one row per table/dataset. Claude reads this to answer questions about 
 - `data/processed/` — model-ready features. Regenerable from raw + code.
 ```
 
-### claude_instructions/evaluation-protocol.md
+### .claude/rules/evaluation-protocol.md
 
 ```markdown
 # Evaluation Protocol
@@ -311,8 +311,8 @@ Set `setup_slug: data-science`, `skill_slug: data-science-setup`. Resolve `plugi
 
 Files created / updated:
   CLAUDE.md                                    — pointers + workflow rules (delimited section)
-  claude_instructions/data-schema.md           — datasets, columns, lineage
-  claude_instructions/evaluation-protocol.md   — metrics, splits, baselines, reporting
+  .claude/rules/data-schema.md           — datasets, columns, lineage
+  .claude/rules/evaluation-protocol.md   — metrics, splits, baselines, reporting
   pyproject.toml                               — [created | skipped — uv missing | skipped — non-Python stack]
   .claude/settings.json                        — tool permissions for [stack summary]
   .gitignore                                   — raw data, notebook checkpoints, experiment artifacts
@@ -334,8 +334,8 @@ Graphify (knowledge graph):
 
 Next steps:
   1. If Python: run the `uv add` commands printed above in your project root.
-  2. Fill in `claude_instructions/data-schema.md` with your real datasets.
-  3. Fill in `claude_instructions/evaluation-protocol.md` with your primary metric.
+  2. Fill in `.claude/rules/data-schema.md` with your real datasets.
+  3. Fill in `.claude/rules/evaluation-protocol.md` with your primary metric.
   4. Start a new Claude session: "Explore data/raw/<file> and propose a feature-engineering plan."
   5. [If Graphify installed] Try: /graphify query "which notebooks use <feature>?"
 ```
