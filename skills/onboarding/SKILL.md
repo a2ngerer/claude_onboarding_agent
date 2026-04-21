@@ -63,25 +63,69 @@ Before any scanning or file generation, back up every onboarding-agent-managed f
 
 After a successful backup, continue with Step 2 normally. The existing files are **not** deleted — setup skills will overwrite / extend them as they normally would. The backup is the user's restore point.
 
-## Step 2: Scan the Repository
+## Step 2: Scan the Repository (via `repo-scanner` subagent)
 
-Before asking anything, silently scan the current directory:
+Dispatch a `repo-scanner` subagent (defined in `.claude/agents/repo-scanner.md`) to gather repository signals without loading raw filesystem evidence into this context.
+
+**Dispatch brief:**
+
+```
+Use the Agent tool with:
+  subagent_type: repo-scanner
+  description: "Scan the current project for use-case signals"
+  prompt: |
+    Scan the project rooted at the current working directory.
+    Return your standard `repo-scan` fenced block.
+    Signals of interest (advisory — always return every contracted field):
+      - coding
+      - web-development
+      - data-science
+      - academic-writing
+      - knowledge-base
+      - office
+      - research
+      - content-creator
+      - devops
+      - design
+      - graphify
+Expected output: one `repo-scan` fenced block per the subagent's output contract (cap: 500 tokens).
+```
+
+Wait for the subagent to return. Parse the fenced `repo-scan` block. Extract:
+
+- `inferred_use_case` → drives Step 3's option ordering
+- `signals` → short list surfaced in the "inferred" option's explanation
+- `graphify_candidate` → drives the Step 3 graphify aside
+- `existing_claude_md`, `existing_agents_md` → drive the Step 3 pre-notice
+- `repo_size_bucket` → kept for downstream skills if needed
+
+If any contracted field is missing, treat the response as malformed and see the Fallback subsection below.
+
+**If CLAUDE.md already exists** (`existing_claude_md: true`): before presenting options, inform the user: "I found an existing CLAUDE.md. The setup skill will extend it (adding a new section) rather than overwriting it."
+
+If `inferred_use_case: unknown`, make no inference — Step 3 presents all options equally.
+
+### Fallback (if the subagent fails)
+
+Trigger the fallback when the subagent dispatch errors, returns no `repo-scan` block after one retry, or returns a block with missing fields after one retry. On dispatch error, do not retry — fall back immediately. Print (adapt to detected language):
+
+> "⚠ repo-scanner subagent unavailable — falling back to inline detection. Detection is best-effort; rerun `/onboarding` once the subagent is restored for full coverage."
+
+Then run this inline heuristic (single source of truth — no other copy exists in this SKILL):
 
 - Count file extensions: `.py`, `.ts`, `.js`, `.go`, `.rs`, `.rb`, `.java`, `.cs` → coding signal
 - Look for package manifests: `package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, `requirements.txt` → strong coding signal
-- Look for web-framework config or entry points: `next.config.{js,mjs,ts}`, `vite.config.{js,mjs,ts}`, `astro.config.{mjs,ts}`, `remix.config.{js,ts}`, `svelte.config.{js,ts}`, `nuxt.config.{js,ts}`, `app/page.{tsx,jsx}`, `pages/` directory with `_app` or `index`, `src/routes/` (SvelteKit/Remix), `index.html` next to `public/`, or framework deps in `package.json` (`next`, `react-dom`, `vue`, `svelte`, `@sveltejs/kit`, `astro`, `@remix-run/*`, `solid-js`, `@nuxt/kit`) → **web-development signal** (this should dominate a generic coding signal when present — it indicates a web app, not a library or CLI)
-- Look for `.ipynb` files, a `notebooks/` folder, `data/raw/`, or deps on `pandas`/`polars`/`numpy`/`scikit-learn`/`torch`/`jax` in `pyproject.toml` → data-science signal (this should dominate a generic Python coding signal when present)
+- Look for web-framework config or entry points: `next.config.{js,mjs,ts}`, `vite.config.{js,mjs,ts}`, `astro.config.{mjs,ts}`, `remix.config.{js,ts}`, `svelte.config.{js,ts}`, `nuxt.config.{js,ts}`, `app/page.{tsx,jsx}`, `pages/` directory with `_app` or `index`, `src/routes/` (SvelteKit/Remix), `index.html` next to `public/`, or framework deps in `package.json` (`next`, `react-dom`, `vue`, `svelte`, `@sveltejs/kit`, `astro`, `@remix-run/*`, `solid-js`, `@nuxt/kit`) → **web-development signal** (dominates a generic coding signal when present — indicates a web app, not a library or CLI)
+- Look for `.ipynb` files, a `notebooks/` folder, `data/raw/`, or deps on `pandas`/`polars`/`numpy`/`scikit-learn`/`torch`/`jax` in `pyproject.toml` → data-science signal (dominates a generic Python coding signal when present)
 - Look for `.tex`, `.bib` files → research signal
-- Look for a `sections/` folder, a `bib/` folder, `main.tex`/`main.typ`, or a `.typ` file alongside `.bib` → **academic-writing signal** (this should dominate a generic research signal when present — it indicates the repo holds the manuscript, not just literature)
+- Look for a `sections/` folder, a `bib/` folder, `main.tex`/`main.typ`, or a `.typ` file alongside `.bib` → **academic-writing signal** (dominates a generic research signal when present — indicates the repo holds the manuscript, not just literature)
 - Look for `*.docx`, `*.pptx`, `*.pdf`, `*.xlsx` files → office signal
 - Look for a `notes/`, `vault/`, `wiki/`, `obsidian/` directory → knowledge base signal
-- Count total source files and `*.md` / `*.pdf` / `*.ipynb` files. If the repo has a very large code corpus (e.g. > 1000 source files across 25+ tree-sitter languages) OR > 100 PDFs/Markdown notes under `docs/` / `raw/` / `notes/`, set `graphify_candidate: true` — this becomes a hint that a knowledge-graph index (via `graphify-setup`) could significantly reduce Claude's token cost on file-search calls. It is ONLY a hint; the primary use-case decision is unchanged.
+- Count total source files and `*.md` / `*.pdf` / `*.ipynb` files. If the repo has a very large code corpus (e.g. > 1000 source files across 25+ tree-sitter languages) OR > 100 PDFs/Markdown notes under `docs/` / `raw/` / `notes/`, set `graphify_candidate: true` — hint that a knowledge-graph index (via `graphify-setup`) could significantly reduce Claude's token cost on file-search calls. It is ONLY a hint; the primary use-case decision is unchanged.
 - Check if `CLAUDE.md` already exists → set `existing_claude_md: true`
-- Check if `AGENTS.md` already exists
+- Check if `AGENTS.md` already exists → set `existing_agents_md: true`
 
-Infer the most likely use case based on the strongest signal. If no clear signal exists, make no inference.
-
-**If CLAUDE.md already exists:** Before presenting options, inform the user: "I found an existing CLAUDE.md. The setup skill will extend it (adding a new section) rather than overwriting it."
+Produce the same logical shape the subagent would return (`inferred_use_case`, `signals`, `graphify_candidate`, `existing_claude_md`, `existing_agents_md`, `repo_size_bucket`) and continue with Step 3. Infer the most likely use case based on the strongest signal; if none is strong enough, set `inferred_use_case: unknown`.
 
 ## Step 3: Present Options
 
