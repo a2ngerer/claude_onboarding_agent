@@ -17,6 +17,7 @@ Before asking anything, silently scan the current directory:
 
 - Count file extensions: `.py`, `.ts`, `.js`, `.go`, `.rs`, `.rb`, `.java`, `.cs` → coding signal
 - Look for package manifests: `package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, `requirements.txt` → strong coding signal
+- Look for `.ipynb` files, a `notebooks/` folder, `data/raw/`, or deps on `pandas`/`polars`/`numpy`/`scikit-learn`/`torch`/`jax` in `pyproject.toml` → data-science signal (this should dominate a generic Python coding signal when present)
 - Look for `.tex`, `.bib` files → research signal
 - Look for `*.docx`, `*.pptx`, `*.pdf`, `*.xlsx` files → office signal
 - Look for a `notes/`, `vault/`, `wiki/`, `obsidian/` directory → knowledge base signal
@@ -38,28 +39,30 @@ Example format (adapt wording to detected language):
 **Which setup would you like?**
 
 1. [Inferred: Coding Setup] — looks like a Python project (pyproject.toml detected)
-2. Knowledge Base & Documentation — build a structured wiki from code or notes
-3. Office & Business Productivity — emails, reports, presentations
-4. Research & Academic Writing — literature, papers, LaTeX
-5. Content Creation — YouTube, social media, newsletters
-6. DevOps / Cloud Engineering — CI/CD, Kubernetes, Terraform, cloud providers
-7. UI/UX Design — component design, Figma handoff, accessibility
-8. Already set up — audit my current Claude configuration (`/tipps`)
-9. Not sure — help me decide
+2. Data Science / ML — notebooks, experiment tracking, reproducible pipelines
+3. Knowledge Base & Documentation — build a structured wiki from code or notes
+4. Office & Business Productivity — emails, reports, presentations
+5. Research & Academic Writing — literature, papers, LaTeX
+6. Content Creation — YouTube, social media, newsletters
+7. DevOps / Cloud Engineering — CI/CD, Kubernetes, Terraform, cloud providers
+8. UI/UX Design — component design, Figma handoff, accessibility
+9. Already set up — audit my current Claude configuration (`/tipps`)
+10. Not sure — help me decide
 
 ---
 
 ## Step 4: Handle "Not Sure"
 
-If the user picks option 9, ask these 5 yes/no questions one at a time:
+If the user picks option 10, ask these 6 yes/no questions one at a time:
 
 1. "Are you primarily using Claude to work with code or a codebase?" → yes → recommend Coding Setup
-2. "Are you trying to organize documents, notes, or code into a structured knowledge base or wiki?" → yes → recommend Knowledge Base Builder
-3. "Do you mostly work with documents, emails, reports, or presentations?" → yes → recommend Office Setup
-4. "Do you manage infrastructure, CI/CD pipelines, or cloud resources?" → yes → recommend DevOps Setup
-5. "Do you primarily work with UI designs, components, or frontend interfaces?" → yes → recommend Design Setup
+2. "Do you mainly work with notebooks, datasets, or ML models?" → yes → recommend Data Science Setup
+3. "Are you trying to organize documents, notes, or code into a structured knowledge base or wiki?" → yes → recommend Knowledge Base Builder
+4. "Do you mostly work with documents, emails, reports, or presentations?" → yes → recommend Office Setup
+5. "Do you manage infrastructure, CI/CD pipelines, or cloud resources?" → yes → recommend DevOps Setup
+6. "Do you primarily work with UI designs, components, or frontend interfaces?" → yes → recommend Design Setup
 
-If none match after 5 questions, present all 7 options (1–7, excluding "Not sure") with one-line descriptions and ask the user to pick a number.
+If none match after 6 questions, present all 8 setup options (1–8, excluding "Already set up" and "Not sure") with one-line descriptions and ask the user to pick a number.
 
 ## Step 5: Dispatch
 
@@ -69,12 +72,13 @@ Once the user confirms a choice, pass the following handoff context inline and i
 HANDOFF_CONTEXT:
   detected_language: "[ISO 639-1 code, e.g. en, de, es]"
   existing_claude_md: [true/false]
-  inferred_use_case: "[coding|knowledge-base|office|research|content-creator|devops|design|unknown]"
-  repo_signals: ["[list of detected signals, e.g. pyproject.toml, *.py files]"]
+  inferred_use_case: "[coding|data-science|knowledge-base|office|research|content-creator|devops|design|unknown]"
+  repo_signals: ["[list of detected signals, e.g. pyproject.toml, *.py files, *.ipynb]"]
 ```
 
 Skill routing:
 - Coding Setup → invoke `coding-setup` skill
+- Data Science / ML → invoke `data-science-setup` skill
 - Knowledge Base → invoke `knowledge-base-builder` skill
 - Office → invoke `office-setup` skill
 - Research → invoke `research-setup` skill

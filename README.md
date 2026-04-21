@@ -30,6 +30,7 @@ Not sure where to start? Run `/onboarding` and we'll figure it out with you. Or 
 | You are… | Run this | You get |
 |---|---|---|
 | **A developer** shipping code | `/coding-setup` | Superpowers workflow, subagent roles, stack permissions |
+| **A data scientist / ML engineer** | `/data-science-setup` | Notebook hygiene, experiment tracking, `data/raw→processed` layout, reproducibility |
 | **Building a personal wiki / second brain** | `/build-knowledge-base` | Karpathy-pattern wiki, optional Obsidian CLI subagent |
 | **Writing docs, emails, reports** | `/office-setup` | Writing style, document templates, company context |
 | **A researcher or academic** | `/research-setup` | Citation format, domain vocabulary, LaTeX-aware ignores |
@@ -73,6 +74,7 @@ curl -fsSL https://raw.githubusercontent.com/a2ngerer/claude_onboarding_agent/ma
 |---|---|
 | `/onboarding` | Orchestrator — scans your repo, infers your use case, routes you to the right setup |
 | `/coding-setup` | Installs [Superpowers](https://github.com/obra/superpowers), wires up brainstorm → plan → subagents → review → commit |
+| `/data-science-setup` | Notebook workflow (Jupyter/marimo), experiment tracking (MLflow/W&B/DVC), reproducible `pyproject.toml`, `data/raw/interim/processed` layout, model-card pointers |
 | `/build-knowledge-base` | Builds a [Karpathy-pattern](https://github.com/forrestchang/andrej-karpathy-skills) wiki from your notes or codebase (+ optional [Obsidian](https://obsidian.md) CLI integration via dispatched subagent — no always-on MCP token cost) |
 | `/office-setup` | Writing style, document preferences, company context |
 | `/research-setup` | Citation format, research domain, academic writing guidelines |
@@ -95,12 +97,13 @@ Scan repo — detect files, manifests, existing CLAUDE.md
 Suggest the most likely use case (or ask if the repo is empty)
      │
      ├── 1. Coding Setup
-     ├── 2. Knowledge Base Builder
-     ├── 3. Office & Business
-     ├── 4. Research & Writing
-     ├── 5. Content Creation
-     ├── 6. DevOps & Infrastructure
-     └── 7. Design & Frontend
+     ├── 2. Data Science / ML
+     ├── 3. Knowledge Base Builder
+     ├── 4. Office & Business
+     ├── 5. Research & Writing
+     ├── 6. Content Creation
+     ├── 7. DevOps & Infrastructure
+     └── 8. Design & Frontend
                │
                ▼
      Ask 3–7 targeted questions
@@ -124,6 +127,7 @@ Every setup skill creates a tailored `CLAUDE.md` with context and instructions s
 | Skill | CLAUDE.md | Agents | settings.json | .gitignore | External |
 |-------|-----------|--------|---------------|------------|----------|
 | Coding | ✓ + workflow | ✓ 3 roles (AGENTS.md) | ✓ stack permissions | ✓ stack | Superpowers |
+| Data Science | ✓ + pointers (`claude_instructions/data-schema.md`, `evaluation-protocol.md`) | — | ✓ uv / notebook / tracker permissions | ✓ raw data, notebook checkpoints, experiment artifacts | Superpowers (optional) |
 | Knowledge Base | ✓ + Karpathy pattern | ✓ `.claude/agents/obsidian-vault-keeper.md` (optional) | — | ✓ | Superpowers + Karpathy |
 | Office | ✓ + writing style | — | — | ✓ | Superpowers (optional) |
 | Research | ✓ + citation format | — | — | ✓ LaTeX | Superpowers (optional) |
