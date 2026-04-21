@@ -62,7 +62,7 @@ If no meta file (or malformed), read `./CLAUDE.md`. Search for the first line ma
 <!--\s*onboarding-agent:start\s+setup=(?<setup>[a-z-]+)
 ```
 
-- If a match is found: set `detected_setup: <setup>`, `detected_skills: [<setup>-setup]` (or `knowledge-base-builder` / `academic-writing-setup` — use the exact directory name under `skills/`), `installed_version: "unknown"`, `meta_source: "marker"`.
+- If a match is found: set `detected_setup: <setup>`, `detected_skills: [<setup>-setup]` (or `knowledge-base-setup` / `academic-writing-setup` — use the exact directory name under `skills/`), `installed_version: "unknown"`, `meta_source: "marker"`.
 - If no match: no detection succeeded. Tell the user:
 
   > "I could not detect an onboarding-agent setup in this project (no `.claude/onboarding-meta.json` and no `setup=...` marker in CLAUDE.md). Run `/onboarding` first to create one — `/upgrade-setup` will then be able to refresh it without touching your custom content."
@@ -307,7 +307,7 @@ If `applied_count == 0` (all rejected, or dry-run, or nothing found):
 Where:
 
 - `<setup-slug>` ∈ {coding, data-science, design, knowledge-base, devops, content-creator, office, research, academic-writing}
-- `<skill-slug>` is the directory name under `skills/` (e.g. `coding-setup`, `knowledge-base-builder`, `academic-writing-setup`)
+- `<skill-slug>` is the directory name under `skills/` (e.g. `coding-setup`, `knowledge-base-setup`, `academic-writing-setup`)
 - `<name>` identifies the logical section inside the file (e.g. `claude-md`, `workflow`, `guidelines`, `agents-roles`, `settings-allow`). Skills can pick descriptive names; `/upgrade-setup` matches on the triple.
 
 **Backwards compatibility:** the old form without attributes (`<!-- onboarding-agent:start -->`) is still recognized as a legacy marker. On upgrade, the opening tag is rewritten to the attributed form as part of the change.

@@ -22,7 +22,7 @@ For plugins/skills (Superpowers, Karpathy Guidelines):
   - Set `<name>_installed: true`
   - Skip to next dependency
 
-Note on Obsidian integration: the knowledge-base-builder skill previously used an Obsidian MCP dependency here. That was removed in favor of the official Obsidian CLI + `obsidian-vault-keeper` subagent pattern, which is verified inline inside that skill (see its Step 2) rather than installed through this protocol. No `obsidian_*_installed` variables are set by this file.
+Note on Obsidian integration: the knowledge-base-setup skill previously used an Obsidian MCP dependency here. That was removed in favor of the official Obsidian CLI + `obsidian-vault-keeper` subagent pattern, which is verified inline inside that skill (see its Step 2) rather than installed through this protocol. No `obsidian_*_installed` variables are set by this file.
 
 ### Step P2: Opt-in / condition check
 
@@ -71,4 +71,4 @@ On failure:
 | Superpowers         | `superpowers_installed`  | `superpowers_scope` | `superpowers_method` |
 | Karpathy Guidelines | `karpathy_installed`     | `karpathy_scope`    | `karpathy_method`    |
 
-Obsidian CLI is verified inline by knowledge-base-builder (variable `obsidian_cli_available`), not through this protocol.
+Obsidian CLI is verified inline by knowledge-base-setup (variable `obsidian_cli_available`), not through this protocol.

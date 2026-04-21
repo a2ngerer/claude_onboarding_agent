@@ -5,7 +5,7 @@ description: Set up Claude for academic writing — thesis, paper, or dissertati
 
 # Academic Writing Setup
 
-This skill configures Claude for the **output side** of academic work: writing theses, journal papers, conference submissions, dissertations, and abstracts. It pairs with `research-setup` (input side — reading papers, notes) and `knowledge-base-builder` (personal notes) but focuses on producing manuscripts.
+This skill configures Claude for the **output side** of academic work: writing theses, journal papers, conference submissions, dissertations, and abstracts. It pairs with `research-setup` (input side — reading papers, notes) and `knowledge-base-setup` (personal notes) but focuses on producing manuscripts.
 
 Use this skill when the project is primarily a LaTeX or Typst document, not a literature survey or a generic research notebook.
 
@@ -418,7 +418,7 @@ Add a short note to the completion summary (do not generate a template file):
 
 ### Optional: Knowledge-base bridge (mention only)
 
-If the user mentions they already ran `knowledge-base-builder` (or a `wiki/` or `notes/` folder exists), tell them: "Claude can read your existing Obsidian vault / wiki notes as research input while drafting — point to them in `claude_instructions/writing-style.md` or by prefixing prompts with the relevant note path."
+If the user mentions they already ran `knowledge-base-setup` (or a `wiki/` or `notes/` folder exists), tell them: "Claude can read your existing Obsidian vault / wiki notes as research input while drafting — point to them in `claude_instructions/writing-style.md` or by prefixing prompts with the relevant note path."
 
 ## Step 5: Write Upgrade Metadata
 

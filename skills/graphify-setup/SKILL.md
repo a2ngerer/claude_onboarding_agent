@@ -7,7 +7,7 @@ description: Install and wire up Graphify — an open-source knowledge-graph too
 
 This skill installs [Graphify](https://github.com/safishamsi/graphify), registers its `/graphify` slash command and PreToolUse hook with Claude Code, optionally builds an initial graph for the current project, and records a short pointer block in `CLAUDE.md`.
 
-It is safe to run standalone via `/graphify-setup`, OR it is delegated to from any host setup skill (coding-setup, knowledge-base-builder, research-setup, data-science-setup, web-development-setup) when the user opts in.
+It is safe to run standalone via `/graphify-setup`, OR it is delegated to from any host setup skill (coding-setup, knowledge-base-setup, research-setup, data-science-setup, web-development-setup) when the user opts in.
 
 **Language:** Use `detected_language` from handoff context, or detect from the user's first message and use it throughout. All generated file content stays in English.
 

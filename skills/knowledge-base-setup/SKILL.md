@@ -1,9 +1,9 @@
 ---
-name: knowledge-base-builder
+name: knowledge-base-setup
 description: Set up Claude to build and maintain a structured knowledge base using the Karpathy LLM Wiki pattern — works with codebases, personal notes, or both. Integrates with Obsidian via the official Obsidian CLI (token-efficient, dispatched through a dedicated subagent — no always-on MCP overhead).
 ---
 
-# Knowledge Base Builder
+# Knowledge Base Setup
 
 This skill configures Claude to build and maintain a structured, interlinked knowledge base using the Karpathy LLM Wiki pattern.
 
@@ -12,7 +12,7 @@ This skill configures Claude to build and maintain a structured, interlinked kno
 **Existing CLAUDE.md:** If `existing_claude_md: true` in handoff context, or if CLAUDE.md exists in the filesystem, DO NOT overwrite it. Append a new delimited section at the end of the file:
 
 ```
-<!-- onboarding-agent:start setup=knowledge-base skill=knowledge-base-builder section=claude-md -->
+<!-- onboarding-agent:start setup=knowledge-base skill=knowledge-base-setup section=claude-md -->
 ## Claude Onboarding Agent — Knowledge Base
 ...generated content...
 <!-- onboarding-agent:end -->
@@ -65,7 +65,7 @@ Ask one at a time, waiting for each answer:
 
    b. When the user confirms, run `command -v obsidian` via Bash.
       - If the command returns a path: set `obsidian_cli_available: true`.
-      - If it returns nothing or errors: warn the user once — "⚠ `obsidian` not found on PATH. I'll continue with the plain-markdown fallback; you can re-run `/build-knowledge-base` after enabling the CLI." Set `obsidian_cli_available: false` and treat the remaining steps as Option B.
+      - If it returns nothing or errors: warn the user once — "⚠ `obsidian` not found on PATH. I'll continue with the plain-markdown fallback; you can re-run `/knowledge-base-setup` after enabling the CLI." Set `obsidian_cli_available: false` and treat the remaining steps as Option B.
 
    c. If `obsidian_cli_available: true`, also check that Obsidian responds: run `obsidian help` via Bash. If it errors with "Obsidian is not running", ask the user to open Obsidian and retry once. If it still fails, set `obsidian_cli_available: false` and fall back.
 
@@ -261,13 +261,13 @@ A knowledge base is exactly the kind of corpus Graphify is designed for — inte
 >
 > (yes / no / later)"
 
-- **yes** → set `host_setup_slug: "knowledge-base"`, `host_skill_slug: "knowledge-base-builder"`, `run_initial_build: true` (strongly recommended for a KB — the graph is most of the value), `install_git_hook: true` if the target folder is under git. Read `skills/_shared/graphify-install.md` and follow steps G1–G9 in order. The protocol writes the attributed CLAUDE.md section with `setup=knowledge-base skill=graphify-setup section=graphify`.
+- **yes** → set `host_setup_slug: "knowledge-base"`, `host_skill_slug: "knowledge-base-setup"`, `run_initial_build: true` (strongly recommended for a KB — the graph is most of the value), `install_git_hook: true` if the target folder is under git. Read `skills/_shared/graphify-install.md` and follow steps G1–G9 in order. The protocol writes the attributed CLAUDE.md section with `setup=knowledge-base skill=graphify-setup section=graphify`.
 - **no** → set `graphify_installed: false` and skip to Step 5.
 - **later** → invoke `skills/_shared/graphify-install.md` in "later" mode: skip G1–G7 and write only the short deferred pointer block (`"Knowledge graph: run /graphify-setup when ready."`). Set `graphify_installed: false`, `graphify_deferred: true`.
 
 ## Step 5: Write Upgrade Metadata
 
-Set `setup_slug: knowledge-base`, `skill_slug: knowledge-base-builder`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`. If Step 4 installed Graphify, `skills_used` will automatically pick up `graphify-setup` via the shared protocol's own write-meta call — this step records `knowledge-base-builder` alongside it.
+Set `setup_slug: knowledge-base`, `skill_slug: knowledge-base-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`. If Step 4 installed Graphify, `skills_used` will automatically pick up `graphify-setup` via the shared protocol's own write-meta call — this step records `knowledge-base-setup` alongside it.
 
 ## Step 6: Completion Summary
 
