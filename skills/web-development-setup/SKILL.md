@@ -131,13 +131,36 @@ If Q3 (backend) = Python (FastAPI or Django), additionally probe `uv --version`.
 
 If Q3 (backend) = Go, probe `go version`. If missing, print ONCE: "⚠ `go` is not installed. Install from https://go.dev/dl/ — setup continues as instructions-only."
 
-## Step 6: Generate Artifacts
+## Step 6: Offer GitHub MCP (conditional)
+
+Read `skills/_shared/offer-mcp.md` and follow it with these parameters:
+
+- `mcp_slug`: `github`
+- `trigger_condition`: project is git-initialized AND has a GitHub remote. Check via Bash:
+  `git remote -v 2>/dev/null | grep -q 'github.com' && echo YES || echo NO`
+  If `NO`, skip this step entirely — no prompt, no CLAUDE.md change.
+- `capability_line`: "Access GitHub issues, PRs, and reviews directly via the GitHub API instead of shelling out to `gh`."
+- `install_command`: `claude mcp add github npx -- -y @modelcontextprotocol/server-github`
+- `auth_type`: `api_token`
+- `auth_detail`: `GITHUB_PERSONAL_ACCESS_TOKEN` (generate at https://github.com/settings/tokens — scope `repo` for private repos, else `public_repo`)
+- `pointer_link`: `https://github.com/modelcontextprotocol/servers/tree/main/src/github`
+
+Record `github_installed` in skill state for use by the CLAUDE.md generator and completion summary.
+
+## Step 7: Generate Artifacts
 
 For each file below, if it already exists extend rather than overwrite. Use `<!-- onboarding-agent:start setup=web-development skill=web-development-setup section=<name> -->` / `<!-- onboarding-agent:end -->` markers for CLAUDE.md; use `# onboarding-agent: web-development — start` / `# onboarding-agent: web-development — end` markers for `.gitignore`.
 
 ### CLAUDE.md (≤ 30 lines — pointers only)
 
 Read `document-skeletons.md` and write its `CLAUDE.md` section to `CLAUDE.md` (as a delimited block if the file already exists). Fill in the `[Q…]`, `[styling_stack]`, `[deploy_target_hint]`, and conditional blocks based on the interview answers.
+
+[Include ONLY if github_installed is true OR github_deferred is true — emitted per skills/_shared/offer-mcp.md Step 5]
+Append a `## Configured MCP servers` subsection with one bullet:
+```
+## Configured MCP servers
+- github: [see _shared/offer-mcp.md Step 5 for the exact per-state line format]
+```
 
 ### .claude/rules/api-conventions.md
 
@@ -199,7 +222,7 @@ Adapt based on answers:
 
 Read `gitignore-block.md`. Append the `.gitignore` block at the end of the user's `.gitignore` (delimited markers; replace only the content between them if already present). If `.env.example` is missing, emit the `.env.example` scaffold from the same file.
 
-## Step 7: Optional Graphify Integration
+## Step 8: Optional Graphify Integration
 
 Ask ONCE (adapt to detected language):
 
@@ -210,14 +233,14 @@ Ask ONCE (adapt to detected language):
 > (yes / no / later)"
 
 - **yes** → set `host_setup_slug: "web-development"`, `host_skill_slug: "web-development-setup"`, `run_initial_build: true`, `install_git_hook: true`. Read `skills/_shared/graphify-install.md` and follow steps G1–G9 in order. The protocol writes the attributed CLAUDE.md section with `setup=web-development skill=graphify-setup section=graphify`.
-- **no** → set `graphify_installed: false` and skip to Step 8.
+- **no** → set `graphify_installed: false` and skip to Step 9.
 - **later** → invoke `skills/_shared/graphify-install.md` in "later" mode: skip G1–G7 and write only the short deferred pointer block. Set `graphify_installed: false`, `graphify_deferred: true`.
 
-## Step 8: Write Upgrade Metadata
+## Step 9: Write Upgrade Metadata
 
-Set `setup_slug: web-development`, `skill_slug: web-development-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`. If Step 7 installed Graphify, `skills_used` will include both `web-development-setup` and `graphify-setup`.
+Set `setup_slug: web-development`, `skill_slug: web-development-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`. If Step 8 installed Graphify, `skills_used` will include both `web-development-setup` and `graphify-setup`.
 
-## Step 9: Render Anchor Sections
+## Step 10: Render Anchor Sections
 
 Read `skills/_shared/anchor-mapping.md`. Locate the row for `setup_type: web-development`. For each anchor slug in that row:
 
@@ -231,7 +254,7 @@ Read `skills/_shared/anchor-mapping.md`. Locate the row for `setup_type: web-dev
 
 Do not fail if any single `render-anchor-section.md` call returns `placeholder`. Collect rendered / placeholder slugs for the completion summary.
 
-## Step 10: Completion Summary
+## Step 11: Completion Summary
 
 ```
 ✓ Web Development setup complete!
@@ -260,6 +283,9 @@ Environment:
 
 Graphify (knowledge graph):
   [✓ installed via <installer>, /graphify + PreToolUse hook registered | ⚠ installed but hook not verified — run /graphify in a new session | — skipped: <reason> | — deferred: run /graphify-setup when ready | — not offered]
+
+MCP servers:
+  [one line per MCP considered, formatted per skills/_shared/offer-mcp.md Step 6 — omit if github trigger condition was false]
 
 Next steps:
   1. Run the printed install commands (or create the project via the scaffolder, then `cd` in).
