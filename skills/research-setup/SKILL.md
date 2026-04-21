@@ -115,11 +115,25 @@ For each selected skill, run: `/plugin install <skill>@claude-plugins-official`
 
 On failure: warn and continue. Add successfully installed skills to the Completion Summary under: `Optional community skills: [list or "none selected"]`
 
-## Step 5: Write Upgrade Metadata
+## Step 5: Optional Graphify Integration
 
-Set `setup_slug: research`, `skill_slug: research-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`.
+Research projects often carry large PDF libraries, Markdown notes, and literature folders — exactly what Graphify indexes. Ask ONCE (adapt to detected language):
 
-## Step 6: Completion Summary
+> "Install Graphify knowledge-graph integration now?
+>
+> Graphify indexes your research corpus (PDFs, Markdown notes, code snippets via tree-sitter for 25 languages, diagrams, images, audio/video) into a local graph, registers a `/graphify` slash command, and adds a PreToolUse hook that consults the graph BEFORE Claude runs Grep / Glob / Read. This cuts token cost substantially on large literature folders. See https://github.com/safishamsi/graphify.
+>
+> (yes / no / later)"
+
+- **yes** → set `host_setup_slug: "research"`, `host_skill_slug: "research-setup"`, `run_initial_build: true`, `install_git_hook: false` (research folders are usually not under git). Read `skills/_shared/graphify-install.md` and follow steps G1–G9 in order. The protocol writes the attributed CLAUDE.md section with `setup=research skill=graphify-setup section=graphify`.
+- **no** → set `graphify_installed: false` and skip to Step 6.
+- **later** → invoke `skills/_shared/graphify-install.md` in "later" mode: skip G1–G7 and write only the short deferred pointer block. Set `graphify_installed: false`, `graphify_deferred: true`.
+
+## Step 6: Write Upgrade Metadata
+
+Set `setup_slug: research`, `skill_slug: research-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`. If Step 5 installed Graphify, `skills_used` will include both `research-setup` and `graphify-setup`.
+
+## Step 7: Completion Summary
 
 ```
 ✓ Research setup complete!
@@ -136,7 +150,11 @@ External skills:
 
 Optional community skills: [list of installed skills, or "none selected"]
 
+Graphify (knowledge graph):
+  [✓ installed via <installer>, /graphify + PreToolUse hook registered | ⚠ installed but hook not verified — run /graphify in a new session | — skipped: <reason> | — deferred: run /graphify-setup when ready | — not offered]
+
 Next steps:
   Start a new Claude session and say: "Summarize this paper: [paste abstract or upload PDF]"
   Or: "Help me outline a literature review on [topic]"
+  [If Graphify installed] Try: /graphify query "which papers discuss <topic>?"
 ```

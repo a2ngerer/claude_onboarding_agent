@@ -140,11 +140,25 @@ On failure for any skill: warn clearly ("⚠ Could not install [skill] — skipp
 
 Add the list of successfully installed optional skills to the Completion Summary under a new line: `Optional community skills: [list or "none selected"]`
 
-## Step 5: Write Upgrade Metadata
+## Step 5: Optional Graphify Integration
 
-Set `setup_slug: coding`, `skill_slug: coding-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`.
+Ask ONCE (adapt to detected language):
 
-## Step 6: Completion Summary
+> "Install Graphify knowledge-graph integration now?
+>
+> Graphify indexes your project (code via tree-sitter for 25 languages, plus Markdown, PDFs, diagrams, images, audio/video) into a local graph and registers a PreToolUse hook that consults the graph BEFORE Claude runs Grep / Glob / Read. This dramatically cuts token cost on large codebases. It also adds a `/graphify` slash command for natural-language queries. See https://github.com/safishamsi/graphify.
+>
+> (yes / no / later)"
+
+- **yes** → set `host_setup_slug: "coding"`, `host_skill_slug: "coding-setup"`, `run_initial_build: true`, `install_git_hook: true`. Read `skills/_shared/graphify-install.md` and follow steps G1–G9 in order. The shared protocol handles prerequisites (Python >= 3.10, `uv` or `pipx`), install (`uv tool install graphifyy` preferred, `pipx install graphifyy` fallback — never `pip install`), `graphify install`, hook verification, optional initial build + git hook, and appends the attributed CLAUDE.md section with `setup=coding skill=graphify-setup section=graphify`. Record the protocol's output variables for the completion summary.
+- **no** → do not mention Graphify further. Set `graphify_installed: false` and skip to Step 6.
+- **later** → invoke `skills/_shared/graphify-install.md` in "later" mode: skip Steps G1–G7 and only write the short deferred pointer block into CLAUDE.md (`"Knowledge graph: run /graphify-setup when ready."`). Set `graphify_installed: false`, `graphify_deferred: true`.
+
+## Step 6: Write Upgrade Metadata
+
+Set `setup_slug: coding`, `skill_slug: coding-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`. If Step 5 installed Graphify, `skills_used` will automatically pick up `graphify-setup` via the shared protocol's own write-meta call — this step records `coding-setup` alongside it.
+
+## Step 7: Completion Summary
 
 ```
 ✓ Coding setup complete! Here's what was configured:
@@ -162,7 +176,11 @@ External skills:
 
 Optional community skills: [list of installed skills, or "none selected"]
 
+Graphify (knowledge graph):
+  [✓ installed via <installer>, /graphify + PreToolUse hook registered | ⚠ installed but hook not verified — run /graphify in a new session | — skipped: <reason> | — deferred: run /graphify-setup when ready | — not offered]
+
 Next steps:
   Start a new Claude session and run: /superpowers:using-superpowers
   Then try: /superpowers:brainstorming "describe your first feature"
+  [If Graphify installed] Try: /graphify query "where does auth happen in this repo?"
 ```

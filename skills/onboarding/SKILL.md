@@ -23,6 +23,7 @@ Before asking anything, silently scan the current directory:
 - Look for a `sections/` folder, a `bib/` folder, `main.tex`/`main.typ`, or a `.typ` file alongside `.bib` → **academic-writing signal** (this should dominate a generic research signal when present — it indicates the repo holds the manuscript, not just literature)
 - Look for `*.docx`, `*.pptx`, `*.pdf`, `*.xlsx` files → office signal
 - Look for a `notes/`, `vault/`, `wiki/`, `obsidian/` directory → knowledge base signal
+- Count total source files and `*.md` / `*.pdf` / `*.ipynb` files. If the repo has a very large code corpus (e.g. > 1000 source files across 25+ tree-sitter languages) OR > 100 PDFs/Markdown notes under `docs/` / `raw/` / `notes/`, set `graphify_candidate: true` — this becomes a hint that a knowledge-graph index (via `graphify-setup`) could significantly reduce Claude's token cost on file-search calls. It is ONLY a hint; the primary use-case decision is unchanged.
 - Check if `CLAUDE.md` already exists → set `existing_claude_md: true`
 - Check if `AGENTS.md` already exists
 
@@ -35,6 +36,8 @@ Infer the most likely use case based on the strongest signal. If no clear signal
 Present all options. If an inference was made, place it at position 1 with a short note explaining what was detected. If no inference, present all options equally.
 
 Example format (adapt wording to detected language):
+
+If `graphify_candidate: true` from Step 2, also print a one-line aside under the numbered list: _"Heads-up: your repo is large enough that a local knowledge graph (option 11) could cut Claude's token cost on file-search tool calls. You can install it now, later via `/graphify-setup`, or layered on top of any of the other setups."_
 
 ---
 
@@ -50,14 +53,15 @@ Example format (adapt wording to detected language):
 8. Content Creation — YouTube, social media, newsletters
 9. DevOps / Cloud Engineering — CI/CD, Kubernetes, Terraform, cloud providers
 10. UI/UX Design — component design, Figma handoff, accessibility
-11. Already set up — audit my current Claude configuration (`/tipps`)
-12. Not sure — help me decide
+11. Knowledge Graph (Graphify) — install the `/graphify` command + PreToolUse hook for token-efficient search across code, docs, PDFs, and media
+12. Already set up — audit my current Claude configuration (`/tipps`)
+13. Not sure — help me decide
 
 ---
 
 ## Step 4: Handle "Not Sure"
 
-If the user picks the "Not sure" option, ask these 8 yes/no questions one at a time:
+If the user picks the "Not sure" option, ask these 9 yes/no questions one at a time:
 
 1. "Are you primarily using Claude to work with code or a codebase?" → yes → recommend Coding Setup
 2. "Are you building a web app — frontend, backend API, or full-stack (Next.js / React / Vue / Svelte / Astro / Remix)?" → yes → recommend Web Development Setup
@@ -67,8 +71,9 @@ If the user picks the "Not sure" option, ask these 8 yes/no questions one at a t
 6. "Are you writing a thesis, paper, or dissertation (LaTeX / Typst manuscript)?" → yes → recommend Academic Writing Setup
 7. "Do you manage infrastructure, CI/CD pipelines, or cloud resources?" → yes → recommend DevOps Setup
 8. "Do you primarily work with UI designs, components, or frontend interfaces?" → yes → recommend Design Setup
+9. "Is your main pain that Claude burns too many tokens searching across a large codebase, docs folder, or mixed-media corpus?" → yes → recommend Graphify Setup (layers on top of any other setup)
 
-If none match after 8 questions, present all 10 setup options (1–10, excluding "Already set up" and "Not sure") with one-line descriptions and ask the user to pick a number.
+If none match after 9 questions, present all 11 setup options (1–11, excluding "Already set up" and "Not sure") with one-line descriptions and ask the user to pick a number.
 
 ## Step 5: Dispatch
 
@@ -78,8 +83,9 @@ Once the user confirms a choice, pass the following handoff context inline and i
 HANDOFF_CONTEXT:
   detected_language: "[ISO 639-1 code, e.g. en, de, es]"
   existing_claude_md: [true/false]
-  inferred_use_case: "[coding|web-development|data-science|knowledge-base|office|research|academic-writing|content-creator|devops|design|unknown]"
+  inferred_use_case: "[coding|web-development|data-science|knowledge-base|office|research|academic-writing|content-creator|devops|design|graphify|unknown]"
   repo_signals: ["[list of detected signals, e.g. pyproject.toml, *.py files, *.ipynb, next.config.ts, package.json:next]"]
+  graphify_candidate: [true/false]
 ```
 
 Skill routing:
@@ -93,6 +99,7 @@ Skill routing:
 - Content Creator → invoke `content-creator-setup` skill
 - DevOps Setup → invoke `devops-setup` skill
 - UI/UX Design Setup → invoke `design-setup` skill
+- Knowledge Graph (Graphify) → invoke `graphify-setup` skill (standalone — `host_setup_slug: "graphify"`, `host_skill_slug: "graphify-setup"`)
 - Already set up (audit) → invoke `tipps` skill
 
-Step back completely. The setup skill handles everything from here.
+Step back completely. The setup skill handles everything from here. For the five host setups that offer Graphify conditionally (coding-setup, knowledge-base-builder, research-setup, data-science-setup, web-development-setup), the Graphify question appears AFTER the host setup's main questions, not here — those skills delegate to `skills/_shared/graphify-install.md` themselves.
