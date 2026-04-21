@@ -133,19 +133,19 @@ Suggest the most likely use case (or ask if the repo is empty)
 
 Every setup skill creates a tailored `CLAUDE.md` with context and instructions specific to your workflow. Here's what each path produces:
 
-| Skill | CLAUDE.md | Agents | settings.json | .gitignore | External |
-|-------|-----------|--------|---------------|------------|----------|
-| Coding | ✓ + workflow | ✓ 3 roles (AGENTS.md) | ✓ stack permissions | ✓ stack | Superpowers |
-| Web Development | ✓ + pointers (`.claude/rules/api-conventions.md`, `component-structure.md`, `env-vars.md`) | — | ✓ framework + package-manager + deploy-CLI permissions | ✓ `node_modules/`, framework build outputs (`.next/`, `dist/`, `.astro/`, …), `.env.local`, test artifacts | Superpowers (optional) |
-| Data Science | ✓ + pointers (`.claude/rules/data-schema.md`, `evaluation-protocol.md`) | — | ✓ uv / notebook / tracker permissions | ✓ raw data, notebook checkpoints, experiment artifacts | Superpowers (optional) |
-| Knowledge Base | ✓ + Karpathy pattern | ✓ `.claude/agents/obsidian-vault-keeper.md` (optional) | — | ✓ | Superpowers + Karpathy |
-| Office | ✓ + writing style | — | — | ✓ | Superpowers (optional) |
-| Research | ✓ + citation format | — | — | ✓ LaTeX | Superpowers (optional) |
-| Academic Writing | ✓ + non-negotiable citation rules (pointers to `.claude/rules/writing-style.md`, `citation-rules.md`) | — | — | ✓ LaTeX / Typst build artifacts | Superpowers (optional) |
-| Content | ✓ + brand voice | — | — | ✓ media files | Superpowers (optional) |
-| DevOps | ✓ + infra workflow | ✓ 3 roles | ✓ stack permissions | ✓ IaC state, secrets | Superpowers (optional) |
-| Design | ✓ + UI guidelines | ✓ 2 roles | ✓ stack permissions | ✓ design assets | Superpowers (optional) |
-| Graphify | ✓ + delimited pointer block (`/graphify query / path / explain`) | — | Graphify registers its own PreToolUse hook via `graphify install` | — | `graphifyy` (Python package via `uv tool install`, `pipx` fallback) |
+| Skill | CLAUDE.md | Agents | settings.json | .gitignore | Hooks | External |
+|-------|-----------|--------|---------------|------------|-------|----------|
+| Coding | ✓ + workflow | ✓ 3 roles (AGENTS.md) | ✓ stack permissions | ✓ stack | — | Superpowers |
+| Web Development | ✓ + pointers (`.claude/rules/api-conventions.md`, `component-structure.md`, `env-vars.md`) | — | ✓ framework + package-manager + deploy-CLI permissions | ✓ `node_modules/`, framework build outputs (`.next/`, `dist/`, `.astro/`, …), `.env.local`, test artifacts | ✓ type-check on save (TS only, opt-in) | Superpowers (optional) |
+| Data Science | ✓ + pointers (`.claude/rules/data-schema.md`, `evaluation-protocol.md`) | — | ✓ uv / notebook / tracker permissions | ✓ raw data, notebook checkpoints, experiment artifacts | ✓ nbstripout on save (opt-in) | Superpowers (optional) |
+| Knowledge Base | ✓ + Karpathy pattern | ✓ `.claude/agents/obsidian-vault-keeper.md` (optional) | — | ✓ | — | Superpowers + Karpathy |
+| Office | ✓ + writing style | — | — | ✓ | — | Superpowers (optional) |
+| Research | ✓ + citation format | — | — | ✓ LaTeX | — | Superpowers (optional) |
+| Academic Writing | ✓ + non-negotiable citation rules (pointers to `.claude/rules/writing-style.md`, `citation-rules.md`) | — | — | ✓ LaTeX / Typst build artifacts | ✓ SessionStart rules reload (opt-in) | Superpowers (optional) |
+| Content | ✓ + brand voice | — | — | ✓ media files | — | Superpowers (optional) |
+| DevOps | ✓ + infra workflow | ✓ 3 roles | ✓ stack permissions | ✓ IaC state, secrets | ✓ plan-before-apply guard (opt-in) | Superpowers (optional) |
+| Design | ✓ + UI guidelines | ✓ 2 roles | ✓ stack permissions | ✓ design assets | — | Superpowers (optional) |
+| Graphify | ✓ + delimited pointer block (`/graphify query / path / explain`) | — | Graphify registers its own PreToolUse hook via `graphify install` | — | (Graphify's own PreToolUse hook) | `graphifyy` (Python package via `uv tool install`, `pipx` fallback) |
 
 ### The coding workflow (powered by Superpowers)
 
