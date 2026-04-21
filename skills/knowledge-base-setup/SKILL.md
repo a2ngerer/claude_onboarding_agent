@@ -269,7 +269,21 @@ A knowledge base is exactly the kind of corpus Graphify is designed for — inte
 
 Set `setup_slug: knowledge-base`, `skill_slug: knowledge-base-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`. If Step 4 installed Graphify, `skills_used` will automatically pick up `graphify-setup` via the shared protocol's own write-meta call — this step records `knowledge-base-setup` alongside it.
 
-## Step 6: Completion Summary
+## Step 6: Render Anchor Sections
+
+Read `skills/_shared/anchor-mapping.md`. Locate the row for `setup_type: knowledge-base`. For each anchor slug in that row:
+
+1. Call `skills/_shared/render-anchor-section.md` with:
+   - `setup_type: knowledge-base`
+   - `skill_slug: knowledge-base-setup`
+   - `anchor_slug: <slug>`
+   - `target_file: ./CLAUDE.md`
+   - `fallback_content: <embedded fallback from skills/anchors/SKILL.md for that slug>`
+2. If a `./AGENTS.md` file was generated earlier in this skill, repeat the call with `target_file: ./AGENTS.md`.
+
+Do not fail if any single `render-anchor-section.md` call returns `placeholder`. Collect rendered / placeholder slugs for the completion summary.
+
+## Step 7: Completion Summary
 
 ```
 ✓ Knowledge Base setup complete!
@@ -300,4 +314,5 @@ Next steps:
   Start a new Claude session and say: "Ingest the files in raw/ and build the wiki"
   [if obsidian_cli_available] For vault ops, just ask — Claude will dispatch the obsidian-vault-keeper agent automatically.
   [if graphify_installed] Try: /graphify query "which notes mention <topic>?"
+  - Run `/anchors` any time to refresh the anchor-derived sections. If any section was rendered as a placeholder due to offline mode, re-run `/anchors` once you are back online.
 ```
