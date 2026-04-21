@@ -217,7 +217,21 @@ Ask ONCE (adapt to detected language):
 
 Set `setup_slug: web-development`, `skill_slug: web-development-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`. If Step 7 installed Graphify, `skills_used` will include both `web-development-setup` and `graphify-setup`.
 
-## Step 9: Completion Summary
+## Step 9: Render Anchor Sections
+
+Read `skills/_shared/anchor-mapping.md`. Locate the row for `setup_type: web-development`. For each anchor slug in that row:
+
+1. Call `skills/_shared/render-anchor-section.md` with:
+   - `setup_type: web-development`
+   - `skill_slug: web-development-setup`
+   - `anchor_slug: <slug>`
+   - `target_file: ./CLAUDE.md`
+   - `fallback_content: <embedded fallback from skills/anchors/SKILL.md for that slug>`
+2. If a `./AGENTS.md` file was generated earlier in this skill, repeat the call with `target_file: ./AGENTS.md`.
+
+Do not fail if any single `render-anchor-section.md` call returns `placeholder`. Collect rendered / placeholder slugs for the completion summary.
+
+## Step 10: Completion Summary
 
 ```
 ✓ Web Development setup complete!
@@ -253,4 +267,5 @@ Next steps:
   3. Wire your deploy target's secret store (Vercel / Netlify / Cloudflare / Fly) — see .claude/rules/env-vars.md.
   4. Start a new Claude session: "Generate an initial [route / component / API handler] following the conventions in .claude/rules/." Claude will respect the rules in CLAUDE.md.
   5. [If Graphify installed] Try: /graphify query "where does the auth middleware live?"
+  - Run `/anchors` any time to refresh the anchor-derived sections. If any section was rendered as a placeholder due to offline mode, re-run `/anchors` once you are back online.
 ```
