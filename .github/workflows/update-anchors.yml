@@ -1,0 +1,45 @@
+name: Update anchors (daily)
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Claude Code to research and update anchors
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: |
+            You are the anchors updater for this repo.
+
+            For each file in `docs/anchors/` (excluding `README.md`):
+            1. Read the file's YAML frontmatter `sources` list.
+            2. For each source URL, use `WebFetch` to get the current state of that page.
+            3. Diff the anchor body against what the sources say today.
+            4. If changes are warranted, rewrite the file:
+               - Keep the frontmatter schema exactly (name, description, last_updated, sources, version).
+               - Bump `version` by one.
+               - Set `last_updated` to today's UTC date (YYYY-MM-DD).
+               - Do NOT add URLs to `sources` that were not already there.
+            5. Respect the ≤ 100-line body limit documented in `docs/anchors/README.md`.
+
+            After editing, check `git status`:
+            - If any `docs/anchors/*.md` file changed, create a branch named
+              `chore/anchors-update-$(date -u +%Y-%m-%d)`, commit only the changed anchor
+              files, push, and open a PR against `main` using the body template at
+              `.github/PULL_REQUEST_TEMPLATE/anchor-update.md` with the diff summary filled in.
+            - If nothing changed, exit without creating a PR.
+
+            Never auto-merge. Never modify anything outside `docs/anchors/`.
+          allowed_tools: "Read,Write,Edit,WebFetch,Bash(git:*),Bash(gh:*),Bash(date:*)"
