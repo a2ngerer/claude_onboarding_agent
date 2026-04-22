@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://claude-onboarding-agent/schemas/handoff-context.schema.json",
+  "title": "handoff-context",
+  "description": "Context payload the onboarding orchestrator passes inline to a setup skill at dispatch time. Each setup skill consumes this via skills/_shared/consume-handoff.md; when absent or invalid, the helper falls back to inline detection and produces the same shape.",
+  "type": "object",
+  "required": [
+    "detected_language",
+    "existing_claude_md",
+    "inferred_use_case",
+    "repo_signals",
+    "graphify_candidate"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "detected_language": {
+      "type": "string",
+      "description": "ISO 639-1 language code the orchestrator locked onto for the session (e.g. 'en', 'de', 'es'). Used by setup skills to localise prompts and generated comments; technical field names and code stay in English.",
+      "pattern": "^[a-z]{2}(-[A-Za-z0-9]+)?$"
+    },
+    "existing_claude_md": {
+      "type": "boolean",
+      "description": "True when a CLAUDE.md already exists in the project root. Setup skills MUST NOT overwrite it; they append a delimited onboarding-agent section instead."
+    },
+    "inferred_use_case": {
+      "type": ["string", "null"],
+      "description": "The use-case bucket the repo-scanner (or its fallback) settled on. Null or 'unknown' means no inference was made. Setup skills may read this to tailor option ordering or language, but the user's explicit choice still wins.",
+      "enum": [
+        "coding",
+        "web-development",
+        "data-science",
+        "knowledge-base",
+        "office",
+        "research",
+        "academic-writing",
+        "content-creator",
+        "devops",
+        "design",
+        "graphify",
+        "unknown",
+        null
+      ]
+    },
+    "repo_signals": {
+      "type": "object",
+      "description": "Advisory signals collected during the repo scan. The object shape intentionally stays open: consumers read named fields if present and ignore the rest. At minimum, callers populate 'signals' (short list of human-readable evidence strings). Other keys preserve any repo-scan fields downstream skills find useful.",
+      "additionalProperties": true,
+      "properties": {
+        "signals": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Short human-readable evidence strings (e.g. 'pyproject.toml', '*.ipynb', 'package.json:next').",
+          "maxItems": 20
+        },
+        "existing_agents_md": {
+          "type": "boolean",
+          "description": "True when AGENTS.md already exists in the project root."
+        },
+        "repo_size_bucket": {
+          "type": "string",
+          "enum": ["tiny", "small", "medium", "large"],
+          "description": "Coarse bucket describing repo size; informs downstream heuristics without loading raw filesystem evidence."
+        }
+      }
+    },
+    "graphify_candidate": {
+      "type": "boolean",
+      "description": "True when the scan flagged the repo as large enough that a Graphify knowledge-graph index would likely cut token cost. Advisory only; never blocks the primary setup flow."
+    },
+    "source": {
+      "type": "string",
+      "enum": ["orchestrator", "fallback"],
+      "description": "Optional provenance marker set by the helper. 'orchestrator' means the payload arrived from the onboarding skill; 'fallback' means the helper ran inline detection because no valid block was supplied."
+    }
+  }
+}

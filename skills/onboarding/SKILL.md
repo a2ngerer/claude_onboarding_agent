@@ -75,7 +75,7 @@ Use the Agent tool with:
   description: "Scan the current project for use-case signals"
   prompt: |
     Scan the project rooted at the current working directory.
-    Return your standard `repo-scan` fenced block.
+    Return your standard JSON envelope (kind: "repo-scan").
     Signals of interest (advisory — always return every contracted field):
       - coding
       - web-development
@@ -88,18 +88,18 @@ Use the Agent tool with:
       - devops
       - design
       - graphify
-Expected output: one `repo-scan` fenced block per the subagent's output contract (cap: 500 tokens).
+Expected output: one fenced ```json block per the subagent's output contract (cap: 500 tokens).
 ```
 
-Wait for the subagent to return. Parse the fenced `repo-scan` block. Extract:
+Wait for the subagent to return. Parse the reply via `skills/_shared/parse-subagent-json.md` with `reply_kind: "repo-scan"` and `schema_path: ".claude/agents/schemas/repo-scan.schema.json"`. Branch on the helper's result:
 
-- `inferred_use_case` → drives Step 3's option ordering
-- `signals` → short list surfaced in the "inferred" option's explanation
-- `graphify_candidate` → drives the Step 3 graphify aside
-- `existing_claude_md`, `existing_agents_md` → drive the Step 3 pre-notice
-- `repo_size_bucket` → kept for downstream skills if needed
-
-If any contracted field is missing, treat the response as malformed and see the Fallback subsection below.
+- On success (`result.ok: true`), extract from `result.data`:
+  - `inferred_use_case` → drives Step 3's option ordering
+  - `signals` → short list surfaced in the "inferred" option's explanation
+  - `graphify_candidate` → drives the Step 3 graphify aside
+  - `existing_claude_md`, `existing_agents_md` → drive the Step 3 pre-notice
+  - `repo_size_bucket` → kept for downstream skills if needed
+- On failure (`result.ok: false`, any `reason`), treat as a malformed response and use the Fallback subsection below.
 
 **If CLAUDE.md already exists** (`existing_claude_md: true`): before presenting options, inform the user: "I found an existing CLAUDE.md. The setup skill will extend it (adding a new section) rather than overwriting it."
 
@@ -107,7 +107,7 @@ If `inferred_use_case: unknown`, make no inference — Step 3 presents all optio
 
 ### Fallback (if the subagent fails)
 
-Trigger the fallback when the subagent dispatch errors, returns no `repo-scan` block after one retry, or returns a block with missing fields after one retry. On dispatch error, do not retry — fall back immediately. Print (adapt to detected language):
+Trigger the fallback when the shared parser returns a failure marker (`ok: false` with any `reason`) after one retry, or when the Agent tool itself errors. On dispatch error, do not retry — fall back immediately. Print (adapt to detected language):
 
 > "⚠ repo-scanner subagent unavailable — falling back to inline detection. Detection is best-effort; rerun `/onboarding` once the subagent is restored for full coverage."
 
@@ -173,15 +173,21 @@ If none match after 9 questions, present all 11 setup options (1–11, excluding
 
 ## Step 5: Dispatch
 
-Once the user confirms a choice, pass the following handoff context inline and invoke the chosen skill:
+Once the user confirms a choice, pass the following handoff context inline and invoke the chosen skill. The payload conforms to `docs/schemas/handoff-context.schema.json` (Draft 2020-12); setup skills consume it via `skills/_shared/consume-handoff.md`.
 
-```
-HANDOFF_CONTEXT:
-  detected_language: "[ISO 639-1 code, e.g. en, de, es]"
-  existing_claude_md: [true/false]
-  inferred_use_case: "[coding|web-development|data-science|knowledge-base|office|research|academic-writing|content-creator|devops|design|graphify|unknown]"
-  repo_signals: ["[list of detected signals, e.g. pyproject.toml, *.py files, *.ipynb, next.config.ts, package.json:next]"]
-  graphify_candidate: [true/false]
+```json
+{
+  "detected_language": "<ISO 639-1 code, e.g. en, de, es>",
+  "existing_claude_md": false,
+  "inferred_use_case": "<coding|web-development|data-science|knowledge-base|office|research|academic-writing|content-creator|devops|design|graphify|unknown>",
+  "repo_signals": {
+    "signals": ["<short evidence strings, e.g. pyproject.toml, *.ipynb, package.json:next>"],
+    "existing_agents_md": false,
+    "repo_size_bucket": "<tiny|small|medium|large>"
+  },
+  "graphify_candidate": false,
+  "source": "orchestrator"
+}
 ```
 
 Skill routing:
@@ -214,19 +220,24 @@ Use the Agent tool with:
   description: "Verify the files the setup skill just wrote"
   prompt: |
     Verify the following files exist on disk and are structurally valid.
-    Return your standard `artifact-verify` fenced block.
+    Return your standard JSON envelope (kind: "artifact-verify").
     files_to_check:
       - <path 1>
       - <path 2>
       - ...
-Expected output: one `artifact-verify` fenced block per the subagent's output contract (cap: 200 tokens).
+Expected output: one fenced ```json block per the subagent's output contract (cap: 200 tokens).
 ```
 
-Parse the report. If `status: ok`, print one line: `✓ Artifacts verified (<files_checked> files checked).` If `status: issues`, print the issue list verbatim and suggest `/checkup` to decide next steps. Do NOT retry the setup skill automatically — the issues may be intentional (e.g. the user skipped a file during the setup skill's own prompts).
+Parse the reply via `skills/_shared/parse-subagent-json.md` with `reply_kind: "artifact-verify"` and `schema_path: ".claude/agents/schemas/artifact-verify.schema.json"`. On success (`result.ok: true`):
+
+- If `result.data.status == "ok"`, print one line: `✓ Artifacts verified (<result.data.files_checked> files checked).`
+- If `result.data.status == "issues"`, print the `result.data.issues` list verbatim and suggest `/checkup` to decide next steps.
+
+Do NOT retry the setup skill automatically — the issues may be intentional (e.g. the user skipped a file during the setup skill's own prompts).
 
 ### Fallback (if the subagent fails)
 
-Trigger the fallback when the subagent dispatch errors, returns no `artifact-verify` block after one retry, or returns a block with missing fields after one retry. On dispatch error, do not retry — fall back immediately. Print (adapt to detected language):
+Trigger the fallback when the shared parser returns a failure marker (`ok: false` with any `reason`) after one retry, or when the Agent tool itself errors. On dispatch error, do not retry — fall back immediately. Print (adapt to detected language):
 
 > "⚠ artifact-verifier unavailable — please spot-check the generated files manually."
 
@@ -265,17 +276,17 @@ Use the Agent tool with:
   description: "Run /audit-setup and summarize findings"
   prompt: |
     Invoke the audit skill named below and return your standard
-    `audit-summary` fenced block with severity-bucketed counts.
+    JSON envelope (kind: "audit-summary") with severity-bucketed counts.
     audit_skill: audit-setup
     max_top_titles: 3
-Expected output: one `audit-summary` fenced block per the subagent's output contract (cap: 300 tokens).
+Expected output: one fenced ```json block per the subagent's output contract (cap: 300 tokens).
 ```
 
-Parse `total`, `high`, `medium`, `low`, `top_titles`. Print a one-screen summary. If `high >= 1`, also suggest `/upgrade-setup` to apply the recommended fixes.
+Parse the reply via `skills/_shared/parse-subagent-json.md` with `reply_kind: "audit-summary"` and `schema_path: ".claude/agents/schemas/audit-summary.schema.json"`. On success (`result.ok: true`), read `result.data.total`, `result.data.high`, `result.data.medium`, `result.data.low`, `result.data.top_titles`. Print a one-screen summary. If `result.data.high >= 1`, also suggest `/upgrade-setup` to apply the recommended fixes.
 
 ### Fallback (if the subagent fails)
 
-Trigger the fallback when the subagent dispatch errors, returns no `audit-summary` block after one retry, or returns a block whose sole `top_titles` entry begins with `error:` (the subagent's documented error signal). On dispatch error, do not retry — fall back immediately. Print (adapt to detected language):
+Trigger the fallback when the shared parser returns a failure marker (`ok: false` with any `reason`) after one retry, or when the subagent's envelope arrives with `ok: false` (the documented in-band error signal), or when the Agent tool itself errors. On dispatch error, do not retry — fall back immediately. Print (adapt to detected language):
 
 > "⚠ audit-collector unavailable — run `/audit-setup` manually to audit the new setup."
 

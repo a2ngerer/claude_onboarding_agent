@@ -7,9 +7,9 @@ description: Set up Claude for academic research and writing — configures cita
 
 This skill configures Claude for academic and research work.
 
-**Language:** Use `detected_language` from handoff context, or detect from the user's first message and use it throughout.
+**Handoff context:** Read `skills/_shared/consume-handoff.md` and run it with the handoff block (if any). The helper guarantees the following locals: `detected_language`, `existing_claude_md`, `inferred_use_case`, `repo_signals`, `graphify_candidate`. Use `detected_language` for all user-facing prose; generated file content stays in English.
 
-**Existing CLAUDE.md:** If `existing_claude_md: true` in handoff context, or if CLAUDE.md exists in the filesystem, DO NOT overwrite it. Append a new delimited section at the end of the file:
+**Existing CLAUDE.md:** If `existing_claude_md: true`, DO NOT overwrite it. Append a new delimited section at the end of the file:
 
 ```
 <!-- onboarding-agent:start setup=research skill=research-setup section=claude-md -->
@@ -20,12 +20,17 @@ This skill configures Claude for academic and research work.
 
 If the delimited block already exists from a previous run, replace only the content between the markers; leave the rest untouched. Wrap generated `.gitignore` entries in `# onboarding-agent: research — start` / `— end` markers so `/upgrade-setup` can refresh them non-destructively.
 
+## Supporting Files
+
+Read these on-demand at the step that invokes them. Do not read eagerly.
+
+- `skills/_shared/consume-handoff.md` — orchestrator handoff parse + inline fallback (preamble, before Step 1)
+- `skills/_shared/offer-superpowers.md` — canonical Superpowers opt-in (Step 1)
+- `skills/_shared/offer-graphify.md` — canonical Graphify opt-in (Step 5)
+
 ## Step 1: Install Dependencies
 
-Read `skills/_shared/installation-protocol.md` and follow it for each dependency below.
-
-Dependencies:
-- Superpowers (optional) — description: "A free Claude Code skills library (94,000+ users). Brainstorming and planning skills work well for structuring research arguments and planning complex documents." — marketplace-id: `superpowers@claude-plugins-official`, github: `https://github.com/obra/superpowers`, name: `superpowers`
+Read `skills/_shared/offer-superpowers.md` and run it with `skill_slug: research-setup`, `mandatory: false`, `capability_line: "A free Claude Code skills library (94,000+ users). Brainstorming and planning skills work well for structuring research arguments and planning complex documents."` The helper asks the user, delegates to `skills/_shared/installation-protocol.md` on `yes`, and sets `superpowers_installed`, `superpowers_scope`, `superpowers_method`.
 
 ## Step 2: Context Questions
 
@@ -76,6 +81,10 @@ Superpowers is installed. For complex writing tasks — outlines, literature rev
 
 ### .gitignore
 
+Assemble the block from the research-specific lines below plus the shared common patterns from `skills/_shared/gitignore-common.md`. Wrap in `# onboarding-agent: research — start` / `— end` markers.
+
+Research-specific lines:
+
 ```gitignore
 # LaTeX build artifacts
 *.aux
@@ -91,14 +100,9 @@ Superpowers is installed. For complex writing tasks — outlines, literature rev
 # Large files
 *.pdf
 *.zip
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Claude local settings
-.claude/settings.local.json
 ```
+
+Then inline the block from `skills/_shared/gitignore-common.md` (OS noise, env files, `.claude/settings.local.json`).
 
 ## Step 4: Optional Community Skills
 
@@ -117,17 +121,19 @@ On failure: warn and continue. Add successfully installed skills to the Completi
 
 ## Step 5: Optional Graphify Integration
 
-Research projects often carry large PDF libraries, Markdown notes, and literature folders — exactly what Graphify indexes. Ask ONCE (adapt to detected language):
+Research projects often carry large PDF libraries, Markdown notes, and literature folders — exactly what Graphify indexes.
 
-> "Install Graphify knowledge-graph integration now?
->
-> Graphify indexes your research corpus (PDFs, Markdown notes, code snippets via tree-sitter for 25 languages, diagrams, images, audio/video) into a local graph, registers a `/graphify` slash command, and adds a PreToolUse hook that consults the graph BEFORE Claude runs Grep / Glob / Read. This cuts token cost substantially on large literature folders. See https://github.com/safishamsi/graphify.
->
-> (yes / no / later)"
+Read `skills/_shared/offer-graphify.md` and run it with:
 
-- **yes** → set `host_setup_slug: "research"`, `host_skill_slug: "research-setup"`, `run_initial_build: true`, `install_git_hook: false` (research folders are usually not under git). Read `skills/_shared/graphify-install.md` and follow steps G1–G9 in order. The protocol writes the attributed CLAUDE.md section with `setup=research skill=graphify-setup section=graphify`.
-- **no** → set `graphify_installed: false` and skip to Step 6.
-- **later** → invoke `skills/_shared/graphify-install.md` in "later" mode: skip G1–G7 and write only the short deferred pointer block. Set `graphify_installed: false`, `graphify_deferred: true`.
+- `host_setup_slug: "research"`
+- `host_skill_slug: "research-setup"`
+- `run_initial_build: true`
+- `install_git_hook: false` (research folders are usually not under git)
+- `corpus_blurb: "your research corpus (PDFs, Markdown notes, code snippets via tree-sitter for 25 languages, diagrams, images, audio/video). This cuts token cost substantially on large literature folders"`
+
+The helper owns the opt-in prompt and the three-way branch (yes / no / later),
+delegating to `skills/_shared/graphify-install.md`. Record the `graphify_*`
+variables it produces for use in Step 8.
 
 ## Step 6: Write Upgrade Metadata
 

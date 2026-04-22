@@ -7,9 +7,9 @@ description: Set up Claude for software development — installs Superpowers, co
 
 This skill sets up Claude Code for professional software development using a proven iterative workflow.
 
-**Language:** If a HANDOFF_CONTEXT is present, use `detected_language`. Otherwise detect language from the user's first message and use it throughout.
+**Handoff context:** Read `skills/_shared/consume-handoff.md` and run it with the handoff block (if any). The helper guarantees the following locals: `detected_language`, `existing_claude_md`, `inferred_use_case`, `repo_signals`, `graphify_candidate`. Use `detected_language` for all user-facing prose; generated file content stays in English.
 
-**Existing CLAUDE.md:** If `existing_claude_md: true` in handoff context, or if CLAUDE.md exists in the filesystem, DO NOT overwrite it. Append a new delimited section at the end of the file:
+**Existing CLAUDE.md:** If `existing_claude_md: true`, DO NOT overwrite it. Append a new delimited section at the end of the file:
 
 ```
 <!-- onboarding-agent:start setup=coding skill=coding-setup section=claude-md -->
@@ -20,21 +20,26 @@ This skill sets up Claude Code for professional software development using a pro
 
 If the delimited block already exists from a previous run, replace only the content between the markers; leave the rest of the file untouched. Use the same marker pattern (`# onboarding-agent: coding — start` / `— end`) around generated `.gitignore` blocks so `/upgrade-setup` can refresh them non-destructively.
 
+## Supporting Files
+
+Read these on-demand at the step that invokes them. Do not read eagerly.
+
+- `skills/_shared/consume-handoff.md` — orchestrator handoff parse + inline fallback (preamble, before Step 1)
+- `skills/_shared/offer-superpowers.md` — canonical Superpowers opt-in and install (Step 1)
+- `skills/_shared/offer-github-mcp.md` — canonical GitHub MCP offer (Step 4)
+- `skills/_shared/offer-graphify.md` — canonical Graphify opt-in (Step 7)
+- `skills/_shared/gitignore-python.md`, `skills/_shared/gitignore-node.md`, `skills/_shared/gitignore-common.md` — canonical `.gitignore` blocks (Step 5)
+
 ## Step 1: Install Dependencies
 
-Read `skills/_shared/installation-protocol.md` and follow it for each dependency below.
-
-Dependencies:
-- Superpowers (required) — marketplace-id: `superpowers@claude-plugins-official`, github: `https://github.com/obra/superpowers`, name: `superpowers`
+Read `skills/_shared/offer-superpowers.md` and run it with `skill_slug: coding-setup`, `mandatory: true`. The helper delegates to `skills/_shared/installation-protocol.md` and sets `superpowers_installed`, `superpowers_scope`, `superpowers_method`.
 
 ## Step 2: Context Questions
 
-Ask these 4 questions one at a time. Wait for each answer before asking the next:
+Ask these 2 questions one at a time. Wait for each answer before asking the next:
 
 1. "What is your primary programming language or tech stack? (e.g., Python, TypeScript/React, Go, Rust)"
-2. "Do you work solo or in a team?"
-3. "Which git host do you use? (GitHub / GitLab / Bitbucket / other / none)"
-4. "Which IDE or editor do you use? (VS Code / JetBrains / Neovim / other)"
+2. "Which IDE or editor do you use? (VS Code / JetBrains / Neovim / other)"
 
 ## Step 3: Offer Project-Local Subagent
 
@@ -66,19 +71,7 @@ Record the emit outcome (`emit_subagent`, `subagent_skipped_existing`, `subagent
 
 ## Step 4: Offer GitHub MCP (conditional)
 
-Read `skills/_shared/offer-mcp.md` and follow it with these parameters:
-
-- `mcp_slug`: `github`
-- `trigger_condition`: project is git-initialized AND has a GitHub remote. Check via Bash:
-  `git remote -v 2>/dev/null | grep -q 'github.com' && echo YES || echo NO`
-  If `NO`, skip this step entirely — no prompt, no CLAUDE.md change.
-- `capability_line`: "Access GitHub issues, PRs, and reviews directly via the GitHub API instead of shelling out to `gh`."
-- `install_command`: `claude mcp add github npx -- -y @modelcontextprotocol/server-github`
-- `auth_type`: `api_token`
-- `auth_detail`: `GITHUB_PERSONAL_ACCESS_TOKEN` (generate at https://github.com/settings/tokens — scope `repo` for private repos, else `public_repo`)
-- `pointer_link`: `https://github.com/modelcontextprotocol/servers/tree/main/src/github`
-
-Record `github_installed` in skill state for use by the CLAUDE.md generator and completion summary.
+Read `skills/_shared/offer-github-mcp.md` and run it with `skill_slug: coding-setup`. The helper carries the canonical trigger condition, install command, auth details, and pointer link, and sets `github_installed` (and `github_deferred` on `later`) for the CLAUDE.md generator and completion summary.
 
 ## Step 5: Generate Artifacts
 
@@ -90,7 +83,7 @@ Generate the following files automatically:
 # Claude Instructions
 
 ## Project Context
-[Stack from Q1] project. [Solo/Team from Q2]. Git host: [Q3 answer]. IDE: [Q4 answer].
+[Stack from Q1] project. IDE: [Q2 answer].[If `git remote -v` reveals a recognizable host (github.com / gitlab.com / bitbucket.org), append ` Git host: <host>.`; otherwise omit the sentence.]
 
 ## Development Workflow
 [Include this entire section ONLY if superpowers_installed is true]
@@ -161,13 +154,15 @@ Extend the `allow` list based on detected stack:
 
 ### .gitignore
 
-Generate a `.gitignore` appropriate for the detected stack. Always include `.claude/settings.local.json`.
+Generate a `.gitignore` appropriate for the detected stack. Always include the common block from `skills/_shared/gitignore-common.md`, then append the stack-specific block:
 
-- Python: `__pycache__/`, `.venv/`, `*.pyc`, `dist/`, `.env`, `.claude/settings.local.json`
-- Node: `node_modules/`, `dist/`, `.env`, `*.log`, `.claude/settings.local.json`
-- Go: `*.exe`, `*.test`, `vendor/`, `.claude/settings.local.json`
-- Rust: `target/`, `.claude/settings.local.json`
-- Generic fallback: `.env`, `*.log`, `.DS_Store`, `.claude/settings.local.json`
+- Python → read `skills/_shared/gitignore-python.md` and append its block
+- Node / TypeScript → read `skills/_shared/gitignore-node.md` and append its block
+- Go → append `*.exe`, `*.test`, `vendor/`
+- Rust → append `target/`
+- Generic fallback → nothing beyond the common block
+
+Wrap the generated block in `# onboarding-agent: coding — start` / `— end` markers so `/upgrade-setup` can refresh it non-destructively.
 
 ## Step 6: Optional Community Skills
 
@@ -190,17 +185,17 @@ Add the list of successfully installed optional skills to the Completion Summary
 
 ## Step 7: Optional Graphify Integration
 
-Ask ONCE (adapt to detected language):
+Read `skills/_shared/offer-graphify.md` and run it with:
 
-> "Install Graphify knowledge-graph integration now?
->
-> Graphify indexes your project (code via tree-sitter for 25 languages, plus Markdown, PDFs, diagrams, images, audio/video) into a local graph and registers a PreToolUse hook that consults the graph BEFORE Claude runs Grep / Glob / Read. This dramatically cuts token cost on large codebases. It also adds a `/graphify` slash command for natural-language queries. See https://github.com/safishamsi/graphify.
->
-> (yes / no / later)"
+- `host_setup_slug: "coding"`
+- `host_skill_slug: "coding-setup"`
+- `run_initial_build: true`
+- `install_git_hook: true`
+- `corpus_blurb: "your project (code via tree-sitter for 25 languages, plus Markdown, PDFs, diagrams, images, audio/video)"`
 
-- **yes** → set `host_setup_slug: "coding"`, `host_skill_slug: "coding-setup"`, `run_initial_build: true`, `install_git_hook: true`. Read `skills/_shared/graphify-install.md` and follow steps G1–G9 in order. The shared protocol handles prerequisites (Python >= 3.10, `uv` or `pipx`), install (`uv tool install graphifyy` preferred, `pipx install graphifyy` fallback — never `pip install`), `graphify install`, hook verification, optional initial build + git hook, and appends the attributed CLAUDE.md section with `setup=coding skill=graphify-setup section=graphify`. Record the protocol's output variables for the completion summary.
-- **no** → do not mention Graphify further. Set `graphify_installed: false` and skip to Step 8.
-- **later** → invoke `skills/_shared/graphify-install.md` in "later" mode: skip Steps G1–G7 and only write the short deferred pointer block into CLAUDE.md (`"Knowledge graph: run /graphify-setup when ready."`). Set `graphify_installed: false`, `graphify_deferred: true`.
+The helper owns the opt-in prompt and the three-way branch (yes / no / later),
+delegating to `skills/_shared/graphify-install.md`. Record the `graphify_*`
+variables it produces for use in Step 10.
 
 ## Step 8: Write Upgrade Metadata
 

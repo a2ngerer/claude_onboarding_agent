@@ -9,9 +9,9 @@ This skill configures Claude for the **output side** of academic work: writing t
 
 Use this skill when the project is primarily a LaTeX or Typst document, not a literature survey or a generic research notebook.
 
-**Language:** Use `detected_language` from handoff context, or detect from the user's first message and use it throughout. All generated file content stays in English.
+**Handoff context:** Read `skills/_shared/consume-handoff.md` and run it with the handoff block (if any). The helper guarantees the following locals: `detected_language`, `existing_claude_md`, `inferred_use_case`, `repo_signals`, `graphify_candidate`. Use `detected_language` for all user-facing prose; generated file content stays in English.
 
-**Existing CLAUDE.md:** If `existing_claude_md: true` in handoff context, or if `CLAUDE.md` already exists in the filesystem, DO NOT overwrite it. Append a new delimited section at the end of the file:
+**Existing CLAUDE.md:** If `existing_claude_md: true`, DO NOT overwrite it. Append a new delimited section at the end of the file:
 
 ```
 <!-- onboarding-agent:start setup=academic-writing skill=academic-writing-setup section=claude-md -->
@@ -30,13 +30,12 @@ Read these on-demand at the step that invokes them. Do not read eagerly.
 - `document-skeletons.md` — directory scaffold, `main.tex`, `main.typ`, `bib/references.bib` (Step 4)
 - `gitignore-block.md` — the `.gitignore` block (Step 4)
 - `optional-integrations.md` — `.pre-commit-config.yaml`, Overleaf instructions, template pointer, KB bridge (Step 4)
+- `skills/_shared/consume-handoff.md` — orchestrator handoff parse + inline fallback (preamble, before Step 1)
+- `skills/_shared/offer-superpowers.md` — canonical Superpowers opt-in (Step 1)
 
 ## Step 1: Install Dependencies
 
-Read `skills/_shared/installation-protocol.md` and follow it for each dependency below.
-
-Dependencies:
-- Superpowers (optional) — description: "A free Claude Code skills library (94,000+ users). Brainstorming and planning skills help structure long arguments, chapter outlines, and multi-section revisions." — marketplace-id: `superpowers@claude-plugins-official`, github: `https://github.com/obra/superpowers`, name: `superpowers`
+Read `skills/_shared/offer-superpowers.md` and run it with `skill_slug: academic-writing-setup`, `mandatory: false`, `capability_line: "A free Claude Code skills library (94,000+ users). Brainstorming and planning skills help structure long arguments, chapter outlines, and multi-section revisions."` The helper asks the user, delegates to `skills/_shared/installation-protocol.md` on `yes`, and sets `superpowers_installed`, `superpowers_scope`, `superpowers_method`.
 
 ## Step 2: Verify Writing Toolchain
 
@@ -105,8 +104,7 @@ Ask these questions ONE AT A TIME. Wait for each answer before asking the next.
    C) No — I manage `.bib` entries manually
    D) I use a different manager (Paperpile, Mendeley, EndNote)"
 
-7. "Optional: install Superpowers for structured brainstorming and multi-step writing plans? (yes / no)
-   (Separate from the mandatory installation step above — only ask if not already installed.)"
+(Superpowers was already offered in Step 1 — no separate question here.)
 
 ## Step 4: Offer Project-Local Subagent
 
