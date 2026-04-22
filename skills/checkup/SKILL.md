@@ -61,19 +61,20 @@ Use the Agent tool with:
   prompt: |
     Scan the project rooted at the current working directory for
     onboarding-agent-owned delimiters. Return your standard
-    `repo-scan` fenced block. The caller only needs these fields:
+    JSON envelope (kind: "repo-scan"). The caller only needs these
+    fields inside `data`:
       - existing_claude_md
       - existing_agents_md
       - signals (any string matching "onboarding-agent" or
         "_onboarding_agent" indicates a marker)
-Expected output: one `repo-scan` fenced block per the subagent's output contract.
+Expected output: one fenced ```json block per the subagent's output contract.
 ```
 
-Parse the returned report. Set `delimiters_present: true` if `existing_claude_md: true` OR `existing_agents_md: true` AND any signal references `onboarding-agent` / `_onboarding_agent`, otherwise `delimiters_present: false`.
+Parse the reply via `skills/_shared/parse-subagent-json.md` with `reply_kind: "repo-scan"` and `schema_path: ".claude/agents/schemas/repo-scan.schema.json"`. On success (`result.ok: true`), set `delimiters_present: true` if `result.data.existing_claude_md == true` OR `result.data.existing_agents_md == true` AND any entry in `result.data.signals` references `onboarding-agent` / `_onboarding_agent`, otherwise `delimiters_present: false`.
 
 ### Fallback (if the subagent fails)
 
-Trigger the fallback when the subagent dispatch errors, returns no `repo-scan` block after one retry, or returns a block with missing fields. On dispatch error, do not retry — fall back immediately. Print:
+Trigger the fallback when the shared parser returns a failure marker (`ok: false` with any `reason`) after one retry, or when the Agent tool itself errors. On dispatch error, do not retry — fall back immediately. Print:
 
 > "⚠ repo-scanner subagent unavailable — falling back to inline delimiter scan."
 
@@ -189,19 +190,19 @@ Use the Agent tool with:
   description: "Run /audit-setup and summarize findings"
   prompt: |
     Invoke the audit skill named below and return your standard
-    `audit-summary` fenced block with severity-bucketed counts.
+    JSON envelope (kind: "audit-summary") with severity-bucketed counts.
     audit_skill: audit-setup
     max_top_titles: 3
-Expected output: one `audit-summary` fenced block per the subagent's output contract.
+Expected output: one fenced ```json block per the subagent's output contract.
 ```
 
-Parse `total`, `high`, `medium`, `low`, `top_titles`. Store as `audit_findings: { total, high, medium, low, top_titles: [...] }`. Continue to Stage 4.
+Parse the reply via `skills/_shared/parse-subagent-json.md` with `reply_kind: "audit-summary"` and `schema_path: ".claude/agents/schemas/audit-summary.schema.json"`. On success (`result.ok: true`), store `audit_findings: { total: result.data.total, high: result.data.high, medium: result.data.medium, low: result.data.low, top_titles: result.data.top_titles }`. Continue to Stage 4.
 
-If the returned block's `top_titles` begins with an `error:` entry (the subagent's documented error signal), treat it as a subagent failure and use the Fallback below.
+If the envelope arrives with `ok: false` (the subagent's documented in-band error signal), treat it as a subagent failure and use the Fallback below.
 
 ### Fallback (if the subagent fails)
 
-Trigger the fallback when the subagent dispatch errors, returns no `audit-summary` block after one retry, or signals an error via `top_titles`. On dispatch error, do not retry — fall back immediately. Print:
+Trigger the fallback when the shared parser returns a failure marker (`ok: false` with any `reason`) after one retry, or when the subagent's envelope arrives with `ok: false`, or when the Agent tool itself errors. On dispatch error, do not retry — fall back immediately. Print:
 
 > "⚠ audit-collector unavailable — running /audit-setup inline."
 

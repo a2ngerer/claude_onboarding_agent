@@ -20,29 +20,40 @@ The caller provides, in the `prompt:` field:
 
 ## Output Contract
 
-Return exactly one fenced code block tagged `repo-scan`, containing YAML-style fields. Do not return prose before or after the block. Example of the exact shape:
+Return exactly one fenced code block tagged `json`, containing a single JSON object in the uniform plugin envelope (`ok` / `kind` / `data`). Do not return prose before or after the block. `kind` MUST equal `"repo-scan"`. The object MUST validate against `.claude/agents/schemas/repo-scan.schema.json`.
 
-```repo-scan
-inferred_use_case: web-development
-signals:
-  - package.json
-  - next.config.ts
-  - "package.json:next"
-  - "app/page.tsx"
-graphify_candidate: false
-existing_claude_md: true
-existing_agents_md: false
-repo_size_bucket: small
+Example of the exact reply shape (valid payload, not a placeholder):
+
+```json
+{
+  "ok": true,
+  "kind": "repo-scan",
+  "data": {
+    "inferred_use_case": "web-development",
+    "signals": [
+      "package.json",
+      "next.config.ts",
+      "package.json:next",
+      "app/page.tsx"
+    ],
+    "graphify_candidate": false,
+    "existing_claude_md": true,
+    "existing_agents_md": false,
+    "repo_size_bucket": "small"
+  }
+}
 ```
 
-Field definitions:
+Field definitions (inside `data`):
 
 - `inferred_use_case` — one of: `coding`, `web-development`, `data-science`, `knowledge-base`, `office`, `research`, `academic-writing`, `content-creator`, `devops`, `design`, `graphify`, `unknown`. Use `unknown` when no signal is strong enough to commit to a single use case.
-- `signals` — a list of strings identifying the detected evidence (file names, directory names, or `manifest:dependency` pairs). At least the strongest three signals; at most ten.
+- `signals` — array of strings identifying the detected evidence (file names, directory names, or `manifest:dependency` pairs). At least the strongest three signals; at most ten.
 - `graphify_candidate` — `true` if the repo has either > 1000 source files across multiple languages OR > 100 PDFs/Markdown notes under `docs/` / `raw/` / `notes/`. Otherwise `false`.
 - `existing_claude_md` — `true` if `./CLAUDE.md` exists.
 - `existing_agents_md` — `true` if `./AGENTS.md` exists.
 - `repo_size_bucket` — one of: `tiny` (< 20 non-hidden files), `small` (20–200), `medium` (200–2000), `large` (> 2000). Count via `find . -not -path './.*' -type f | wc -l` or equivalent.
+
+Schema reference: `.claude/agents/schemas/repo-scan.schema.json`.
 
 ## Detection Heuristics (mirror of `onboarding/SKILL.md` Step 2)
 
@@ -61,9 +72,9 @@ Apply the dominance rules in order. The strongest single signal wins. If two sig
 
 - **Read-only.** Do not use `Write` or `Edit`. Do not invoke `Bash` commands that modify state — no `rm`, `mv`, `cp`, `touch`, `mkdir -p` (except `/tmp`), no `>`-redirects into project files, no `git add`/`commit`/`push`/`mv`.
 - **No recursive dispatch.** Do not invoke the Agent tool. Do not call another subagent from inside this one.
-- **No prose.** Return the fenced `repo-scan` block and nothing else. No preamble, no summary, no explanation.
+- **No prose.** Return the fenced ```json block and nothing else. No preamble, no summary, no explanation. Exactly one fenced block per reply.
 - **Bounded cost.** Cap `find` output at the first ~5000 paths. If the repo is larger than that, infer from the head and set `repo_size_bucket: large` without exhaustive enumeration.
 
 ## Failure Mode
 
-If a signal cannot be determined (e.g., `find` fails, a required manifest is unreadable), emit `unknown` for `inferred_use_case` and include in `signals` a string of the form `error:<short description>`. Never return a partial block that omits contracted fields, and never silently skip a field.
+If a signal cannot be determined (e.g., `find` fails, a required manifest is unreadable), emit `unknown` for `data.inferred_use_case` and include in `data.signals` a string of the form `error:<short description>`. Keep `ok: true` in this case — the envelope is still structurally valid and the caller can act on the `unknown` verdict. Never return a partial JSON object that omits contracted fields, and never silently skip a field.
