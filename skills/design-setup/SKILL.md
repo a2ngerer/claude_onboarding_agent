@@ -1,11 +1,13 @@
 ---
 name: design-setup
-description: Set up Claude for UI/UX design work — configures your design tool, frontend stack, and accessibility standard so Claude generates production-quality components and avoids generic AI aesthetics.
+description: Set up Claude for UI/UX design tooling — wires up your design tool (Figma, Sketch, XD, Penpot) and the Figma MCP handoff. Pair with web-development-setup for the frontend stack, testing, and accessibility rules.
 ---
 
 # UI/UX Design Setup
 
-This skill configures Claude for UI/UX design and frontend work.
+This skill configures the **design-tool layer** only: which design tool the user works in, and whether Claude should read Figma frames directly via MCP for UI handoff. It intentionally does NOT configure a frontend stack, a testing setup, or accessibility rules — those live in `web-development-setup` and would duplicate rules if emitted here.
+
+Run `web-development-setup` first (or alongside) when you also need framework-aware tool permissions, component / API conventions, or WCAG enforcement. `web-development-setup` offers to delegate to this skill automatically after it asks for the frontend framework.
 
 **Handoff context:** Read `skills/_shared/consume-handoff.md` and run it with the handoff block (if any). The helper guarantees the following locals: `detected_language`, `existing_claude_md`, `inferred_use_case`, `repo_signals`, `graphify_candidate`. Use `detected_language` for all user-facing prose; generated file content stays in English.
 
@@ -26,61 +28,47 @@ Read these on-demand at the step that invokes them. Do not read eagerly.
 
 - `skills/_shared/consume-handoff.md` — orchestrator handoff parse + inline fallback (preamble, before Step 1)
 
+## Delegated Mode
+
+This skill may be invoked as a sub-step of `web-development-setup` (the "UI/design tooling" branch of web-dev Step 3b). When that happens, the parent skill sets `delegated_from: web-development-setup` in the handoff context. In delegated mode:
+
+- Skip the language detection preamble — use the parent's `detected_language`.
+- Skip Step 1 (Superpowers offer) — the parent already handled it.
+- Skip Step 4 (frontend-design skill pointer) — the parent owns that prompt once.
+- Skip Step 6 (Write Upgrade Metadata) and Step 7 (Render Anchor Sections) — the parent's meta file and anchor block already covers this run. Instead, append `"design-setup"` to the parent's `skills_used[]` list when it writes the meta file.
+
+All other steps still run so the user gets the design-tool CLAUDE.md section and the Figma MCP offer.
+
 ## Step 1: Install Dependencies
+
+Skip in delegated mode.
 
 Read `skills/_shared/installation-protocol.md` and follow it for each dependency below.
 
 Dependencies:
 - Superpowers (optional) — description: "A free Claude Code skills library (94,000+ users). The brainstorming skill is useful for exploring design directions and component structures before committing to an implementation." — marketplace-id: `superpowers@claude-plugins-official`, github: `https://github.com/obra/superpowers`, name: `superpowers`
 
-## Step 2: Context Questions
+## Step 2: Context Question
 
-Ask one at a time:
+Ask:
 
 1. "Which design tool do you primarily use?
    A) Figma
    B) Sketch
    C) Adobe XD
-   D) Other — please specify"
+   D) Penpot
+   E) None — I mainly work from written specs or screenshots
+   F) Other — please specify"
 
-2. "What is your frontend stack?
-   A) React + Tailwind CSS
-   B) Vue
-   C) Vanilla CSS / plain HTML
-   D) Other — please specify
-   E) None — I work design-only, no code"
+Record the answer as `design_tool`.
 
-3. "What is your primary workflow with Claude?
-   A) Hand off designs → have Claude generate the code
-   B) Review and improve existing UI code
-   C) Both"
-
-4. "Which accessibility standard should Claude enforce?
-   A) WCAG AA (standard compliance)
-   B) WCAG AAA (strict compliance)
-   C) No specific standard"
-
-## Step 3: Optional Community Skills
-
-> "Would you like to install additional community skills?
->
-> A) frontend-design (official Anthropic) — avoids AI-generic UI, makes bold design decisions (277k installs, strongly recommended)
-> B) web-artifacts-builder — build complex HTML artifacts with React + Tailwind + shadcn/ui
-> C) accessibility-skill — automated WCAG audit and remediation guidance
-> D) All of the above
-> E) None"
-
-For each selected skill, run: `/plugin install <skill>@claude-plugins-official`
-
-On failure: warn and continue. Store successfully installed skills as `optional_skills_installed`.
-
-## Step 4: Offer Figma MCP (conditional)
+## Step 3: Offer Figma MCP (conditional)
 
 Read `skills/_shared/offer-mcp.md` and follow it with these parameters:
 
 - `mcp_slug`: `figma-context`
-- `trigger_condition`: Q1 answer is "A) Figma". If the user picked another tool, skip this step entirely.
-- `capability_line`: "Read Figma frames directly into Claude's context for UI-to-code work."
+- `trigger_condition`: `design_tool` is "A) Figma". If the user picked another tool, skip this step entirely.
+- `capability_line`: "Read Figma frames directly into Claude's context for UI-to-code handoff."
 - `install_command`: the install command from `docs/anchors/mcp-servers.md` under "Design" (currently: see https://github.com/GLips/Figma-Context-MCP — use the README's documented `claude mcp add` form at registration time; adapt if the anchor is updated).
 - `auth_type`: `api_token`
 - `auth_detail`: `FIGMA_API_TOKEN` (generate at https://www.figma.com/developers/api#access-tokens — scope: read-only is sufficient)
@@ -88,88 +76,50 @@ Read `skills/_shared/offer-mcp.md` and follow it with these parameters:
 
 Record `figma-context_installed` in skill state.
 
+## Step 4: Offer frontend-design Skill
+
+Skip in delegated mode — the parent skill owns this prompt.
+
+Ask ONCE (adapt to detected language):
+
+> "Install the official Anthropic `frontend-design` skill? It avoids AI-generic UI, makes bold design decisions, and is strongly recommended for design-to-code work (277k+ installs). (yes / no)"
+
+On `yes`: run `/plugin install frontend-design@claude-plugins-official`. On failure: warn once and continue. Record `frontend-design_installed` accordingly.
+
 ## Step 5: Generate Artifacts
 
 ### CLAUDE.md
 
+Emit a short, focused block — design-tool pipeline and MCP pointer only. Do NOT emit framework, workflow, or WCAG rules here; those belong to `web-development-setup`.
+
 ```markdown
-# Claude Instructions — UI/UX Design
+# Claude Instructions — Design Tooling
 
-## Design Context
-Tool: [Q1 answer] | Stack: [Q2 answer] | Workflow: [Q3 answer] | Accessibility: [Q4 answer]
+## Design Tool
+Primary tool: [design_tool answer]
 
-## Guidelines
-- Avoid generic AI aesthetics — no default gray cards, no rounded-everything, no "modern minimal" clichés unless explicitly requested
-- Always check [Q4 accessibility standard] compliance for color contrast and interactive elements
-- When generating UI code: component-first, no inline styles, use design tokens where available
-- When reviewing designs or code: flag accessibility issues before aesthetic feedback
-- Prefer existing component library patterns over custom implementations
-- For Figma handoff: extract exact spacing, typography, and color tokens from the provided specs — do not approximate
-- When given a topic or feature, suggest multiple visual directions before committing to one
+## Design-to-Code Handoff
+- When given a design spec (link, screenshot, or pasted frame), extract exact spacing, typography, and color tokens — do not approximate.
+- Prefer existing component library patterns over custom reimplementations.
+- If the repo has frontend conventions (see `.claude/rules/component-structure.md` when `web-development-setup` has also run), follow them before applying design-tool defaults.
 
-[Include ONLY if superpowers_installed is true]
+[Include ONLY if superpowers_installed is true AND not in delegated mode]
 ## Superpowers
-Superpowers is installed. For design exploration and component planning, use superpowers:brainstorming to compare directions before generating code.
+Superpowers is installed. For design exploration and component planning, use `superpowers:brainstorming` to compare directions before generating code.
 
 [Include ONLY if figma-context_installed is true OR figma-context_deferred is true — emitted per skills/_shared/offer-mcp.md Step 5]
 ## Configured MCP servers
 - figma-context: [see _shared/offer-mcp.md Step 5 for the exact per-state line format]
 ```
 
-Adapt based on Q2 (stack):
-- React + Tailwind → add "Prefer Tailwind utility classes over custom CSS. Use shadcn/ui components where applicable."
-- Vue → add "Prefer Vue SFC patterns. Use Vuetify or PrimeVue components where applicable."
-- None (design-only) → omit code-specific guidelines
-
-### AGENTS.md
-
-```markdown
-# Agent Roles
-
-## designer
-Generates UI components and layouts from design specs or descriptions. Follows the design system and accessibility standard defined in CLAUDE.md. Never introduces inline styles or undocumented design tokens.
-
-## accessibility-auditor
-Reviews UI code and designs for WCAG compliance. Returns a prioritized list of violations with remediation suggestions, ordered by severity.
-```
-
-### .claude/settings.json
-
-Build based on Q2 (frontend stack):
-- React + Tailwind or Vue → include npm/npx/node:
-```json
-{
-  "permissions": {
-    "allow": [
-      "Bash(git *)",
-      "Bash(npm *)",
-      "Bash(npx *)",
-      "Bash(node *)"
-    ]
-  }
-}
-```
-- Other: treat same as React + Tailwind (include npm/npx/node) as a safe default for unknown stacks
-- None (design-only) or Vanilla CSS:
-```json
-{
-  "permissions": {
-    "allow": ["Bash(git *)"]
-  }
-}
-```
-
 ### .gitignore
+
+Append (or extend the existing delimited block) with design-tool artifacts only. Framework build output (`node_modules/`, `.next/`, etc.) is `web-development-setup`'s responsibility — do NOT re-emit it here.
 
 ```gitignore
 # Design files
 *.fig
 *.sketch
-
-# Frontend build
-node_modules/
-dist/
-.next/
 
 # OS
 .DS_Store
@@ -179,11 +129,17 @@ Thumbs.db
 .claude/settings.local.json
 ```
 
+Note: this skill does NOT generate `AGENTS.md` or `.claude/settings.json`. Frontend code review, accessibility auditing, and Bash permissions for a web stack are owned by `web-development-setup` and would duplicate rules if emitted from here.
+
 ## Step 6: Write Upgrade Metadata
+
+Skip in delegated mode.
 
 Set `setup_slug: design`, `skill_slug: design-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`.
 
 ## Step 7: Render Anchor Sections
+
+Skip in delegated mode — the parent skill's anchor pass already covers this run.
 
 Read `skills/_shared/anchor-mapping.md`. Locate the row for `setup_type: design`. For each anchor slug in that row:
 
@@ -193,7 +149,6 @@ Read `skills/_shared/anchor-mapping.md`. Locate the row for `setup_type: design`
    - `anchor_slug: <slug>`
    - `target_file: ./CLAUDE.md`
    - `fallback_content: <embedded fallback from skills/anchors/SKILL.md for that slug>`
-2. If a `./AGENTS.md` file was generated earlier in this skill, repeat the call with `target_file: ./AGENTS.md`.
 
 Do not fail if any single `render-anchor-section.md` call returns `placeholder`. Collect rendered / placeholder slugs for the completion summary.
 
@@ -204,19 +159,16 @@ For every call, also capture `render_freshness`. When it is anything other than 
 ```
 ✓ UI/UX Design setup complete!
 
-Files created:
-  CLAUDE.md                     — design context, accessibility standard ([Q4]), UI guidelines
-  AGENTS.md                     — designer and accessibility-auditor role definitions
-  .claude/settings.json         — tool permissions for [stack]
-  .gitignore                    — design file and build rules
-  .claude/onboarding-meta.json  — setup marker for /upgrade-setup
+Files created / updated:
+  CLAUDE.md                     — design-tool pipeline + Figma MCP pointer (delimited section)
+  .gitignore                    — design-file ignore block (delimited section)
+  .claude/onboarding-meta.json  — setup marker for /upgrade-setup                       [skipped in delegated mode]
 
 External skills:
-  [✓ Superpowers installed via superpowers_method (superpowers_scope)]
+  [✓ Superpowers installed via superpowers_method (superpowers_scope)]                  [skipped in delegated mode]
   [skipped — install later with: /plugin install superpowers@claude-plugins-official]
   [⚠ Superpowers installation failed — install manually: https://github.com/obra/superpowers]
-
-Optional community skills: [list of installed skills, or "none selected"]
+  [✓ frontend-design installed | — declined | ⚠ install failed]                         [skipped in delegated mode]
 
 MCP servers:
   [one line per MCP considered, formatted per skills/_shared/offer-mcp.md Step 6 — omit if figma-context trigger condition was false]
@@ -226,9 +178,7 @@ Anchor freshness:
    Anchor <anchor_slug> served from <render_freshness> — consider running /anchors to refresh.]
 
 Next steps:
-  Start a new Claude session and paste a design description or Figma spec.
-  Example: "Build this card component: [description or paste Figma spec]"
-  Example: "Review this UI for WCAG AA compliance"
-  Example: "Redesign this form — it feels too generic"
+  - If you also need frontend stack rules (framework, testing, linting, WCAG), run `/web-development-setup`.
+  - Paste a Figma frame or design description into a new Claude session and ask for the component implementation.
   - Run `/anchors` any time to refresh the anchor-derived sections. If any section was rendered as a placeholder due to offline mode, re-run `/anchors` once you are back online.
 ```

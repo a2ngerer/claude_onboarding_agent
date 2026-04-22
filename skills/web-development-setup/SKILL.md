@@ -107,6 +107,20 @@ Ask these questions ONE AT A TIME. Wait for each answer before asking the next.
 
 (The optional Superpowers install is handled by Step 1 via the shared installation protocol and is never forced.)
 
+### Optional: UI / design tooling delegation
+
+After the questions above, ask ONCE (adapt to detected language):
+
+> "Do you also need UI/design tooling (design-tool pipeline, Figma handoff, design-tool MCP)? (yes / no)"
+
+- **no** → set `delegate_design: false` and continue normally.
+- **yes** → set `delegate_design: true`. After Step 8 writes this skill's artifacts (and before Step 9), invoke `skills/design-setup/SKILL.md` in **delegated mode**:
+
+  - Pass `delegated_from: web-development-setup` and the current `detected_language` in the handoff context.
+  - `design-setup` will run only its Q1 (design tool) and its Figma MCP offer, and write its own delimited CLAUDE.md block + `.gitignore` block. It will NOT emit framework, workflow, or WCAG rules (those are already covered by this skill) and will NOT write its own `.claude/onboarding-meta.json` or anchor sections.
+  - Before invoking, ask ONCE: "Install the official Anthropic `frontend-design` skill? It avoids AI-generic UI and is strongly recommended for design-to-code work (277k+ installs). (yes / no)". On `yes`: run `/plugin install frontend-design@claude-plugins-official`. On failure: warn once and continue. This offer is made here rather than inside `design-setup` so the combined flow prompts for it exactly once.
+  - When this skill's Step 10 writes `./.claude/onboarding-meta.json`, append `"design-setup"` to `skills_used[]`.
+
 ## Step 4: Derive Implied Defaults (do NOT ask)
 
 Read `framework-defaults.md`. Use the matrix there to derive `styling_stack` and `deploy_target_hint` from Q1 and Q2. These are NOT asked as separate questions.
@@ -291,6 +305,10 @@ On `yes`:
 
 Read `gitignore-block.md` for the web-specific additions and the delimited-marker shape. Inside the marker block, inline the Node/JS patterns from `skills/_shared/gitignore-node.md` and the shared common patterns from `skills/_shared/gitignore-common.md` (single source of truth for Node / OS / env / Claude-local lines). Append the fully assembled block to the user's `.gitignore`; if the marker block already exists, replace only the content between the markers. If `.env.example` is missing, emit the `.env.example` scaffold from `gitignore-block.md`.
 
+## Step 8b: Delegate to design-setup (conditional)
+
+If `delegate_design: true` (see Step 3), invoke `skills/design-setup/SKILL.md` now. Pass `delegated_from: web-development-setup` and the current `detected_language` in the handoff context. Design-setup will write its own delimited CLAUDE.md block and `.gitignore` block; it will NOT write its own meta file or render its own anchor sections. Resume this skill at Step 9 when it returns.
+
 ## Step 9: Optional Graphify Integration
 
 Read `skills/_shared/offer-graphify.md` and run it with:
@@ -307,7 +325,7 @@ variables it produces for use in Step 12.
 
 ## Step 10: Write Upgrade Metadata
 
-Set `setup_slug: web-development`, `skill_slug: web-development-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. If Step 6 emitted the `component-auditor` subagent, set `subagents_installed: ["component-auditor"]`; otherwise leave it unset. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`. If Step 9 installed Graphify, `skills_used` will include both `web-development-setup` and `graphify-setup`.
+Set `setup_slug: web-development`, `skill_slug: web-development-setup`. Resolve `plugin_version` from the plugin's own `plugin.json`. If Step 6 emitted the `component-auditor` subagent, set `subagents_installed: ["component-auditor"]`; otherwise leave it unset. Then follow `skills/_shared/write-meta.md` to create or merge `./.claude/onboarding-meta.json`. If Step 9 installed Graphify, `skills_used` will include both `web-development-setup` and `graphify-setup`. If the design-tooling delegation ran (`delegate_design: true`), also include `design-setup` in `skills_used`.
 
 ## Step 11: Render Anchor Sections
 
@@ -364,6 +382,11 @@ Hooks:
    | — skipped per user
    | ⚠ settings.json is corrupt — entries printed above for manual paste
    | — not offered (plain JavaScript)]
+
+Design tooling:
+  [✓ design-setup delegated — design-tool pipeline + Figma MCP pointer added to CLAUDE.md
+   | — declined
+   | — not offered]
 
 Anchor freshness:
   [omit the whole block if anchor_freshness_notes is empty; otherwise one line per entry:
