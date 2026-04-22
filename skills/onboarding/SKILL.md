@@ -158,7 +158,7 @@ _Your repo is large — `/graphify-setup` can layer on top of any choice in this
 _Tip: if you both read papers and write a manuscript in this repo, pick option 6 (research) first — it detects a manuscript folder and offers to cascade into option 5 (academic-writing) automatically._
 
 **Operations**
-9. Office & Business Productivity — emails, reports, presentations
+9. Business Writing — emails, memos, reports, proposals (Office setup)
 10. DevOps / Cloud Engineering — CI/CD, Kubernetes, Terraform, cloud providers
 
 **Other**
@@ -199,7 +199,7 @@ Commit to the recommendation after Q2. No Q3 needed on this branch.
 > "What's the primary output?
 >   a) A thesis, paper, or dissertation manuscript (LaTeX / Typst, with `.bib`) → recommend `academic-writing-setup`
 >   b) Reading papers, literature notes, or a personal knowledge vault
->   c) Business documents — emails, reports, slides, spreadsheets → recommend `office-setup`
+>   c) Business writing — emails, memos, reports, proposals → recommend `office-setup`
 >   d) Published content for an audience — YouTube, social, newsletters → recommend `content-creator-setup`"
 
 If the user picks B-b, ask Q3 to disambiguate between the two text-centric vault skills:

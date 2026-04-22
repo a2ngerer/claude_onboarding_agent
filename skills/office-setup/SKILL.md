@@ -1,11 +1,11 @@
 ---
 name: office-setup
-description: Set up Claude for office and business productivity — configures your writing style, document preferences, and company context so Claude always produces on-brand, appropriately formal output.
+description: Set up Claude for business writing — emails, memos, reports, proposals. Configures writing style, document-type preferences, and company context so Claude produces on-brand text. Does NOT cover presentations or slide decks.
 ---
 
 # Office Setup
 
-This skill configures Claude for business and office work.
+This skill configures Claude for business writing (emails, memos, reports, proposals). Presentations and slide decks are explicitly out of scope — the emitted rules commit to written prose only.
 
 **Handoff context:** Read `skills/_shared/consume-handoff.md` and run it with the handoff block (if any). The helper guarantees the following locals: `detected_language`, `existing_claude_md`, `inferred_use_case`, `repo_signals`, `graphify_candidate`. Use `detected_language` for all user-facing prose; generated file content stays in English.
 
@@ -37,11 +37,12 @@ Dependencies:
 
 Ask one at a time:
 
-1. "What types of documents do you create most often?
-   A) Emails and messages
-   B) Reports and proposals
-   C) Presentations
-   D) All of the above / a mix"
+1. "Which type of business writing do you produce most often?
+   A) Emails and short messages (customer replies, internal updates, memos)
+   B) Reports and proposals (longer, structured, audience-facing)
+   C) A mix of both"
+
+   Store the letter as `document_focus`. This answer branches the emitted guidelines in Step 4 and gates the Google-Drive MCP offer in Step 3.
 
 2. "What writing style do you prefer?
    A) Formal — corporate tone, complete sentences, no contractions
@@ -58,7 +59,7 @@ Read `skills/_shared/offer-mcp.md` once. Then run it for each MCP below in order
 ### Gmail
 
 - `mcp_slug`: `gmail`
-- `trigger_condition`: Q1 answer is "A) Emails and messages" OR "D) All of the above".
+- `trigger_condition`: `document_focus` is `A` or `C` (email path or mix).
 - `capability_line`: "Read, search, and send email from your Gmail inbox."
 - `install_command`: the current install command from `docs/anchors/mcp-servers.md` under "Productivity" (prefer the official Google Gmail MCP if listed; else the community `gmail-mcp-server` noted in the anchor).
 - `auth_type`: `oauth`
@@ -68,7 +69,7 @@ Read `skills/_shared/offer-mcp.md` once. Then run it for each MCP below in order
 ### Google Calendar
 
 - `mcp_slug`: `google-calendar`
-- `trigger_condition`: same as Gmail (Q1 = A or D). Offer Calendar only if Gmail was offered.
+- `trigger_condition`: same as Gmail (`document_focus` is `A` or `C`). Offer Calendar only if Gmail was offered.
 - `capability_line`: "Read and create calendar events."
 - `install_command`: from `docs/anchors/mcp-servers.md`.
 - `auth_type`: `oauth`
@@ -78,7 +79,7 @@ Read `skills/_shared/offer-mcp.md` once. Then run it for each MCP below in order
 ### Google Drive
 
 - `mcp_slug`: `google-drive`
-- `trigger_condition`: Q1 answer is "B) Reports and proposals" OR "D) All of the above".
+- `trigger_condition`: `document_focus` is `B` or `C` (report path or mix).
 - `capability_line`: "Read and search documents in your Google Drive."
 - `install_command`: from `docs/anchors/mcp-servers.md`.
 - `auth_type`: `oauth`
@@ -91,27 +92,46 @@ Record `gmail_installed`, `google-calendar_installed`, `google-drive_installed` 
 
 ### CLAUDE.md
 
+Assemble the template below. The `## Guidelines` section has a shared header block plus one or two branched subheadings keyed on `document_focus`:
+
+- `document_focus: A` → emit only the `### Emails and short messages` subheading.
+- `document_focus: B` → emit only the `### Reports and proposals` subheading.
+- `document_focus: C` → emit both subheadings in the order shown.
+
 ```markdown
-# Claude Instructions — Office & Business
+# Claude Instructions — Business Writing
 
 ## Context
 [Answer from Q3, or "No specific context provided."]
 
 ## Writing Style
 Preferred style: [answer from Q2 — Formal / Semi-formal / Casual]
-Primary document types: [answer from Q1]
+Primary document focus: [answer from Q1 — Emails / Reports / Mix]
 
 ## Guidelines
 - Always match the preferred writing style defined above
-- For emails: suggest a clear subject line when drafting; include greeting and sign-off
-- For reports: use an executive summary, clear section headers, and a conclusions section
-- For presentations: suggest slide structure with one idea per slide; include speaker notes when asked
 - Proofread for grammar and clarity before presenting output
 - If the document's audience or purpose is not clear, ask before drafting longer pieces
 
+[Include this subheading ONLY if document_focus is A or C]
+### Emails and short messages
+- Suggest a clear, specific subject line when drafting a new email — not a generic "Follow-up" or "Update"
+- Open with an appropriate greeting and close with a sign-off that matches the preferred style
+- Keep paragraphs short (2–4 sentences) and put the main ask in the first paragraph
+- One primary ask per message; if more are needed, use a short bulleted list and label them
+- For replies: mirror the sender's register unless the style above overrides it; quote the specific point you are answering
+
+[Include this subheading ONLY if document_focus is B or C]
+### Reports and proposals
+- Open with an executive summary that states the purpose, the key finding or recommendation, and the required decision
+- Use clear section headers; structure follows problem → analysis → options → recommendation → next steps
+- Cite numbers and sources inline; do not drop claims without evidence the reader can verify
+- Close with a conclusions section that re-states the recommendation and the owner / timeline for the next step
+- Match length to audience: an internal memo is shorter than a board proposal; ask if the audience is unclear
+
 [Include ONLY if superpowers_installed is true]
 ## Superpowers
-Superpowers is installed. For complex multi-step tasks (research + structure + write), use superpowers:brainstorming to plan the approach before drafting.
+Superpowers is installed. For longer reports and proposals, use superpowers:brainstorming to structure the argument before drafting, and superpowers:writing-plans for multi-section revisions.
 
 [Include ONLY if any of gmail_installed / gmail_deferred / google-calendar_installed / google-calendar_deferred / google-drive_installed / google-drive_deferred is true — emitted per skills/_shared/offer-mcp.md Step 5, one bullet per installed or deferred MCP]
 ## Configured MCP servers
@@ -158,10 +178,13 @@ For every call, also capture `render_freshness`. When it is anything other than 
 ## Step 7: Completion Summary
 
 ```
-✓ Office setup complete!
+✓ Business writing setup complete!
+
+Scope: emails, memos, reports, proposals. Presentations are NOT covered —
+re-run `/onboarding` if you need a separate skill for slide decks.
 
 Files created:
-  CLAUDE.md                     — writing style, document preferences, and context instructions
+  CLAUDE.md                     — writing style, document-focus guidelines, and context
   .gitignore                    — office temp file rules
   .claude/onboarding-meta.json  — setup marker for /upgrade-setup
 
@@ -178,7 +201,7 @@ Anchor freshness:
    Anchor <anchor_slug> served from <render_freshness> — consider running /anchors to refresh.]
 
 Next steps:
-  Start a new Claude session and say: "Draft an email to [recipient] about [topic]"
-  Or: "Write a report on [subject] for [audience]"
+  [If document_focus is A or C] Start a new Claude session and say: "Draft an email to [recipient] about [topic]"
+  [If document_focus is B or C] Or: "Draft an executive summary and section outline for a proposal on [subject] to [audience]"
   - Run `/anchors` any time to refresh the anchor-derived sections. If any section was rendered as a placeholder due to offline mode, re-run `/anchors` once you are back online.
 ```

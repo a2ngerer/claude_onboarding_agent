@@ -33,7 +33,7 @@ Not sure where to start? Run `/onboarding` and we'll figure it out with you. Or 
 | **Building a web app** (frontend, backend, or full-stack) | `/web-development-setup` | Frontend, backend, or full-stack web app — framework-aware permissions, env-var hygiene, deploy-target pointers |
 | **A data scientist / ML engineer** | `/data-science-setup` | Notebook hygiene, experiment tracking, `data/raw→processed` layout, reproducibility |
 | **Building a personal wiki / second brain** | `/knowledge-base-setup` | Karpathy-pattern wiki, optional Obsidian CLI subagent |
-| **Writing docs, emails, reports** | `/office-setup` | Writing style, document templates, company context |
+| **Writing emails, memos, reports, proposals** | `/office-setup` | Business-writing focus: Q1 branches guidelines (email path vs. report path); presentations out of scope |
 | **A researcher or academic** | `/research-setup` | Citation format, domain vocabulary, LaTeX-aware ignores |
 | **Writing a thesis, paper, or dissertation** | `/academic-writing-setup` | Thesis / paper / dissertation — LaTeX or Typst, Zotero, citation rules that prevent hallucinations |
 | **Creating content** (YouTube, blog, social) | `/content-creator-setup` | Brand voice, platform presets, audience profile |
@@ -96,7 +96,7 @@ irm https://raw.githubusercontent.com/a2ngerer/claude_onboarding_agent/main/scri
 | `/web-development-setup` | Framework-aware web-app setup — Next.js / React / Vue / Svelte / SolidJS / Astro / Remix + optional backend (Node/Bun/Python/Go). API conventions, component structure, env-var hygiene, deploy-target pointers |
 | `/data-science-setup` | Notebook workflow (Jupyter/marimo), experiment tracking (MLflow/W&B/DVC), reproducible `pyproject.toml`, `data/raw/interim/processed` layout, model-card pointers |
 | `/knowledge-base-setup` | Builds a [Karpathy-pattern](https://github.com/forrestchang/andrej-karpathy-skills) wiki from your notes or codebase (+ optional [Obsidian](https://obsidian.md) CLI integration via dispatched subagent — no always-on MCP token cost) |
-| `/office-setup` | Writing style, document preferences, company context |
+| `/office-setup` | Business writing — emails, memos, reports, proposals. Q1 bifurcates emitted guidelines (email path / report path / both); presentations are out of scope |
 | `/research-setup` | Citation format, research domain, academic writing guidelines |
 | `/academic-writing-setup` | Thesis / paper / dissertation setup — LaTeX or Typst stack, Zotero + Better BibTeX, citation style, no-invented-citations rules, `sections/`/`bib/`/`figures/` scaffold |
 | `/content-creator-setup` | Brand voice, platform preferences, audience context |
