@@ -122,13 +122,15 @@ Use the Agent tool with:
   description: "Enumerate candidate files for upgrade diffing"
   prompt: |
     Scan the project rooted at the current working directory.
-    Return your standard `repo-scan` fenced block. The caller only
-    needs these fields:
+    Return your standard JSON envelope (kind: "repo-scan"). The
+    caller only needs these fields inside `data`:
       - existing_claude_md
       - existing_agents_md
       - signals (any string matching a candidate file path)
-Expected output: one `repo-scan` fenced block per the subagent's output contract.
+Expected output: one fenced ```json block per the subagent's output contract.
 ```
+
+Parse the reply via `skills/_shared/parse-subagent-json.md` with `reply_kind: "repo-scan"` and `schema_path: ".claude/agents/schemas/repo-scan.schema.json"`. On success (`result.ok: true`), use `result.data.existing_claude_md`, `result.data.existing_agents_md`, and `result.data.signals` as the "scan report" below. On failure, jump to the Fallback subsection.
 
 For each skill in `detected_skills`, read its `SKILL.md` from the plugin installation (resolved in Step 1.3) and cross-reference against the scan report to build the candidate list. The universal candidates are:
 
@@ -142,7 +144,7 @@ Skip any candidate file that the scan report indicates does not exist. Do not cr
 
 ### Fallback (if the subagent fails)
 
-Trigger the fallback when the subagent dispatch errors, returns no `repo-scan` block after one retry, or returns a block with missing fields. On dispatch error, do not retry — fall back immediately. Print:
+Trigger the fallback when the shared parser returns a failure marker (`ok: false` with any `reason`) after one retry, or when the Agent tool itself errors. On dispatch error, do not retry — fall back immediately. Print:
 
 > "⚠ repo-scanner subagent unavailable — enumerating candidate files inline."
 

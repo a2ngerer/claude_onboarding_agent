@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://claude-onboarding-agent/schemas/artifact-verify.schema.json",
+  "title": "artifact-verify",
+  "description": "Envelope returned by the artifact-verifier subagent.",
+  "type": "object",
+  "required": ["ok", "kind", "data"],
+  "additionalProperties": false,
+  "properties": {
+    "ok": { "type": "boolean" },
+    "kind": { "const": "artifact-verify" },
+    "notes": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "data": {
+      "type": "object",
+      "required": ["status", "files_checked", "issues"],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["ok", "issues"]
+        },
+        "files_checked": { "type": "integer", "minimum": 0 },
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["file", "problem"],
+            "additionalProperties": false,
+            "properties": {
+              "file": { "type": "string" },
+              "problem": {
+                "type": "string",
+                "enum": [
+                  "missing delimiter",
+                  "invalid JSON",
+                  "empty file",
+                  "path does not exist"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -22,31 +22,46 @@ The verifier never infers the file list itself. Empty `files_to_check` → retur
 
 ## Output Contract
 
-Return exactly one fenced code block tagged `artifact-verify`, containing YAML-style fields. Do not return prose before or after the block. Example of the exact shape:
+Return exactly one fenced code block tagged `json`, containing a single JSON object in the uniform plugin envelope (`ok` / `kind` / `data`). Do not return prose before or after the block. `kind` MUST equal `"artifact-verify"`. The object MUST validate against `.claude/agents/schemas/artifact-verify.schema.json`.
 
-```artifact-verify
-status: ok
-files_checked: 3
-issues: []
+All-clean example (valid payload, not a placeholder):
+
+```json
+{
+  "ok": true,
+  "kind": "artifact-verify",
+  "data": {
+    "status": "ok",
+    "files_checked": 3,
+    "issues": []
+  }
+}
 ```
 
-Issues example:
+Issues example (valid payload, not a placeholder):
 
-```artifact-verify
-status: issues
-files_checked: 3
-issues:
-  - file: ./CLAUDE.md
-    problem: missing delimiter
-  - file: ./.claude/settings.json
-    problem: invalid JSON
+```json
+{
+  "ok": true,
+  "kind": "artifact-verify",
+  "data": {
+    "status": "issues",
+    "files_checked": 3,
+    "issues": [
+      { "file": "./CLAUDE.md", "problem": "missing delimiter" },
+      { "file": "./.claude/settings.json", "problem": "invalid JSON" }
+    ]
+  }
+}
 ```
 
-Field definitions:
+Field definitions (inside `data`):
 
-- `status` — `ok` when `issues` is empty; `issues` when at least one file failed a check.
+- `status` — `"ok"` when `issues` is empty; `"issues"` when at least one file failed a check.
 - `files_checked` — integer count of files the caller listed. Always equal to `len(files_to_check)` regardless of pass/fail.
-- `issues` — list of `{ file, problem }` entries, one per failing file. `problem` is one of the fixed strings: `"missing delimiter"`, `"invalid JSON"`, `"empty file"`, `"path does not exist"`. Use the first one that fires per file — do not chain multiple problems for a single path.
+- `issues` — array of `{ file, problem }` entries, one per failing file. `problem` is one of the fixed strings: `"missing delimiter"`, `"invalid JSON"`, `"empty file"`, `"path does not exist"`. Use the first one that fires per file — do not chain multiple problems for a single path.
+
+Schema reference: `.claude/agents/schemas/artifact-verify.schema.json`.
 
 ## Check Rules
 
@@ -66,9 +81,9 @@ Stop at the first problem for a given file — one issue per file at most.
 
 - **Read-only.** Do not use `Write` or `Edit`. Do not invoke `Bash` commands that modify state — no `rm`, `mv`, `cp`, `touch`, `mkdir`, no `>`-redirects into project files, no `git add`/`commit`/`push`/`mv`.
 - **No recursive dispatch.** Do not invoke the Agent tool. Do not call another subagent from inside this one.
-- **No prose.** Return the `artifact-verify` fenced block and nothing else. No preamble, no explanation, no remediation suggestions.
-- **Bounded cost.** Cap `files_to_check` at 50 entries. If the caller passes more, check the first 50 and set `status: issues` with a synthetic issue `{ file: "<input>", problem: "path does not exist" }` is NOT appropriate — instead return `status: ok` for the first 50 and note the truncation with a trailing issue entry whose `file` is `"(input truncated)"` and `problem: "path does not exist"`. Callers should not pass more than 50.
+- **No prose.** Return the fenced ```json block and nothing else. No preamble, no explanation, no remediation suggestions. Exactly one fenced block per reply.
+- **Bounded cost.** Cap `files_to_check` at 50 entries. If the caller passes more, check the first 50 and set `data.status: "issues"` with a trailing issue entry whose `file` is `"(input truncated)"` and `problem: "path does not exist"`. Callers should not pass more than 50.
 
 ## Failure Mode
 
-If a read fails for reasons other than non-existence (permission denied, binary content, I/O error), emit an `issues` entry with `problem: path does not exist` and continue with the remaining files. Never return a partial block that omits contracted fields, and never silently skip a file the caller listed.
+If a read fails for reasons other than non-existence (permission denied, binary content, I/O error), emit a `data.issues` entry with `problem: "path does not exist"` and continue with the remaining files. Keep `ok: true` — the envelope is still structurally valid; the non-empty `issues` list is the signal. Never return a partial JSON object that omits contracted fields, and never silently skip a file the caller listed.

@@ -22,34 +22,52 @@ The collector never picks the audit skill itself. If `audit_skill` is empty or u
 
 ## Output Contract
 
-Return exactly one fenced code block tagged `audit-summary`, containing YAML-style fields. Do not return prose before or after the block. Example of the exact shape:
+Return exactly one fenced code block tagged `json`, containing a single JSON object in the uniform plugin envelope (`ok` / `kind` / `data`). Do not return prose before or after the block. `kind` MUST equal `"audit-summary"`. The object MUST validate against `.claude/agents/schemas/audit-summary.schema.json`.
 
-```audit-summary
-total: 4
-high: 1
-medium: 2
-low: 1
-top_titles:
-  - "Overly broad tool permissions in .claude/settings.json"
-  - "Deprecated Claude model ID referenced in CLAUDE.md"
-  - "Missing onboarding-agent delimiter in AGENTS.md"
+Populated example (valid payload, not a placeholder):
+
+```json
+{
+  "ok": true,
+  "kind": "audit-summary",
+  "data": {
+    "total": 4,
+    "high": 1,
+    "medium": 2,
+    "low": 1,
+    "top_titles": [
+      "Overly broad tool permissions in .claude/settings.json",
+      "Deprecated Claude model ID referenced in CLAUDE.md",
+      "Missing onboarding-agent delimiter in AGENTS.md"
+    ]
+  }
+}
 ```
 
-Empty-audit example:
+Empty-audit example (valid payload, not a placeholder):
 
-```audit-summary
-total: 0
-high: 0
-medium: 0
-low: 0
-top_titles: []
+```json
+{
+  "ok": true,
+  "kind": "audit-summary",
+  "data": {
+    "total": 0,
+    "high": 0,
+    "medium": 0,
+    "low": 0,
+    "top_titles": []
+  }
+}
 ```
 
-Field definitions:
+Field definitions (inside `data`):
 
 - `total` — integer count of findings the audit skill emitted.
 - `high`, `medium`, `low` — non-negative integers. `high + medium + low` MUST equal `total`.
-- `top_titles` — list of up to `max_top_titles` (default 3) finding titles, in the order the audit skill printed them (HIGH severity first). Empty list when `total == 0`.
+- `top_titles` — array of up to `max_top_titles` (default 3) finding titles, in the order the audit skill printed them (HIGH severity first). Empty array when `total == 0`.
+- `error` — optional string; set when the subagent could not run the audit skill (see Failure Mode). Accompanied by `"ok": false` at the envelope level.
+
+Schema reference: `.claude/agents/schemas/audit-summary.schema.json`.
 
 ## Execution
 
@@ -64,24 +82,30 @@ If the audit skill returns its "nothing to improve" message, emit the empty-audi
 
 - **Read-only.** Do not use `Write` or `Edit`. Do not invoke `Bash` commands that modify state — no `rm`, `mv`, `cp`, `touch`, `mkdir`, no `>`-redirects into project files, no `git add`/`commit`/`push`/`mv`.
 - **No recursive dispatch.** Do not invoke the Agent tool. Do not call another subagent from inside this one. (The audit skill runs inline within this subagent's context, not as a nested dispatch.)
-- **No prose.** Return the `audit-summary` fenced block and nothing else. No preamble, no remediation narrative, no listing of every finding.
-- **Bounded output.** The `top_titles` list is capped (default 3, hard cap 5). Long titles are truncated to 120 characters with a trailing `…`.
+- **No prose.** Return the fenced ```json block and nothing else. No preamble, no remediation narrative, no listing of every finding. Exactly one fenced block per reply.
+- **Bounded output.** The `data.top_titles` list is capped (default 3, hard cap 5). Long titles are truncated to 120 characters with a trailing `…`.
 
 ## Failure Mode
 
 - If `audit_skill` is empty, unknown, or not installed, emit:
 
-  ```audit-summary
-  total: 0
-  high: 0
-  medium: 0
-  low: 0
-  top_titles:
-    - "error:audit skill unavailable"
+  ```json
+  {
+    "ok": false,
+    "kind": "audit-summary",
+    "data": {
+      "total": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0,
+      "top_titles": [],
+      "error": "audit skill unavailable"
+    }
+  }
   ```
 
-  Set `total: 0` deliberately — there is no positive finding count to report. The single placeholder entry in `top_titles` signals the error to the caller, which MUST treat it as a failed dispatch and fall back inline.
+  Set `ok: false` and populate `data.error` with a short reason. The caller MUST treat `ok: false` as a failed dispatch and fall back inline.
 
-- If the audit skill aborts mid-run (e.g., it required a dependency that is missing), emit the same shape with `top_titles: ["error:<short reason>"]`.
+- If the audit skill aborts mid-run (e.g., a required dependency is missing), emit the same shape with `data.error: "<short reason>"`.
 
-- Never return a partial block that omits contracted fields, and never silently swallow an audit-skill error.
+- Never return a partial JSON object that omits contracted fields, and never silently swallow an audit-skill error.

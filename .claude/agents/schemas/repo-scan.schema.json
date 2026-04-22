@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://claude-onboarding-agent/schemas/repo-scan.schema.json",
+  "title": "repo-scan",
+  "description": "Envelope returned by the repo-scanner subagent.",
+  "type": "object",
+  "required": ["ok", "kind", "data"],
+  "additionalProperties": false,
+  "properties": {
+    "ok": { "type": "boolean" },
+    "kind": { "const": "repo-scan" },
+    "notes": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "data": {
+      "type": "object",
+      "required": [
+        "inferred_use_case",
+        "signals",
+        "graphify_candidate",
+        "existing_claude_md",
+        "existing_agents_md",
+        "repo_size_bucket"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "inferred_use_case": {
+          "type": "string",
+          "enum": [
+            "coding",
+            "web-development",
+            "data-science",
+            "knowledge-base",
+            "office",
+            "research",
+            "academic-writing",
+            "content-creator",
+            "devops",
+            "design",
+            "graphify",
+            "unknown"
+          ]
+        },
+        "signals": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 0,
+          "maxItems": 10
+        },
+        "graphify_candidate": { "type": "boolean" },
+        "existing_claude_md": { "type": "boolean" },
+        "existing_agents_md": { "type": "boolean" },
+        "repo_size_bucket": {
+          "type": "string",
+          "enum": ["tiny", "small", "medium", "large"]
+        }
+      }
+    }
+  }
+}
