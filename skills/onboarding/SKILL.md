@@ -31,7 +31,7 @@ If either a meta file or any marker is found, print (adapt to detected language)
 
 > "Existing onboarding-agent setup detected (type: `<setup_type>`, installed `<installed_at>`). Re-running `/onboarding` would overwrite or duplicate existing sections.
 >
-> Run `/checkup` to decide whether to rebuild or selectively improve this setup, or re-run `/onboarding --rebuild` to force a full rebuild (existing files will be backed up to `.claude/backups/<timestamp>/` first)."
+> Run `/checkup` to decide whether to rebuild or selectively improve this setup, or re-run `/onboarding --rebuild` to force a full rebuild (existing files will be backed up to `.claude/backups/<timestamp>-onboarding/` first)."
 
 Exit here. Do not proceed to Step 2.
 
@@ -39,27 +39,11 @@ If nothing is detected, or `rebuild_mode: true`, continue.
 
 ## Step 1b: Backup before rebuild (only if `rebuild_mode: true`)
 
-Before any scanning or file generation, back up every onboarding-agent-managed file that currently exists in the repo. Skip this step silently if nothing matches.
+Before any scanning or file generation, back up every onboarding-agent-managed file that currently exists in the repo. Delegate the mechanics to the shared helper; do not reimplement timestamp or copy logic here.
 
-1. Compute `timestamp = <YYYYMMDD-HHMMSS>` in local time (single value for this invocation).
-2. Create the backup root via Bash: `mkdir -p .claude/backups/<timestamp>/`.
-3. For each of the following paths that exists on disk, copy it into the backup folder preserving the relative path:
-   - `./CLAUDE.md`
-   - `./AGENTS.md`
-   - `./.claude/settings.json`
-   - `./.claude/settings.local.json` (user-modified — never discard without a copy)
-   - `./.claude/onboarding-meta.json`
-   - `./.claude/rules/` (recursive — include every `.md` under it)
-
-   Use Bash `cp --parents` where available, otherwise `mkdir -p "$(dirname dest)"` and `cp` the file (or `cp -R` for directories).
-
-4. **Backup failure aborts onboarding.** If any copy fails, print:
-
-   > "⚠ Backup failed for `<path>`: `<error>`. Aborting onboarding before any file is touched. Nothing has been modified. Re-run once the cause is fixed, or back up manually and try again."
-
-   Exit. Do not proceed to Step 2.
-
-5. Store `rebuild_backup_path = .claude/backups/<timestamp>/` for the completion summary.
+1. Read `skills/_shared/backup-before-write.md` and follow it with `trigger: onboarding-rebuild`. Capture the returned `rebuild_backup_path`.
+2. **Backup failure aborts onboarding.** If the helper signals failure (it prints the standardized warning itself), exit here. Do not proceed to Step 2.
+3. Store `rebuild_backup_path` (as returned by the helper, e.g. `.claude/backups/<timestamp>-onboarding/`) for the completion summary in Step 6.
 
 After a successful backup, continue with Step 2 normally. The existing files are **not** deleted — setup skills will overwrite / extend them as they normally would. The backup is the user's restore point.
 
