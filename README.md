@@ -106,13 +106,15 @@ Scan repo — detect files, manifests, existing CLAUDE.md
 Suggest the most likely use case (or ask if the repo is empty)
      │
      ├── 1. Coding Setup
-     ├── 2. Data Science / ML
-     ├── 3. Knowledge Base Builder
-     ├── 4. Office & Business
-     ├── 5. Research & Writing
-     ├── 6. Content Creation
-     ├── 7. DevOps & Infrastructure
-     └── 8. Design & Frontend
+     ├── 2. Web Development
+     ├── 3. Data Science / ML
+     ├── 4. Knowledge Base Builder
+     ├── 5. Office & Business
+     ├── 6. Research & Writing
+     ├── 7. Academic Writing
+     ├── 8. Content Creation
+     ├── 9. DevOps & Infrastructure
+     └── 10. Design & Frontend
                │
                ▼
      Ask 3–7 targeted questions
@@ -135,16 +137,16 @@ Every setup skill creates a tailored `CLAUDE.md` with context and instructions s
 
 | Skill | CLAUDE.md | Agents | settings.json | .gitignore | Hooks | External |
 |-------|-----------|--------|---------------|------------|-------|----------|
-| Coding | ✓ + workflow | ✓ 3 roles (AGENTS.md) | ✓ stack permissions | ✓ stack | — | Superpowers |
-| Web Development | ✓ + pointers (`.claude/rules/api-conventions.md`, `component-structure.md`, `env-vars.md`) | — | ✓ framework + package-manager + deploy-CLI permissions | ✓ `node_modules/`, framework build outputs (`.next/`, `dist/`, `.astro/`, …), `.env.local`, test artifacts | ✓ type-check on save (TS only, opt-in) | Superpowers (optional) |
-| Data Science | ✓ + pointers (`.claude/rules/data-schema.md`, `evaluation-protocol.md`) | — | ✓ uv / notebook / tracker permissions | ✓ raw data, notebook checkpoints, experiment artifacts | ✓ nbstripout on save (opt-in) | Superpowers (optional) |
+| Coding | ✓ + workflow | ✓ 3 roles (AGENTS.md) + opt-in `code-reviewer` subagent | ✓ stack permissions | ✓ stack | — | Superpowers + opt-in GitHub MCP |
+| Web Development | ✓ + pointers (`.claude/rules/api-conventions.md`, `component-structure.md`, `env-vars.md`) | opt-in `component-auditor` subagent | ✓ framework + package-manager + deploy-CLI permissions | ✓ `node_modules/`, framework build outputs (`.next/`, `dist/`, `.astro/`, …), `.env.local`, test artifacts | ✓ type-check on save (TS only, opt-in) | Superpowers (optional) + opt-in GitHub MCP |
+| Data Science | ✓ + pointers (`.claude/rules/data-schema.md`, `evaluation-protocol.md`) | opt-in `notebook-auditor` subagent | ✓ uv / notebook / tracker permissions | ✓ raw data, notebook checkpoints, experiment artifacts | ✓ nbstripout on save (opt-in) | Superpowers (optional) |
 | Knowledge Base | ✓ + Karpathy pattern | ✓ `.claude/agents/obsidian-vault-keeper.md` (optional) | — | ✓ | — | Superpowers + Karpathy |
-| Office | ✓ + writing style | — | — | ✓ | — | Superpowers (optional) |
+| Office | ✓ + writing style | — | — | ✓ | — | Superpowers (optional) + opt-in Gmail / Calendar / Drive MCP |
 | Research | ✓ + citation format | — | — | ✓ LaTeX | — | Superpowers (optional) |
-| Academic Writing | ✓ + non-negotiable citation rules (pointers to `.claude/rules/writing-style.md`, `citation-rules.md`) | — | — | ✓ LaTeX / Typst build artifacts | ✓ SessionStart rules reload (opt-in) | Superpowers (optional) |
+| Academic Writing | ✓ + non-negotiable citation rules (pointers to `.claude/rules/writing-style.md`, `citation-rules.md`) | opt-in `writing-style-auditor` subagent | — | ✓ LaTeX / Typst build artifacts | ✓ SessionStart rules reload (opt-in) | Superpowers (optional) |
 | Content | ✓ + brand voice | — | — | ✓ media files | — | Superpowers (optional) |
 | DevOps | ✓ + infra workflow | ✓ 3 roles | ✓ stack permissions | ✓ IaC state, secrets | ✓ plan-before-apply guard (opt-in) | Superpowers (optional) |
-| Design | ✓ + UI guidelines | ✓ 2 roles | ✓ stack permissions | ✓ design assets | — | Superpowers (optional) |
+| Design | ✓ + UI guidelines | ✓ 2 roles | ✓ stack permissions | ✓ design assets | — | Superpowers (optional) + opt-in Figma MCP |
 | Graphify | ✓ + delimited pointer block (`/graphify query / path / explain`) | — | Graphify registers its own PreToolUse hook via `graphify install` | — | (Graphify's own PreToolUse hook) | `graphifyy` (Python package via `uv tool install`, `pipx` fallback) |
 
 ### The coding workflow (powered by Superpowers)
@@ -165,7 +167,7 @@ Optional: connect [Obsidian](https://obsidian.md) via the official Obsidian CLI,
 
 ## Realtime anchors
 
-Some best practices change faster than plugin releases — current Claude model IDs, recommended Python tooling, the MCP server landscape. To keep skills accurate without requiring users to reinstall the plugin, this repo ships a set of short, auto-updated reference snapshots under [`docs/anchors/`](docs/anchors/).
+Some best practices change faster than plugin releases — current Claude model IDs, recommended MCP servers, Claude Code tooling conventions, subagent patterns, knowledge-base layouts. To keep skills accurate without requiring users to reinstall the plugin, this repo ships a set of short, auto-updated reference snapshots under [`docs/anchors/`](docs/anchors/).
 
 Skills fetch anchors at runtime from a pinned `raw.githubusercontent.com` URL via the shared [`skills/_shared/fetch-anchor.md`](skills/_shared/fetch-anchor.md) protocol (24h cache, embedded offline fallback). A daily GitHub Action researches the sources listed in each anchor and opens a PR for human review — anchors are never auto-merged. Format details: [`docs/anchors/README.md`](docs/anchors/README.md).
 
