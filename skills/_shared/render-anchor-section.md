@@ -13,6 +13,7 @@ Shared protocol for rendering a curated excerpt of an anchor into a delimited ma
 ## Outputs
 
 - `render_result` — one of `rendered`, `placeholder`, `unchanged`, `skipped`.
+- `render_freshness` — one of `network`, `cache`, `fallback`, `embedded`. Propagated verbatim from `fetch-anchor.md`'s `fetch_freshness`. Callers MUST surface any value other than `network` or `cache` in their completion summary.
 
 ## Security invariants
 
@@ -25,6 +26,8 @@ Shared protocol for rendering a curated excerpt of an anchor into a delimited ma
 ### Step R1 — Fetch the anchor
 
 Call `skills/_shared/fetch-anchor.md` with `anchor_name: <anchor_slug>` and `fallback_content: <fallback_content>`.
+
+Capture its `fetch_freshness` output and assign it to `render_freshness` — this value is carried through to Step R5 unchanged, regardless of which branch below runs.
 
 - If `anchor_markdown` is non-null → continue to Step R2.
 - If `anchor_markdown` is null → set `render_result: placeholder` and skip to Step R4 with the excerpt body:
@@ -50,6 +53,8 @@ Select the excerpt section by anchor slug (exact match required, falling back to
 
 The excerpt is the content between the chosen `## <Heading>` line (exclusive) and the next `## ` line (or end of body). Strip trailing blank lines. If the extracted text exceeds 25 lines, truncate to 25 lines and append `<!-- excerpt truncated — see full anchor in cache -->` as the last line.
 
+If the primary section is missing and the fallback path is triggered, emit a log line to the user: `Anchor <anchor_slug> rendered from fallback excerpt (<reason>)`, where `<reason>` is either the fallback heading name used or `first 20 lines of body`. Do not fall through silently.
+
 ### Step R4 — Write the marker section
 
 Construct the section block exactly (replace the three placeholders):
@@ -70,10 +75,13 @@ Never touch bytes outside the marker pair.
 
 ### Step R5 — Return
 
-Return `render_result`.
+Return `render_result` and `render_freshness`.
+
+When `render_freshness` is anything other than `network` or `cache`, emit a log line to the user before returning: `Anchor <anchor_slug> rendered from <render_freshness>`. This guarantees no silent fallthrough — the caller and user both see which source backed the excerpt.
 
 ## Notes for callers
 
 - Setup skills call this protocol once per anchor in their mapped list. Each call is independent — if one anchor fetch fails, the others still run.
 - `/anchors` uses this protocol only on files that already exist; it does not create `CLAUDE.md` or `AGENTS.md` from scratch. Section 4.3 of the spec is explicit that initial creation is the setup skill's job.
 - `fallback_content` must be a plausible-shape markdown anchor (frontmatter + body) so Step R2 can parse it. If omitted, Step R1 may return null, leading to the placeholder path in Step R4.
+- Callers MUST read `render_freshness` and, whenever its value is not `network` or `cache`, mention the affected anchor slug in the completion summary with conservative wording — e.g. `Anchor <slug> served from <render_freshness> — consider running /anchors to refresh.` Aggregate across multiple anchors when several are in scope.

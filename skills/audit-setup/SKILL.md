@@ -155,6 +155,8 @@ Read `skills/_shared/anchor-mapping.md` → extract the list of anchor slugs map
 
 For each `anchor_slug` in `anchors_for_setup`, fetch the anchor via `skills/_shared/fetch-anchor.md` (embedded fallback: use the snapshot declared in `skills/anchors/SKILL.md` for that slug). If `fetch-anchor` returns `anchor_markdown: null`, skip that slug and continue.
 
+Capture `fetch_freshness` from each fetch. When it is anything other than `network` or `cache`, record the pair `(anchor_slug, fetch_freshness)` in `anchor_freshness_notes`. The Output block's `Anchor freshness` line surfaces this list so reviewers know which checks ran against a stale or embedded snapshot instead of current upstream content.
+
 Run the anchor-specific check defined below. Each check is `LOW` severity and produces at most one finding per anchor.
 
 ### Check 5.1 — `claude-models` deprecated-ID reference `[MEDIUM]`
@@ -213,9 +215,16 @@ How to apply: [how text]
 
 ---
 [N] finding(s): [X] HIGH · [Y] MEDIUM · [Z] LOW
+
+[omit the block below if anchor_freshness_notes is empty; otherwise append:
+Anchor freshness:
+  [one line per entry:
+   Anchor <anchor_slug> served from <fetch_freshness> — Pass 5 check ran against a snapshot; re-run /anchors once upstream is reachable.]]
 ```
 
 If no findings at all: print exactly:
 ```
 Your Claude setup looks clean — nothing to improve right now.
 ```
+
+If `anchor_freshness_notes` is non-empty even in the no-findings case, append the same `Anchor freshness:` block after the one-liner so reviewers know the Pass 5 checks ran against a stale or embedded snapshot.

@@ -45,9 +45,10 @@ For each `anchor_slug` in `anchors_for_setup`:
 For each target file in `["./CLAUDE.md", "./AGENTS.md"]`:
 
 - If the target file does not exist → skip (this skill does not create files).
-- Otherwise: mentally run `skills/_shared/render-anchor-section.md` with `setup_type: detected_setup`, `skill_slug: anchors`, `anchor_slug`, `target_file`, and the embedded fallback snapshot provided at the bottom of this SKILL. **Do not write yet** — compute the proposed excerpt body only.
+- Otherwise: mentally run `skills/_shared/render-anchor-section.md` with `setup_type: detected_setup`, `skill_slug: anchors`, `anchor_slug`, `target_file`, and the embedded fallback snapshot provided at the bottom of this SKILL. **Do not write yet** — compute the proposed excerpt body only. Capture the protocol's `render_freshness` output.
 - Locate the existing marker section in the target file using the regex `<!--\s*onboarding-agent:start\s+setup=\S+\s+skill=\S+\s+section=anchor-<anchor_slug>\s*-->`. If no match → skip this (target_file, anchor_slug) pair. `/anchors` only refreshes sections that already exist.
-- If the proposed excerpt body differs from the existing section body → append a `{change_id, anchor_slug, file, proposed_body, existing_body}` entry to `proposed_changes`.
+- If the proposed excerpt body differs from the existing section body → append a `{change_id, anchor_slug, file, proposed_body, existing_body, render_freshness}` entry to `proposed_changes`.
+- Whenever `render_freshness` is anything other than `network` or `cache`, record the pair `(anchor_slug, render_freshness)` in `anchor_freshness_notes` (deduplicate across target files).
 
 ### Step 2.2 — Early exit when nothing to do
 
@@ -121,6 +122,10 @@ Summary:
   Dry-run only: <D>
 
 Backup folder: <./.claude/backups/<timestamp>/ | n/a — nothing applied>
+
+Anchor freshness:
+  [omit the whole block if anchor_freshness_notes is empty; otherwise one line per unique entry:
+   Anchor <anchor_slug> served from <render_freshness> — upstream was unreachable or malformed; re-run /anchors once connectivity returns.]
 
 Next:
   - Run /tipps to audit the updated setup.

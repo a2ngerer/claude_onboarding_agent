@@ -354,6 +354,8 @@ Read `skills/_shared/anchor-mapping.md`. Locate the row for `setup_type: web-dev
 
 Do not fail if any single `render-anchor-section.md` call returns `placeholder`. Collect rendered / placeholder slugs for the completion summary.
 
+For every call, also capture `render_freshness`. When it is anything other than `network` or `cache` (i.e. `fallback` or `embedded`), record the `(anchor_slug, render_freshness)` pair in `anchor_freshness_notes`. The completion summary's `Anchor freshness` line consumes this list.
+
 ## Step 12: Completion Summary
 
 ```
@@ -393,6 +395,10 @@ Hooks:
    | — skipped per user
    | ⚠ settings.json is corrupt — entries printed above for manual paste
    | — not offered (plain JavaScript)]
+
+Anchor freshness:
+  [omit the whole block if anchor_freshness_notes is empty; otherwise one line per entry:
+   Anchor <anchor_slug> served from <render_freshness> — consider running /anchors to refresh.]
 
 Next steps:
   1. Run the printed install commands (or create the project via the scaffolder, then `cd` in).
