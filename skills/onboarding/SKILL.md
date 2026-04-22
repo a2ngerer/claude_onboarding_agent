@@ -247,15 +247,11 @@ To restore everything to the pre-rebuild state:
 
 If Step 1b did not run (normal onboarding without `--rebuild`), omit this block entirely.
 
-## Step 7: Optional post-setup audit (via `audit-collector` subagent)
+## Step 7: Silent post-setup audit (via `audit-collector` subagent)
 
-After all other steps complete, ask the user (adapt wording to detected language):
+After all other steps complete, run a best-effort post-setup audit **silently** in the background. Do NOT ask the user whether to run it — no opt-in prompt, no preamble, no "running audit…" status line. The audit is a no-cost safety net: if everything is clean, the user sees nothing; if something critical is wrong, the user gets a short, actionable list.
 
-> "Run a post-setup audit now? It checks the new setup against current best practices without modifying anything. (y/n)"
-
-If the user replies `n` (or any negative variant), skip this step silently. Do not re-prompt within the session.
-
-If the user replies `y`, dispatch an `audit-collector` subagent (defined in `.claude/agents/audit-collector.md`).
+Dispatch an `audit-collector` subagent (defined in `.claude/agents/audit-collector.md`).
 
 **Dispatch brief:**
 
@@ -265,19 +261,48 @@ Use the Agent tool with:
   description: "Run /audit-setup and summarize findings"
   prompt: |
     Invoke the audit skill named below and return your standard
-    `audit-summary` fenced block with severity-bucketed counts.
+    `audit-summary` JSON envelope with severity-bucketed counts.
     audit_skill: audit-setup
-    max_top_titles: 3
-Expected output: one `audit-summary` fenced block per the subagent's output contract (cap: 300 tokens).
+    max_top_titles: 5
+Expected output: one fenced ```json block containing the audit-collector envelope (`ok`, `kind: "audit-summary"`, `data: { total, high, medium, low, top_titles }`); cap: 300 tokens.
 ```
 
-Parse `total`, `high`, `medium`, `low`, `top_titles`. Print a one-screen summary. If `high >= 1`, also suggest `/upgrade-setup` to apply the recommended fixes.
+### Parsing
 
-### Fallback (if the subagent fails)
+Parse the reply by extracting the single fenced ```json block and validating the envelope:
 
-Trigger the fallback when the subagent dispatch errors, returns no `audit-summary` block after one retry, or returns a block whose sole `top_titles` entry begins with `error:` (the subagent's documented error signal). On dispatch error, do not retry — fall back immediately. Print (adapt to detected language):
+- The parsed object MUST have `ok == true`, `kind == "audit-summary"`, and `data` containing integers `total`, `high`, `medium`, `low` and an array `top_titles`.
+- If `ok` is `false`, the block is missing, JSON is invalid, or any contracted field is absent, treat the audit as failed and see "Parse failure" below.
 
-> "⚠ audit-collector unavailable — run `/audit-setup` manually to audit the new setup."
+### Surfacing findings
+
+- **If `high == 0`:** say nothing. The setup skill's completion summary already printed above is the end of the flow. Do not announce that the audit ran, do not list MEDIUM / LOW / INFO findings, do not print totals. Proceed to Step 8.
+- **If `high >= 1`:** append a short, actionable block below the completion summary. Use this shape (adapt wording to detected language; keep the command tokens verbatim):
+
+  ```
+  Post-setup audit — action items
+
+  - <HIGH finding title> → run `<single most appropriate command>`
+  - <HIGH finding title> → run `<single most appropriate command>`
+  ```
+
+  One line per HIGH finding, no severity badges, no "Why" / "How to apply" detail. MEDIUM / LOW / INFO findings are never listed here — the user can run `/audit-setup` manually for the full report.
+
+### Mapping a HIGH finding to exactly one command
+
+Pick the single most appropriate command per finding (never stack two, never use `/upgrade-setup` as a catch-all):
+
+- Finding mentions secrets, tokens, or personal data in `CLAUDE.md` → `/upgrade-setup` (the fix requires a guided rewrite of the file).
+- Finding mentions overly broad permissions (`"*"`, `"Bash(*)"`) in `.claude/settings.json` → `/upgrade-setup`.
+- Finding mentions a stale, deprecated, or out-of-date anchor / best-practice section → `/anchors`.
+- Finding mentions structural drift (missing delimiter, orphaned section, stale onboarding-agent marker, artifact mismatch) → `/checkup`.
+- Any other HIGH finding → `/upgrade-setup` as the default remediation path.
+
+At most one command per finding. If no mapping is obvious, default to `/upgrade-setup`.
+
+### Parse failure
+
+If the audit-collector dispatch errors, returns no parseable JSON envelope, or returns an envelope with `ok: false`, fail **silently**: print nothing, do not retry, do not warn the user. The post-setup audit is best-effort; a missing result must not dilute the setup completion summary. Proceed to Step 8.
 
 ## Step 8: Final hint about /anchors
 
