@@ -31,13 +31,13 @@ Read these on-demand at the step that invokes them. Do not read eagerly.
 - `gitignore-block.md` — the `.gitignore` block and `.env.example` scaffold (Step 6)
 - `document-skeletons.md` — `package.json`, `pyproject.toml`, and per-stack install commands (Step 6)
 - `type-check-hook.template.sh` — bash source for the optional type-check PostToolUse hook, with `<PM_EXEC>` placeholder (Step 8)
+- `skills/_shared/offer-superpowers.md` — canonical Superpowers opt-in (Step 1)
+- `skills/_shared/offer-github-mcp.md` — canonical GitHub MCP offer (Step 7)
+- `skills/_shared/offer-graphify.md` — canonical Graphify opt-in (Step 9)
 
 ## Step 1: Install Dependencies
 
-Read `skills/_shared/installation-protocol.md` and follow it for each dependency below.
-
-Dependencies:
-- Superpowers (optional) — description: "A free Claude Code skills library (94,000+ users). Useful for planning multi-step features, structured brainstorming on routing / data modeling, and subagent-driven refactors across a web stack." — marketplace-id: `superpowers@claude-plugins-official`, github: `https://github.com/obra/superpowers`, name: `superpowers`
+Read `skills/_shared/offer-superpowers.md` and run it with `skill_slug: web-development-setup`, `mandatory: false`, `capability_line: "A free Claude Code skills library (94,000+ users). Useful for planning multi-step features, structured brainstorming on routing / data modeling, and subagent-driven refactors across a web stack."` The helper asks the user, delegates to `skills/_shared/installation-protocol.md` on `yes`, and sets `superpowers_installed`, `superpowers_scope`, `superpowers_method`.
 
 ## Step 2: Detect Package Manager
 
@@ -161,19 +161,7 @@ Record the emit outcome (`emit_subagent`, `subagent_skipped_existing`, `subagent
 
 ## Step 7: Offer GitHub MCP (conditional)
 
-Read `skills/_shared/offer-mcp.md` and follow it with these parameters:
-
-- `mcp_slug`: `github`
-- `trigger_condition`: project is git-initialized AND has a GitHub remote. Check via Bash:
-  `git remote -v 2>/dev/null | grep -q 'github.com' && echo YES || echo NO`
-  If `NO`, skip this step entirely — no prompt, no CLAUDE.md change.
-- `capability_line`: "Access GitHub issues, PRs, and reviews directly via the GitHub API instead of shelling out to `gh`."
-- `install_command`: `claude mcp add github npx -- -y @modelcontextprotocol/server-github`
-- `auth_type`: `api_token`
-- `auth_detail`: `GITHUB_PERSONAL_ACCESS_TOKEN` (generate at https://github.com/settings/tokens — scope `repo` for private repos, else `public_repo`)
-- `pointer_link`: `https://github.com/modelcontextprotocol/servers/tree/main/src/github`
-
-Record `github_installed` in skill state for use by the CLAUDE.md generator and completion summary.
+Read `skills/_shared/offer-github-mcp.md` and run it with `skill_slug: web-development-setup`. The helper carries the canonical trigger condition, install command, auth details, and pointer link, and sets `github_installed` (and `github_deferred` on `later`) for the CLAUDE.md generator and completion summary.
 
 ## Step 8: Generate Artifacts
 
@@ -300,21 +288,21 @@ On `yes`:
 
 ### .gitignore and .env.example
 
-Read `gitignore-block.md`. Append the `.gitignore` block at the end of the user's `.gitignore` (delimited markers; replace only the content between them if already present). If `.env.example` is missing, emit the `.env.example` scaffold from the same file.
+Read `gitignore-block.md` for the web-specific additions and the delimited-marker shape. Inside the marker block, inline the Node/JS patterns from `skills/_shared/gitignore-node.md` and the shared common patterns from `skills/_shared/gitignore-common.md` (single source of truth for Node / OS / env / Claude-local lines). Append the fully assembled block to the user's `.gitignore`; if the marker block already exists, replace only the content between the markers. If `.env.example` is missing, emit the `.env.example` scaffold from `gitignore-block.md`.
 
 ## Step 9: Optional Graphify Integration
 
-Ask ONCE (adapt to detected language):
+Read `skills/_shared/offer-graphify.md` and run it with:
 
-> "Install Graphify knowledge-graph integration now?
->
-> Graphify indexes your web project (TS/JS/Python/Go code via tree-sitter for 25 languages, Markdown docs, JSON schemas, images, OpenAPI specs) into a local graph, registers a `/graphify` slash command, and adds a PreToolUse hook that consults the graph BEFORE Claude runs Grep / Glob / Read. Particularly useful on large monorepos with many routes, components, and server modules. See https://github.com/safishamsi/graphify.
->
-> (yes / no / later)"
+- `host_setup_slug: "web-development"`
+- `host_skill_slug: "web-development-setup"`
+- `run_initial_build: true`
+- `install_git_hook: true`
+- `corpus_blurb: "your web project (TS/JS/Python/Go code via tree-sitter for 25 languages, Markdown docs, JSON schemas, images, OpenAPI specs). Particularly useful on large monorepos with many routes, components, and server modules"`
 
-- **yes** → set `host_setup_slug: "web-development"`, `host_skill_slug: "web-development-setup"`, `run_initial_build: true`, `install_git_hook: true`. Read `skills/_shared/graphify-install.md` and follow steps G1–G9 in order. The protocol writes the attributed CLAUDE.md section with `setup=web-development skill=graphify-setup section=graphify`.
-- **no** → set `graphify_installed: false` and skip to Step 10.
-- **later** → invoke `skills/_shared/graphify-install.md` in "later" mode: skip G1–G7 and write only the short deferred pointer block. Set `graphify_installed: false`, `graphify_deferred: true`.
+The helper owns the opt-in prompt and the three-way branch (yes / no / later),
+delegating to `skills/_shared/graphify-install.md`. Record the `graphify_*`
+variables it produces for use in Step 12.
 
 ## Step 10: Write Upgrade Metadata
 

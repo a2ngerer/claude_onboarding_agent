@@ -28,13 +28,12 @@ Read these on-demand at the step that invokes them. Do not read eagerly.
 - `stack-scaffolds.md` — `pyproject.toml`, `uv add` commands, `.claude/settings.json` permissions, directory scaffold (Step 4)
 - `gitignore-block.md` — the `.gitignore` block (Step 4)
 - `notebook-hygiene.md` — `.pre-commit-config.yaml` for nbstripout + nbqa (Step 4)
+- `skills/_shared/offer-superpowers.md` — canonical Superpowers opt-in (Step 1)
+- `skills/_shared/offer-graphify.md` — canonical Graphify opt-in (Step 6)
 
 ## Step 1: Install Dependencies
 
-Read `skills/_shared/installation-protocol.md` and follow it for each dependency below.
-
-Dependencies:
-- Superpowers (optional) — description: "A free Claude Code skills library (94,000+ users). Useful for planning multi-step experiments and structuring model-training pipelines." — marketplace-id: `superpowers@claude-plugins-official`, github: `https://github.com/obra/superpowers`, name: `superpowers`
+Read `skills/_shared/offer-superpowers.md` and run it with `skill_slug: data-science-setup`, `mandatory: false`, `capability_line: "A free Claude Code skills library (94,000+ users). Useful for planning multi-step experiments and structuring model-training pipelines."` The helper asks the user, delegates to `skills/_shared/installation-protocol.md` on `yes`, and sets `superpowers_installed`, `superpowers_scope`, `superpowers_method`.
 
 ## Step 2: Verify Python Tooling
 
@@ -159,7 +158,7 @@ Read `stack-scaffolds.md` and create the directories and `data/README.md` from i
 
 ### .gitignore
 
-Read `gitignore-block.md` and append its block to the user's `.gitignore` (delimited markers; replace only the content between them if already present).
+Read `gitignore-block.md` for the data-science-specific lines and the delimited-marker shape. Inside the marker block, inline the Python patterns from `skills/_shared/gitignore-python.md` and the shared common patterns from `skills/_shared/gitignore-common.md` (single source of truth for Python / OS / env / Claude-local lines). Append the fully assembled block to the user's `.gitignore`; if the marker block already exists, replace only the content between the markers.
 
 ### Notebook hygiene (only if Q6 = yes)
 
@@ -229,17 +228,17 @@ On `yes`:
 
 ## Step 6: Optional Graphify Integration
 
-Ask ONCE (adapt to detected language):
+Read `skills/_shared/offer-graphify.md` and run it with:
 
-> "Install Graphify knowledge-graph integration now?
->
-> Graphify indexes your project (Python code via tree-sitter for 25 languages, Markdown docs, Jupyter notebooks' text content, PDFs of papers, diagrams, images) into a local graph, registers a `/graphify` slash command, and adds a PreToolUse hook that consults the graph BEFORE Claude runs Grep / Glob / Read. Useful on larger ML repos with many experiments and notes. See https://github.com/safishamsi/graphify.
->
-> (yes / no / later)"
+- `host_setup_slug: "data-science"`
+- `host_skill_slug: "data-science-setup"`
+- `run_initial_build: true`
+- `install_git_hook: true`
+- `corpus_blurb: "your project (Python code via tree-sitter for 25 languages, Markdown docs, Jupyter notebooks' text content, PDFs of papers, diagrams, images). Useful on larger ML repos with many experiments and notes"`
 
-- **yes** → set `host_setup_slug: "data-science"`, `host_skill_slug: "data-science-setup"`, `run_initial_build: true`, `install_git_hook: true`. Read `skills/_shared/graphify-install.md` and follow steps G1–G9 in order. The protocol writes the attributed CLAUDE.md section with `setup=data-science skill=graphify-setup section=graphify`.
-- **no** → set `graphify_installed: false` and skip to Step 7.
-- **later** → invoke `skills/_shared/graphify-install.md` in "later" mode: skip G1–G7 and write only the short deferred pointer block. Set `graphify_installed: false`, `graphify_deferred: true`.
+The helper owns the opt-in prompt and the three-way branch (yes / no / later),
+delegating to `skills/_shared/graphify-install.md`. Record the `graphify_*`
+variables it produces for use in Step 9.
 
 ## Step 7: Write Upgrade Metadata
 
