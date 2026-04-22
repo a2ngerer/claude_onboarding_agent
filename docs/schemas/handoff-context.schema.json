@@ -71,6 +71,15 @@
       "type": "string",
       "enum": ["orchestrator", "fallback"],
       "description": "Optional provenance marker set by the helper. 'orchestrator' means the payload arrived from the onboarding skill; 'fallback' means the helper ran inline detection because no valid block was supplied."
+    },
+    "source_skill": {
+      "type": "string",
+      "enum": ["research-setup"],
+      "description": "Optional marker set when one setup skill cascades into another. Currently only 'research-setup' sets this, to signal academic-writing-setup that it is running as the second leg of the cascade."
+    },
+    "superpowers_offered": {
+      "type": "boolean",
+      "description": "Optional cascade marker. When true, the parent skill already ran the Superpowers opt-in; the child skill MUST skip its own Superpowers offer and inherit the parent's resolved state."
     }
   }
 }

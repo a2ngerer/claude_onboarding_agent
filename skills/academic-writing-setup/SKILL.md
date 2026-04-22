@@ -11,6 +11,14 @@ Use this skill when the project is primarily a LaTeX or Typst document, not a li
 
 **Handoff context:** Read `skills/_shared/consume-handoff.md` and run it with the handoff block (if any). The helper guarantees the following locals: `detected_language`, `existing_claude_md`, `inferred_use_case`, `repo_signals`, `graphify_candidate`. Use `detected_language` for all user-facing prose; generated file content stays in English.
 
+**Cascade mode:** When the handoff context carries `source_skill: "research-setup"`, this skill is running as the second leg of a cascade invoked from `research-setup`. In that mode:
+
+- Do NOT re-run language detection — use the parent's `detected_language` directly.
+- If `superpowers_offered: true`, SKIP the Superpowers offer in Step 1 entirely. Treat `superpowers_installed` as whatever the parent resolved it to. Do not re-prompt the user.
+- All other steps (toolchain probe, Q1–Q6 context questions, artifact generation, subagent offer, hook offer) still run. The user explicitly opted into the writing-side setup; they still need to answer discipline / stack / citation-style questions.
+
+On direct or orchestrator dispatch, both markers are absent and this skill behaves exactly as before.
+
 **Existing CLAUDE.md:** If `existing_claude_md: true`, DO NOT overwrite it. Append a new delimited section at the end of the file:
 
 ```
@@ -35,7 +43,9 @@ Read these on-demand at the step that invokes them. Do not read eagerly.
 
 ## Step 1: Install Dependencies
 
-Read `skills/_shared/offer-superpowers.md` and run it with `skill_slug: academic-writing-setup`, `mandatory: false`, `capability_line: "A free Claude Code skills library (94,000+ users). Brainstorming and planning skills help structure long arguments, chapter outlines, and multi-section revisions."` The helper asks the user, delegates to `skills/_shared/installation-protocol.md` on `yes`, and sets `superpowers_installed`, `superpowers_scope`, `superpowers_method`.
+If cascade mode is active (`source_skill: "research-setup"` AND `superpowers_offered: true` on the handoff context), skip this step entirely — the parent already asked the user and `superpowers_installed` / `superpowers_scope` / `superpowers_method` are already resolved. Do not re-prompt.
+
+Otherwise: read `skills/_shared/offer-superpowers.md` and run it with `skill_slug: academic-writing-setup`, `mandatory: false`, `capability_line: "A free Claude Code skills library (94,000+ users). Brainstorming and planning skills help structure long arguments, chapter outlines, and multi-section revisions."` The helper asks the user, delegates to `skills/_shared/installation-protocol.md` on `yes`, and sets `superpowers_installed`, `superpowers_scope`, `superpowers_method`.
 
 ## Step 2: Verify Writing Toolchain
 
