@@ -18,7 +18,7 @@ jobs:
       - name: Run Claude Code to research and update anchors
         uses: anthropics/claude-code-action@v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           prompt: |
             You are the anchors updater for this repo.
@@ -74,4 +74,4 @@ jobs:
             Never auto-merge. Never modify anything outside `docs/anchors/`. Never
             modify `_trend-sources.md` — trend-source changes are a separate human
             PR.
-          allowed_tools: "Read,Write,Edit,WebFetch,Bash(git:*),Bash(gh:*),Bash(date:*)"
+          claude_args: '--allowed-tools "Read,Write,Edit,WebFetch,Bash(git:*),Bash(gh:*),Bash(date:*)"'
