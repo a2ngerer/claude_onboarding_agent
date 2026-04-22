@@ -29,12 +29,10 @@ Dependencies:
 
 ## Step 2: Context Questions
 
-Ask these 4 questions one at a time. Wait for each answer before asking the next:
+Ask these 2 questions one at a time. Wait for each answer before asking the next:
 
 1. "What is your primary programming language or tech stack? (e.g., Python, TypeScript/React, Go, Rust)"
-2. "Do you work solo or in a team?"
-3. "Which git host do you use? (GitHub / GitLab / Bitbucket / other / none)"
-4. "Which IDE or editor do you use? (VS Code / JetBrains / Neovim / other)"
+2. "Which IDE or editor do you use? (VS Code / JetBrains / Neovim / other)"
 
 ## Step 3: Offer Project-Local Subagent
 
@@ -90,7 +88,7 @@ Generate the following files automatically:
 # Claude Instructions
 
 ## Project Context
-[Stack from Q1] project. [Solo/Team from Q2]. Git host: [Q3 answer]. IDE: [Q4 answer].
+[Stack from Q1] project. IDE: [Q2 answer].[If `git remote -v` reveals a recognizable host (github.com / gitlab.com / bitbucket.org), append ` Git host: <host>.`; otherwise omit the sentence.]
 
 ## Development Workflow
 [Include this entire section ONLY if superpowers_installed is true]
