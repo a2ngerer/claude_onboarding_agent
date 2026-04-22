@@ -63,11 +63,15 @@ Ask one at a time, waiting for each answer:
       > 3. Keep Obsidian running — the CLI is a remote control, not a headless tool.
       > Reply `done` when ready."
 
-   b. When the user confirms, run `command -v obsidian` via Bash.
-      - If the command returns a path: set `obsidian_cli_available: true`.
-      - If it returns nothing or errors: warn the user once — "⚠ `obsidian` not found on PATH. I'll continue with the plain-markdown fallback; you can re-run `/knowledge-base-setup` after enabling the CLI." Set `obsidian_cli_available: false` and treat the remaining steps as Option B.
+   b. When the user confirms, detect the CLI with **3 retries and a 3-second sleep between attempts**. A freshly enabled Obsidian CLI typically needs 5–10 s and a fresh shell to register on `PATH`, so a single probe produces false negatives. Run `command -v obsidian` via Bash; if the command returns empty or errors, `sleep 3` and retry. Repeat up to three attempts in total.
+      - If any attempt returns a path: set `obsidian_cli_available: true` and continue with step c.
+      - If all three attempts fail: **do not fall back silently.** Fallback is opt-in, not automatic. Ask the user verbatim (adapt to detected language, keep the three lettered options):
+        > "Obsidian CLI still not detected. Options: (a) I'll wait and retry, (b) fall back to plain markdown, (c) abort setup."
+        - **(a)** Run the same 3-retry detection loop again. If it still fails, re-ask the same three-option question.
+        - **(b)** Set `obsidian_cli_available: false` and treat the remaining steps as Option B (plain markdown).
+        - **(c)** Abort the skill — do not generate any artifacts. Tell the user they can re-run `/knowledge-base-setup` after enabling the CLI.
 
-   c. If `obsidian_cli_available: true`, also check that Obsidian responds: run `obsidian help` via Bash. If it errors with "Obsidian is not running", ask the user to open Obsidian and retry once. If it still fails, set `obsidian_cli_available: false` and fall back.
+   c. If `obsidian_cli_available: true`, also check that Obsidian responds: run `obsidian help` via Bash. If it errors with "Obsidian is not running", ask the user to open Obsidian and retry once. If it still fails, re-ask the same three-option question from step b (wait / fall back / abort) — again, the fallback to plain markdown requires explicit user confirmation and is never chosen automatically.
 
 3. "What is the path to your target folder?
    - Obsidian users: your vault path (e.g., `/Users/you/Documents/MyVault`)
