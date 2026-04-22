@@ -37,7 +37,7 @@ case "$REL" in
   docs/superpowers/specs/*.md)
     emit "A design spec was modified. If decisions changed, verify the corresponding plan in docs/superpowers/plans/ and any affected SKILL.md files reflect the new contract."
     ;;
-  scripts/install.sh|scripts/uninstall.sh)
+  scripts/install.sh|scripts/uninstall.sh|scripts/install.ps1|scripts/uninstall.ps1)
     emit "Install/uninstall script was modified. Verify: (1) README.md installation instructions still match. (2) docs/installation.md (if present) still matches. (3) .claude-plugin/plugin.json skills/commands arrays are consistent with what the script installs."
     ;;
 esac

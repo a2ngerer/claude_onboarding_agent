@@ -1,8 +1,8 @@
 # How Installation Works
 
-## Current Method: curl + symlinks
+## Current Method: curl + symlinks (macOS / Linux) or irm + junctions (Windows)
 
-The one-liner fetches `install.sh` and runs it locally:
+The one-liner fetches `install.sh` (macOS / Linux) or `install.ps1` (Windows) and runs it locally:
 
 ```
 ~/.claude/
@@ -19,7 +19,9 @@ The one-liner fetches `install.sh` and runs it locally:
     └── ...
 ```
 
-**How Claude Code discovers skills:** it scans `~/.claude/skills/` at session start and loads any `SKILL.md` it finds there. Each skill becomes a `/slash-command` available in every project. The symlinks mean updates (`git pull` in the plugin dir) are picked up immediately without re-running any install step.
+**How Claude Code discovers skills:** it scans `~/.claude/skills/` at session start and loads any `SKILL.md` it finds there. Each skill becomes a `/slash-command` available in every project. The links mean updates (`git pull` in the plugin dir) are picked up immediately without re-running any install step.
+
+**Why junctions on Windows:** the PowerShell script uses directory junctions instead of symbolic links. Junctions work without admin rights and without Developer Mode, while `SymbolicLink` requires one of the two. For Claude Code's read-only skill discovery, the two are equivalent.
 
 The `plugin.json` manifest at `.claude-plugin/plugin.json` declares which skill folders and which slash-command names belong to the plugin. Claude Code doesn't consume this file yet — today it only matters for the future plugin system.
 
@@ -29,11 +31,11 @@ The `plugin.json` manifest at `.claude-plugin/plugin.json` declares which skill 
 
 | Aspect | Notes |
 |--------|-------|
-| Transparency | Full — `install.sh` is readable, every step is visible |
+| Transparency | Full — `install.sh` / `install.ps1` is readable, every step is visible |
 | Security model | No sandboxing — the script runs with full shell permissions of the user |
 | Update control | Explicit — `git pull` only when the user triggers it, no auto-update |
-| Dependencies | `git` and `bash` must be present on the system |
-| Recoverability | Simple and fully transparent — remove symlinks, delete the directory |
+| Dependencies | `git` plus either `bash` (macOS / Linux) or PowerShell 5.1+ (Windows) |
+| Recoverability | Simple and fully transparent — remove links, delete the directory |
 
 ---
 

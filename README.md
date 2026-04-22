@@ -55,18 +55,34 @@ Not sure where to start? Run `/onboarding` and we'll figure it out with you. Or 
 
 ### Option 2 — One-liner (works today)
 
+**macOS / Linux**
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/a2ngerer/claude_onboarding_agent/main/scripts/install.sh | bash
 ```
 
-Clones the repo and symlinks all skills into `~/.claude/skills/` so Claude Code picks them up automatically. To update: re-run the same command.
+**Windows (PowerShell)**
+
+```powershell
+irm https://raw.githubusercontent.com/a2ngerer/claude_onboarding_agent/main/scripts/install.ps1 | iex
+```
+
+Clones the repo and links all skills into `~/.claude/skills/` so Claude Code picks them up automatically. To update: re-run the same command.
 
 > How it works under the hood, plus what the future plugin path looks like: [docs/installation.md](docs/installation.md)
 
 ### Uninstall
 
+**macOS / Linux**
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/a2ngerer/claude_onboarding_agent/main/scripts/uninstall.sh | bash
+```
+
+**Windows (PowerShell)**
+
+```powershell
+irm https://raw.githubusercontent.com/a2ngerer/claude_onboarding_agent/main/scripts/uninstall.ps1 | iex
 ```
 
 ---
