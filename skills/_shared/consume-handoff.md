@@ -8,7 +8,8 @@ The onboarding orchestrator (`skills/onboarding/SKILL.md` Step 5) serialises a c
 
 - Schema file: `docs/schemas/handoff-context.schema.json` (Draft 2020-12).
 - Required fields: `detected_language`, `existing_claude_md`, `inferred_use_case`, `repo_signals`, `graphify_candidate`.
-- Optional fields propagate through unchanged (e.g. `source`, nested keys inside `repo_signals`).
+- Optional fields propagate through unchanged (e.g. `source`, `source_skill`, `superpowers_offered`, nested keys inside `repo_signals`).
+- Cascade markers: `source_skill` and `superpowers_offered` are set only when one setup skill invokes another (e.g. `research-setup` → `academic-writing-setup`). When present, the child skill reads them to skip redundant preambles (language detection) and redundant offers (Superpowers).
 
 ## Input contract (set by the calling skill before reading this file)
 
@@ -74,6 +75,8 @@ After this helper returns, the calling skill reads the following locals directly
 - `repo_signals` — object, possibly with `signals` / `existing_agents_md` / `repo_size_bucket` keys. Always an object, possibly empty.
 - `graphify_candidate` — boolean, always set (default `false`).
 - `source` — `"orchestrator"` | `"fallback"`. Advisory; consumers MAY ignore it.
+- `source_skill` — optional string (currently only `"research-setup"`). Set only on cascade dispatch; absent on direct/orchestrator dispatch. Cascade-aware skills read this to suppress redundant preambles.
+- `superpowers_offered` — optional boolean. Set only on cascade dispatch; when `true`, the parent already ran the Superpowers opt-in and the child skill MUST skip its own offer.
 
 ## Failure mode
 

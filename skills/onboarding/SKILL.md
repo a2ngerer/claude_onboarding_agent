@@ -155,6 +155,8 @@ _Your repo is large — `/graphify-setup` can layer on top of any choice in this
 7. Knowledge Base & Documentation — build a structured wiki from code or notes
 8. Content Creation — YouTube, social media, newsletters
 
+_Tip: if you both read papers and write a manuscript in this repo, pick option 6 (research) first — it detects a manuscript folder and offers to cascade into option 5 (academic-writing) automatically._
+
 **Operations**
 9. Office & Business Productivity — emails, reports, presentations
 10. DevOps / Cloud Engineering — CI/CD, Kubernetes, Terraform, cloud providers
@@ -204,7 +206,7 @@ If the user picks B-b, ask Q3 to disambiguate between the two text-centric vault
 
 > "Q3 — Are you mainly organising your own personal notes/vault, or managing the research flow around a paper (literature, citations, reading queue)?
 >   vault → recommend `knowledge-base-setup`
->   paper research → recommend `research-setup`"
+>   paper research → recommend `research-setup` (if a manuscript folder is present, it will offer to cascade into `academic-writing-setup` automatically)"
 
 For every other B-option, commit after Q2.
 

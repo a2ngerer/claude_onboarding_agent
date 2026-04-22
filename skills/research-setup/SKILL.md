@@ -155,7 +155,54 @@ Do not fail if any single `render-anchor-section.md` call returns `placeholder`.
 
 For every call, also capture `render_freshness`. When it is anything other than `network` or `cache` (i.e. `fallback` or `embedded`), record the `(anchor_slug, render_freshness)` pair in `anchor_freshness_notes`. The completion summary's `Anchor freshness` line consumes this list.
 
-## Step 8: Completion Summary
+## Step 8: Cascade to academic-writing-setup (conditional)
+
+Research projects often ship a manuscript folder next to the literature — when they do, `academic-writing-setup` configures the writing side (voice, citation rules, LaTeX scaffold). Offer the cascade when signals suggest the user is also authoring a paper in this repo.
+
+### Detection
+
+Probe the project root (read-only, non-fatal on any error):
+
+- `main.tex` or `main.typ` at the root
+- `paper.tex`, `thesis.tex`, `manuscript.tex`, or `dissertation.tex` at the root
+- Any `*.tex` file inside `sections/`, `chapters/`, or `manuscript/`
+- A `bib/` directory OR a `*.bib` file at the root
+
+If none match, skip to Step 9. Record `cascade_offered: false`.
+
+### Offer
+
+If at least one signal matched, ask once (adapt to `detected_language`):
+
+> "Ein Manuskript-Gerüst wurde erkannt ([list matched signals, max 3]). Auch `academic-writing-setup` direkt im Anschluss ausführen? Das konfiguriert die Schreibseite (Stil, Zitationsregeln, LaTeX-Scaffold). (yes / no)"
+
+Record the answer as `cascade_accepted`.
+
+- On `no`: set `cascade_offered: true`, `cascade_accepted: false`, `cascade_ran: false`. Continue to Step 9.
+- On `yes`: set `cascade_offered: true`, `cascade_accepted: true`. Proceed to Invocation.
+
+### Invocation
+
+Construct the cascade handoff payload. Copy every field from the handoff context this skill received and add the two cascade markers:
+
+```json
+{
+  "detected_language": "<current detected_language>",
+  "existing_claude_md": <current existing_claude_md>,
+  "inferred_use_case": "<current inferred_use_case>",
+  "repo_signals": <current repo_signals object>,
+  "graphify_candidate": <current graphify_candidate>,
+  "source": "orchestrator",
+  "source_skill": "research-setup",
+  "superpowers_offered": <true if Step 1 already asked the user about Superpowers, else false>
+}
+```
+
+Invoke `skills/academic-writing-setup/SKILL.md` with this payload as the handoff block. The child skill will read the two cascade markers and skip its own language detection preamble and its own Superpowers offer.
+
+Record `cascade_ran: true` once the child skill returns. Do not retry on failure — log the outcome and continue to Step 9.
+
+## Step 9: Completion Summary
 
 ```
 ✓ Research setup complete!
@@ -174,6 +221,11 @@ Optional community skills: [list of installed skills, or "none selected"]
 
 Graphify (knowledge graph):
   [✓ installed via <installer>, /graphify + PreToolUse hook registered | ⚠ installed but hook not verified — run /graphify in a new session | — skipped: <reason> | — deferred: run /graphify-setup when ready | — not offered]
+
+Cascade:
+  [omit the whole line if cascade_offered is false; otherwise:
+   ✓ Cascaded into academic-writing-setup — see its summary above for writing-side artifacts. |
+   — Cascade declined; run /academic-writing-setup later if you also need writing-side rules.]
 
 Anchor freshness:
   [omit the whole block if anchor_freshness_notes is empty; otherwise one line per entry:
