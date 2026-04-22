@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-04-21
+last_updated: 2026-04-22
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 2
+version: 3
 ---
 
 ## Recommended
@@ -26,7 +26,7 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 - **filesystem** — scoped filesystem access beyond the working directory. Install: `claude mcp add filesystem npx -- -y @modelcontextprotocol/server-filesystem <path>`
 - **git** — read git history, blame, diffs without shelling out. Install: `claude mcp add git uvx -- mcp-server-git`
-- **github** — issues, PRs, reviews via the GitHub API. Install: `claude mcp add github npx -- -y @modelcontextprotocol/server-github` (needs `GITHUB_PERSONAL_ACCESS_TOKEN`)
+- **github** — issues, PRs, reviews via the GitHub API. Install: `claude mcp add github npx -- -y @modelcontextprotocol/server-github` (needs `GITHUB_PERSONAL_ACCESS_TOKEN`). Note: the MCP reference implementation is now archived; the package still works but consider browsing community alternatives at the [MCP Registry](https://registry.modelcontextprotocol.io/).
 
 ## Knowledge base
 
@@ -38,7 +38,7 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Productivity
 
-- **slack** — read channels, post messages. Install: `claude mcp add slack npx -- -y @modelcontextprotocol/server-slack`
+- **slack** — read channels, post messages. Note: the official reference server is archived and now community-maintained by Zencoder. Install: `claude mcp add slack npx -- -y @modelcontextprotocol/server-slack`
 - **linear** — issues and projects. Install via Linear's official MCP integration.
 - **gmail / calendar** — via official Google MCP integrations where available; otherwise the community `gmail-mcp-server`.
 
@@ -46,6 +46,12 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 - **kubernetes** — cluster read access, kubectl-equivalent queries. Community servers available; pin a version before production use.
 - **aws / gcp** — prefer official CLIs wrapped via allowed Bash permissions; MCP wrappers exist but are less mature.
+
+## MCP features (recent)
+
+- **Elicitation** — MCP servers can now request structured user input mid-task via an interactive dialog (Claude Code v2.1.76+). Use the `Elicitation` and `ElicitationResult` hooks to intercept or post-process these requests.
+- **Large result persistence** — annotate a tool result with `_meta["anthropic/maxResultSizeChars"]` (up to 500K) to override the default size cap for large payloads.
+- **MCP Registry** — browse and discover published commercial MCP servers at https://registry.modelcontextprotocol.io/.
 
 ## Selection tips
 
