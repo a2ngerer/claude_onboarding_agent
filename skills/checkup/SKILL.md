@@ -46,7 +46,7 @@ Read `./.claude/onboarding-meta.json` if it exists. Expected shape (see `skills/
 }
 ```
 
-- If the file parses and `setup_type` is a recognized slug (one of: `coding`, `data-science`, `design`, `knowledge-base`, `devops`, `content-creator`, `office`, `research`, `academic-writing`, `web-development`, `graphify`), set:
+- If the file parses and `setup_type` is a recognized slug (one of: `coding`, `data-science`, `design`, `knowledge-base`, `devops`, `content-voice`, `office`, `research`, `academic-writing`, `web-development`, `graphify`), set:
   - `meta_present: true`
   - `setup_type`, `skills_used`, `installed_version: plugin_version`, `installed_at`
 - If the file exists but does not parse as JSON: set `meta_present: false`, `meta_corrupt: true`. (Treated by Stage 2 as a hard gate — rebuild.)
@@ -170,7 +170,7 @@ Only run if `meta_present: true`. Compare `setup_type` from meta against a light
 - `academic-writing` → no `sections/`, no `bib/`, no `main.tex`/`main.typ`, no `.typ` alongside `.bib` → fire.
 - `knowledge-base` → no `notes/`, `vault/`, `wiki/`, `obsidian/`, `raw/`, and no sizable markdown corpus (< 5 `.md` files outside the repo root) → fire.
 - `office` → no `*.docx`/`*.pptx`/`*.pdf`/`*.xlsx` files → fire.
-- `content-creator`, `devops`, `design`, `graphify` → no deterministic content signal; do NOT fire G4 for these types (let Stage 4 judge).
+- `content-voice`, `devops`, `design`, `graphify` → no deterministic content signal; do NOT fire G4 for these types (let Stage 4 judge).
 
 Fire reason format: `"setup_type=<type> but repo content does not match (missing: <short signal list>)"`.
 

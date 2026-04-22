@@ -47,7 +47,7 @@ Read `./.claude/onboarding-meta.json` if it exists. Expected shape:
 }
 ```
 
-If the file parses and `setup_type` is a recognized slug (one of: `coding`, `data-science`, `design`, `knowledge-base`, `devops`, `content-creator`, `office`, `research`, `academic-writing`), set:
+If the file parses and `setup_type` is a recognized slug (one of: `coding`, `data-science`, `design`, `knowledge-base`, `devops`, `content-voice`, `office`, `research`, `academic-writing`), set:
 
 - `detected_setup: <setup_type>`
 - `detected_skills: <skills_used>`
@@ -394,7 +394,7 @@ If `applied_count == 0` (all rejected, or dry-run, or nothing found):
 
 Where:
 
-- `<setup-slug>` ∈ {coding, data-science, design, knowledge-base, devops, content-creator, office, research, academic-writing}
+- `<setup-slug>` ∈ {coding, data-science, design, knowledge-base, devops, content-voice, office, research, academic-writing}
 - `<skill-slug>` is the directory name under `skills/` (e.g. `coding-setup`, `knowledge-base-setup`, `academic-writing-setup`)
 - `<name>` identifies the logical section inside the file (e.g. `claude-md`, `workflow`, `guidelines`, `agents-roles`, `settings-allow`). Skills can pick descriptive names; `/upgrade-setup` matches on the triple.
 

@@ -30,9 +30,9 @@ Any other argument is ignored silently.
 
 Read `./.claude/onboarding-meta.json` if it exists. Expected shape per `skills/_shared/write-meta.md`.
 
-- If the file parses and `setup_type` is a recognized slug (one of: `coding`, `data-science`, `design`, `knowledge-base`, `devops`, `content-creator`, `office`, `research`, `academic-writing`, `web-development`) → set `detected_setup: <setup_type>`, `meta_source: meta-file`.
+- If the file parses and `setup_type` is a recognized slug (one of: `coding`, `data-science`, `design`, `knowledge-base`, `devops`, `content-voice`, `office`, `research`, `academic-writing`, `web-development`) → set `detected_setup: <setup_type>`, `meta_source: meta-file`.
 - If the file parses and `setup_type` is `graphify` → print "`/anchors` has no work to do for a standalone graphify setup — anchor sections only apply to primary setups." and exit cleanly.
-- If the file is missing or malformed → ask the user: "No setup detected. Which setup type does this project use? (coding, data-science, design, devops, web-development, knowledge-base, content-creator, office, research, academic-writing)". Accept any of those ten as `detected_setup`. Any other reply → exit without changes.
+- If the file is missing or malformed → ask the user: "No setup detected. Which setup type does this project use? (coding, data-science, design, devops, web-development, knowledge-base, content-voice, office, research, academic-writing)". Accept any of those ten as `detected_setup`. Any other reply → exit without changes.
 
 ### Step 1.2 — Load anchors for this setup
 

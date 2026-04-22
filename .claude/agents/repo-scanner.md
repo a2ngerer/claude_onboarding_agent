@@ -46,7 +46,7 @@ Example of the exact reply shape (valid payload, not a placeholder):
 
 Field definitions (inside `data`):
 
-- `inferred_use_case` — one of: `coding`, `web-development`, `data-science`, `knowledge-base`, `office`, `research`, `academic-writing`, `content-creator`, `devops`, `design`, `graphify`, `unknown`. Use `unknown` when no signal is strong enough to commit to a single use case.
+- `inferred_use_case` — one of: `coding`, `web-development`, `data-science`, `knowledge-base`, `office`, `research`, `academic-writing`, `content-voice`, `devops`, `design`, `graphify`, `unknown`. Use `unknown` when no signal is strong enough to commit to a single use case.
 - `signals` — array of strings identifying the detected evidence (file names, directory names, or `manifest:dependency` pairs). At least the strongest three signals; at most ten.
 - `graphify_candidate` — `true` if the repo has either > 1000 source files across multiple languages OR > 100 PDFs/Markdown notes under `docs/` / `raw/` / `notes/`. Otherwise `false`.
 - `existing_claude_md` — `true` if `./CLAUDE.md` exists.

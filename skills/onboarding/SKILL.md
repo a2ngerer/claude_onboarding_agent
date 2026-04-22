@@ -68,7 +68,7 @@ Use the Agent tool with:
       - knowledge-base
       - office
       - research
-      - content-creator
+      - content-voice
       - devops
       - design
       - graphify
@@ -126,7 +126,7 @@ Fixed numbering (stable across runs):
 | 5 | academic-writing-setup | Writing & Research |
 | 6 | research-setup | Writing & Research |
 | 7 | knowledge-base-setup | Writing & Research |
-| 8 | content-creator-setup | Writing & Research |
+| 8 | content-voice-setup | Writing & Research |
 | 9 | office-setup | Operations |
 | 10 | devops-setup | Operations |
 | 11 | graphify-setup | Other |
@@ -153,7 +153,7 @@ _Your repo is large — `/graphify-setup` can layer on top of any choice in this
 5. Academic Writing — thesis / paper / dissertation: LaTeX or Typst, Zotero, strict no-invented-citations rules (manuscript side)
 6. Research & Academic Writing — literature, papers, LaTeX (reading and note-taking side)
 7. Knowledge Base & Documentation — build a structured wiki from code or notes
-8. Content Creation — YouTube, social media, newsletters
+8. Content Voice — brand voice + per-platform tone rules (not a full content workflow)
 
 _Tip: if you both read papers and write a manuscript in this repo, pick option 6 (research) first — it detects a manuscript folder and offers to cascade into option 5 (academic-writing) automatically._
 
@@ -200,7 +200,7 @@ Commit to the recommendation after Q2. No Q3 needed on this branch.
 >   a) A thesis, paper, or dissertation manuscript (LaTeX / Typst, with `.bib`) → recommend `academic-writing-setup`
 >   b) Reading papers, literature notes, or a personal knowledge vault
 >   c) Business writing — emails, memos, reports, proposals → recommend `office-setup`
->   d) Published content for an audience — YouTube, social, newsletters → recommend `content-creator-setup`"
+>   d) Published content for an audience — brand voice + per-platform tone rules → recommend `content-voice-setup`"
 
 If the user picks B-b, ask Q3 to disambiguate between the two text-centric vault skills:
 
@@ -236,7 +236,7 @@ The tree covers all 11 setup options:
 - `knowledge-base-setup` — B/b → Q3 vault
 - `research-setup` — B/b → Q3 paper
 - `office-setup` — B/c
-- `content-creator-setup` — B/d
+- `content-voice-setup` — B/d
 - `devops-setup` — C/a
 - `graphify-setup` — not on the decision tree; it is a layered add-on. Surfaced via the Step 3 `graphify_candidate` aside and offered by host setups through `skills/_shared/graphify-install.md`. Users who explicitly want it pick option 11 directly, or reach it from the fallback list.
 
@@ -256,7 +256,7 @@ Once the user confirms a choice, pass the following handoff context inline and i
 {
   "detected_language": "<ISO 639-1 code, e.g. en, de, es>",
   "existing_claude_md": false,
-  "inferred_use_case": "<coding|web-development|data-science|knowledge-base|office|research|academic-writing|content-creator|devops|design|graphify|unknown>",
+  "inferred_use_case": "<coding|web-development|data-science|knowledge-base|office|research|academic-writing|content-voice|devops|design|graphify|unknown>",
   "repo_signals": {
     "signals": ["<short evidence strings, e.g. pyproject.toml, *.ipynb, package.json:next>"],
     "existing_agents_md": false,
@@ -275,7 +275,7 @@ Skill routing:
 - Office → invoke `office-setup` skill
 - Research → invoke `research-setup` skill
 - Academic Writing → invoke `academic-writing-setup` skill
-- Content Creator → invoke `content-creator-setup` skill
+- Content Voice → invoke `content-voice-setup` skill
 - DevOps Setup → invoke `devops-setup` skill
 - UI/UX Design Setup → invoke `design-setup` skill
 - Knowledge Graph (Graphify) → invoke `graphify-setup` skill (standalone — `host_setup_slug: "graphify"`, `host_skill_slug: "graphify-setup"`)
