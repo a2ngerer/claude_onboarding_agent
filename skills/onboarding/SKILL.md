@@ -129,26 +129,53 @@ Produce the same logical shape the subagent would return (`inferred_use_case`, `
 
 ## Step 3: Present Options
 
-Present all options. If an inference was made, place it at position 1 with a short note explaining what was detected. If no inference, present all options equally.
+Present all options grouped into the four categories below. Numbering runs 1–13 continuously across categories — users still select by number. If an inference was made, mark that option with a leading `→` arrow and an `[inferred]` tag, and keep it at its natural position inside its own category (do NOT move it to the top of the list). If no inference was made, omit the arrow and tag — present all options equally.
 
-Example format (adapt wording to detected language):
+Fixed numbering (stable across runs):
 
-If `graphify_candidate: true` from Step 2, also print a one-line aside under the numbered list: _"Heads-up: your repo is large enough that a local knowledge graph (option 11) could cut Claude's token cost on file-search tool calls. You can install it now, later via `/graphify-setup`, or layered on top of any of the other setups."_
+| # | Slug | Category |
+|---|---|---|
+| 1 | coding-setup | Code |
+| 2 | web-development-setup | Code |
+| 3 | data-science-setup | Code |
+| 4 | design-setup | Code |
+| 5 | academic-writing-setup | Writing & Research |
+| 6 | research-setup | Writing & Research |
+| 7 | knowledge-base-setup | Writing & Research |
+| 8 | content-creator-setup | Writing & Research |
+| 9 | office-setup | Operations |
+| 10 | devops-setup | Operations |
+| 11 | graphify-setup | Other |
+| 12 | audit-setup (Already set up) | Other |
+| 13 | Not sure | Other |
+
+If `graphify_candidate: true` from Step 2, print exactly ONE line directly under the category that holds the inferred option (or under the Code category when `inferred_use_case: unknown`): _"Your repo is large — `/graphify-setup` can layer on top of any choice in this list."_ Do not print a separate aside elsewhere. This is the only Graphify cue in this step beyond option 11 itself.
+
+Example format (adapt wording to detected language; the `→ [inferred]` marker below assumes coding was inferred — apply it to whichever option matches `inferred_use_case`):
 
 ---
 
 **Which setup would you like?**
 
-1. [Inferred: Coding Setup] — looks like a Python project (pyproject.toml detected)
+**Code**
+→ **1. [inferred] Coding Setup** — looks like a Python project (pyproject.toml detected)
 2. Web Development — frontend, backend, or full-stack web app (Next.js / React / Vue / Svelte / Astro / Remix + API)
 3. Data Science / ML — notebooks, experiment tracking, reproducible pipelines
-4. Knowledge Base & Documentation — build a structured wiki from code or notes
-5. Office & Business Productivity — emails, reports, presentations
+4. UI/UX Design — component design, Figma handoff, accessibility
+
+_Your repo is large — `/graphify-setup` can layer on top of any choice in this list._
+
+**Writing & Research**
+5. Academic Writing — thesis / paper / dissertation: LaTeX or Typst, Zotero, strict no-invented-citations rules (manuscript side)
 6. Research & Academic Writing — literature, papers, LaTeX (reading and note-taking side)
-7. Academic Writing — thesis / paper / dissertation: LaTeX or Typst, Zotero, strict no-invented-citations rules (manuscript side)
+7. Knowledge Base & Documentation — build a structured wiki from code or notes
 8. Content Creation — YouTube, social media, newsletters
-9. DevOps / Cloud Engineering — CI/CD, Kubernetes, Terraform, cloud providers
-10. UI/UX Design — component design, Figma handoff, accessibility
+
+**Operations**
+9. Office & Business Productivity — emails, reports, presentations
+10. DevOps / Cloud Engineering — CI/CD, Kubernetes, Terraform, cloud providers
+
+**Other**
 11. Knowledge Graph (Graphify) — install the `/graphify` command + PreToolUse hook for token-efficient search across code, docs, PDFs, and media
 12. Already set up — audit my current Claude configuration (`/audit-setup`)
 13. Not sure — help me decide
