@@ -217,7 +217,9 @@ git commit -m "docs(claude-md): add end-user hooks authoring rule"
 
 ---
 
-## Task 3 — devops-setup: plan-before-apply PreToolUse hook
+## Task 3 — devops-setup: plan-before-apply PreToolUse hook ~~(superseded 2026-04-22 — issue #40)~~
+
+**Status:** Superseded. The hook this task implemented was defanged in issue #40. `devops-setup` now emits a tool-agnostic `.claude/rules/infra-safety.md` rule file instead. The body of this task is preserved below for historical context; do not re-apply it.
 
 **Files:**
 

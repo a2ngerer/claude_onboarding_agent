@@ -74,7 +74,7 @@ Conservative by construction. One recipe per participating skill. Every recipe h
 
 | Setup Skill | Event | Matcher | Action | Rationale | Default |
 |---|---|---|---|---|---|
-| devops-setup | PreToolUse | `Bash` | Inspect the command string; if it contains `terraform apply`, `pulumi up`, `kubectl apply`, `aws cloudformation deploy`, or `az deployment ... create` AND no corresponding plan / preview file exists in the session state, emit `additionalContext` reminding Claude to run plan/preview first. Never blocks; never `permissionDecision: deny`. | Prevents the single most costly DevOps mistake: applying unplanned changes. | on |
+| ~~devops-setup~~ | ~~PreToolUse~~ | ~~`Bash`~~ | Defanged 2026-04-22 (issue #40). Replaced by a tool-agnostic rule file at `.claude/rules/infra-safety.md` emitted unconditionally by `devops-setup`. Rationale: the hardcoded tool list (Terraform / Pulumi / CloudFormation / kubectl / Azure) silently missed Bicep, CDK, Crossplane, Argo CD, Helm, and any future IaC tool; the `yes` default emitted a hook more aggressively than a new user expects. A rule file instructing Claude to pause before ANY IaC apply covers more surface area with no runtime state. | — | removed |
 | web-development-setup | PostToolUse | `Edit\|Write` | If the edited file matches `*.ts` or `*.tsx` AND a `tsconfig.json` exists at repo root, run the project's TypeScript compiler in `--noEmit` mode scoped to the changed file. Emit any compiler errors as `additionalContext`. Silent on success. Gated on Q5 ≠ plain-JS and a tsconfig being present. | Catches type errors in the same turn, before Claude moves on. | on (only when Q5 = TypeScript) |
 | data-science-setup | PostToolUse | `Edit\|Write` | If the edited file matches `*.ipynb`, run `nbstripout <file>` in-place. Silent on success; on `nbstripout` missing, emit `additionalContext` with the install command. | Notebooks with cell outputs produce massive diffs and leak data. Stripping on save is the de facto standard. | on (only when Q6 = yes, i.e. notebook hygiene accepted) |
 | academic-writing-setup | SessionStart | `startup\|resume` | Emit `additionalContext` with the full text of `.claude/rules/writing-style.md` and `.claude/rules/citation-rules.md` (both plugin-owned, extracted files). Silent if either file is absent. | Long writing sessions drift in voice and citation discipline. Reloading the rules at session boundary keeps the drift corrected. | on |
@@ -90,7 +90,7 @@ Explicitly rejected recipes (documented here so future contributors do not re-li
 
 **Hook-emitting (new behavior):**
 
-- `devops-setup` — adds opt-in question + plan-before-apply PreToolUse hook
+- ~~`devops-setup` — adds opt-in question + plan-before-apply PreToolUse hook~~ (defanged 2026-04-22 per issue #40; now emits `.claude/rules/infra-safety.md` unconditionally instead of a hook)
 - `web-development-setup` — adds opt-in question + TS compile PostToolUse hook, gated on TypeScript
 - `data-science-setup` — adds opt-in question + nbstripout PostToolUse hook, gated on notebook hygiene
 - `academic-writing-setup` — adds opt-in question + SessionStart rules-reload hook
@@ -119,7 +119,7 @@ Explicitly rejected recipes (documented here so future contributors do not re-li
 
 - **User-authored matcher collision.** A user has a `PostToolUse` + `matcher: "Edit|Write"` group before the plugin writes one. Merge appends into that existing group — the plugin entry coexists with the user's. The marker still identifies ownership, so subsequent refresh finds only the plugin entry. Confirmed safe.
 - **Corrupt settings.json.** The plugin never overwrites a file it cannot parse. It prints the fallback block and continues — hooks are a best-effort layer, not a blocker for the rest of the setup.
-- **Hook misfire.** The plan-before-apply guard in `devops-setup` uses substring matching on the command text. False positives are possible (a string literal containing `terraform apply` inside a larger script). Mitigated by using `additionalContext` only — never `permissionDecision: deny` — so false positives cost Claude a reminder, not a blocked action.
+- **Hook misfire.** ~~The plan-before-apply guard in `devops-setup` uses substring matching on the command text.~~ Defanged 2026-04-22 (issue #40) — the devops-setup hook was replaced by a tool-agnostic rule file, so substring-based misfires no longer apply to this plugin. Retained here as a design note for any future Bash-command-inspection hook: prefer rule-file guidance unless runtime enforcement is strictly required.
 - **Schema drift.** Claude Code's hook schema is stable as of current documentation but could evolve. Mitigation: the emit-hook helper is a single file. Schema adjustments happen once, propagate to every skill.
 - **User confusion if a hook blocks their action.** The catalog deliberately avoids `permissionDecision: deny`. Every recipe uses `additionalContext` or silent in-place file modification (`nbstripout`). Nothing hard-blocks the user.
 - **Marker pollution on standard JSON editors.** Some editors strip unknown fields. Claude Code does not; hand-editing in VS Code / Cursor does not; the risk is only a concern if the user pipes the file through a stripping tool. Documented in the helper.
