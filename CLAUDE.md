@@ -185,6 +185,7 @@ When a setup skill produces rule-like content for the user's project, apply this
 | `api-conventions.md` | web-development-setup | Route layout, error shape, auth |
 | `component-structure.md` | web-development-setup | Atomic/container split, colocation |
 | `env-vars.md` | web-development-setup | Public-prefix rules, secret stores |
+| `infra-safety.md` | devops-setup | Pre-apply pause rules |
 
 **Topic exclusivity:** Each whitelist filename has exactly one owning skill. No two skills ever write the same filename. Adding a new topic or owner requires a spec update, not an ad-hoc skill change.
 
