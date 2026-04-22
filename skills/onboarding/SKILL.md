@@ -184,19 +184,83 @@ _Your repo is large — `/graphify-setup` can layer on top of any choice in this
 
 ## Step 4: Handle "Not Sure"
 
-If the user picks the "Not sure" option, ask these 9 yes/no questions one at a time:
+If the user picks the "Not sure" option, walk them through a short decision tree instead of a flat questionnaire. **Never ask more than 3 questions in this step.** If the user is unmatched after 3 questions, fall through to the full 11-option list (same fallback behaviour as today).
 
-1. "Are you primarily using Claude to work with code or a codebase?" → yes → recommend Coding Setup
-2. "Are you building a web app — frontend, backend API, or full-stack (Next.js / React / Vue / Svelte / Astro / Remix)?" → yes → recommend Web Development Setup
-3. "Do you mainly work with notebooks, datasets, or ML models?" → yes → recommend Data Science Setup
-4. "Are you trying to organize documents, notes, or code into a structured knowledge base or wiki?" → yes → recommend Knowledge Base Builder
-5. "Do you mostly work with documents, emails, reports, or presentations?" → yes → recommend Office Setup
-6. "Are you writing a thesis, paper, or dissertation (LaTeX / Typst manuscript)?" → yes → recommend Academic Writing Setup
-7. "Do you manage infrastructure, CI/CD pipelines, or cloud resources?" → yes → recommend DevOps Setup
-8. "Do you primarily work with UI designs, components, or frontend interfaces?" → yes → recommend Design Setup
-9. "Is your main pain that Claude burns too many tokens searching across a large codebase, docs folder, or mixed-media corpus?" → yes → recommend Graphify Setup (layers on top of any other setup)
+Ask Q1 first. Based on the answer, ask Q2 from the matching branch. Only ask Q3 if that branch explicitly marks it as needed; otherwise commit to the recommendation after Q2. Present each question on its own (one at a time), with the lettered options visible.
 
-If none match after 9 questions, present all 11 setup options (1–11, excluding "Already set up" and "Not sure") with one-line descriptions and ask the user to pick a number.
+### Q1 — Primary axis
+
+> "What kind of work will you primarily do with Claude here?
+>   A) Write code or build software
+>   B) Write text, do research, or manage notes
+>   C) Build or operate infrastructure / data pipelines
+>   D) Something else, or a mix of the above"
+
+### Q2 — Branch refinement
+
+**If A (code / software):**
+
+> "What flavor of code work?
+>   a) Frontend-heavy or full-stack web app (React / Next.js / Vue / Svelte / Astro / Remix) → recommend `web-development-setup`
+>   b) Notebooks, datasets, or ML models → recommend `data-science-setup`
+>   c) UI / component design, Figma handoff, accessibility work → recommend `design-setup`
+>   d) General coding — backend, CLI, library, or anything else → recommend `coding-setup`"
+
+Commit to the recommendation after Q2. No Q3 needed on this branch.
+
+**If B (text / research / notes):**
+
+> "What's the primary output?
+>   a) A thesis, paper, or dissertation manuscript (LaTeX / Typst, with `.bib`) → recommend `academic-writing-setup`
+>   b) Reading papers, literature notes, or a personal knowledge vault
+>   c) Business documents — emails, reports, slides, spreadsheets → recommend `office-setup`
+>   d) Published content for an audience — YouTube, social, newsletters → recommend `content-creator-setup`"
+
+If the user picks B-b, ask Q3 to disambiguate between the two text-centric vault skills:
+
+> "Q3 — Are you mainly organising your own personal notes/vault, or managing the research flow around a paper (literature, citations, reading queue)?
+>   vault → recommend `knowledge-base-setup`
+>   paper research → recommend `research-setup`"
+
+For every other B-option, commit after Q2.
+
+**If C (infrastructure / pipelines):**
+
+> "What layer?
+>   a) Cloud, IaC, Kubernetes, CI/CD → recommend `devops-setup`
+>   b) Data pipelines, notebooks, experiments → recommend `data-science-setup`"
+
+Commit after Q2.
+
+**If D (something else / mixed):** fall through to the full 11-option fallback below. Do not ask further questions.
+
+### Fallback
+
+If the user picks D on Q1, or is still unmatched after Q3, or declines any of the branch options, present all 11 setup options (1–11, excluding "Already set up" and "Not sure") with one-line descriptions and ask the user to pick a number. This matches today's fallback.
+
+### Coverage check
+
+The tree covers all 11 setup options:
+
+- `coding-setup` — A/d
+- `web-development-setup` — A/a
+- `data-science-setup` — A/b and C/b
+- `design-setup` — A/c
+- `academic-writing-setup` — B/a
+- `knowledge-base-setup` — B/b → Q3 vault
+- `research-setup` — B/b → Q3 paper
+- `office-setup` — B/c
+- `content-creator-setup` — B/d
+- `devops-setup` — C/a
+- `graphify-setup` — not on the decision tree; it is a layered add-on. Surfaced via the Step 3 `graphify_candidate` aside and offered by host setups through `skills/_shared/graphify-install.md`. Users who explicitly want it pick option 11 directly, or reach it from the fallback list.
+
+### Max-depth contract
+
+No path through this step exceeds 3 questions. Paths by depth:
+- 1 question: none (Q1 alone never commits — it only selects a branch).
+- 2 questions: A/a, A/b, A/c, A/d, B/a, B/c, B/d, C/a, C/b.
+- 3 questions: B/b → vault, B/b → paper research.
+- D collapses immediately to the 11-option fallback with no further questions.
 
 ## Step 5: Dispatch
 
