@@ -7,9 +7,9 @@ description: Set up Claude for data science and ML engineering — configures no
 
 This skill configures Claude for exploratory and productive data science / ML work. It is the right choice when your project centers on notebooks, models, datasets, and experiments — not general application code (use `coding-setup` for that) and not literature research (use `research-setup` for that).
 
-**Language:** Use `detected_language` from handoff context, or detect from the user's first message and use it throughout. All generated file content stays in English.
+**Handoff context:** Read `skills/_shared/consume-handoff.md` and run it with the handoff block (if any). The helper guarantees the following locals: `detected_language`, `existing_claude_md`, `inferred_use_case`, `repo_signals`, `graphify_candidate`. Use `detected_language` for all user-facing prose; generated file content stays in English.
 
-**Existing CLAUDE.md:** If `existing_claude_md: true` in handoff context, or if `CLAUDE.md` already exists in the filesystem, DO NOT overwrite it. Append a new delimited section at the end of the file:
+**Existing CLAUDE.md:** If `existing_claude_md: true`, DO NOT overwrite it. Append a new delimited section at the end of the file:
 
 ```
 <!-- onboarding-agent:start setup=data-science skill=data-science-setup section=claude-md -->
@@ -28,6 +28,7 @@ Read these on-demand at the step that invokes them. Do not read eagerly.
 - `stack-scaffolds.md` — `pyproject.toml`, `uv add` commands, `.claude/settings.json` permissions, directory scaffold (Step 4)
 - `gitignore-block.md` — the `.gitignore` block (Step 4)
 - `notebook-hygiene.md` — `.pre-commit-config.yaml` for nbstripout + nbqa (Step 4)
+- `skills/_shared/consume-handoff.md` — orchestrator handoff parse + inline fallback (preamble, before Step 1)
 - `skills/_shared/offer-superpowers.md` — canonical Superpowers opt-in (Step 1)
 - `skills/_shared/offer-graphify.md` — canonical Graphify opt-in (Step 6)
 

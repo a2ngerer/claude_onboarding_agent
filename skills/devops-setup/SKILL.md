@@ -7,9 +7,9 @@ description: Set up Claude for DevOps and cloud engineering — configures your 
 
 This skill configures Claude for DevOps and infrastructure work.
 
-**Language:** Use `detected_language` from handoff context, or detect from the user's first message and use it throughout.
+**Handoff context:** Read `skills/_shared/consume-handoff.md` and run it with the handoff block (if any). The helper guarantees the following locals: `detected_language`, `existing_claude_md`, `inferred_use_case`, `repo_signals`, `graphify_candidate`. Use `detected_language` for all user-facing prose; generated file content stays in English.
 
-**Existing CLAUDE.md:** If `existing_claude_md: true` in handoff context, or if CLAUDE.md exists in the filesystem, DO NOT overwrite it. Append a new delimited section at the end of the file:
+**Existing CLAUDE.md:** If `existing_claude_md: true`, DO NOT overwrite it. Append a new delimited section at the end of the file:
 
 ```
 <!-- onboarding-agent:start setup=devops skill=devops-setup section=claude-md -->
@@ -24,6 +24,7 @@ If the delimited block already exists from a previous run, replace only the cont
 
 Read these on-demand at the step that invokes them. Do not read eagerly.
 
+- `skills/_shared/consume-handoff.md` — orchestrator handoff parse + inline fallback (preamble, before Step 1)
 - `rule-file-templates.md` — bodies of the `.claude/rules/*.md` files this skill generates (Step 4)
 
 ## Step 1: Install Dependencies

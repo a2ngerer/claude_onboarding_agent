@@ -9,9 +9,9 @@ This skill configures Claude for the **output side** of academic work: writing t
 
 Use this skill when the project is primarily a LaTeX or Typst document, not a literature survey or a generic research notebook.
 
-**Language:** Use `detected_language` from handoff context, or detect from the user's first message and use it throughout. All generated file content stays in English.
+**Handoff context:** Read `skills/_shared/consume-handoff.md` and run it with the handoff block (if any). The helper guarantees the following locals: `detected_language`, `existing_claude_md`, `inferred_use_case`, `repo_signals`, `graphify_candidate`. Use `detected_language` for all user-facing prose; generated file content stays in English.
 
-**Existing CLAUDE.md:** If `existing_claude_md: true` in handoff context, or if `CLAUDE.md` already exists in the filesystem, DO NOT overwrite it. Append a new delimited section at the end of the file:
+**Existing CLAUDE.md:** If `existing_claude_md: true`, DO NOT overwrite it. Append a new delimited section at the end of the file:
 
 ```
 <!-- onboarding-agent:start setup=academic-writing skill=academic-writing-setup section=claude-md -->
@@ -30,6 +30,7 @@ Read these on-demand at the step that invokes them. Do not read eagerly.
 - `document-skeletons.md` — directory scaffold, `main.tex`, `main.typ`, `bib/references.bib` (Step 4)
 - `gitignore-block.md` — the `.gitignore` block (Step 4)
 - `optional-integrations.md` — `.pre-commit-config.yaml`, Overleaf instructions, template pointer, KB bridge (Step 4)
+- `skills/_shared/consume-handoff.md` — orchestrator handoff parse + inline fallback (preamble, before Step 1)
 - `skills/_shared/offer-superpowers.md` — canonical Superpowers opt-in (Step 1)
 
 ## Step 1: Install Dependencies

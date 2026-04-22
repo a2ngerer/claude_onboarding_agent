@@ -173,15 +173,21 @@ If none match after 9 questions, present all 11 setup options (1–11, excluding
 
 ## Step 5: Dispatch
 
-Once the user confirms a choice, pass the following handoff context inline and invoke the chosen skill:
+Once the user confirms a choice, pass the following handoff context inline and invoke the chosen skill. The payload conforms to `docs/schemas/handoff-context.schema.json` (Draft 2020-12); setup skills consume it via `skills/_shared/consume-handoff.md`.
 
-```
-HANDOFF_CONTEXT:
-  detected_language: "[ISO 639-1 code, e.g. en, de, es]"
-  existing_claude_md: [true/false]
-  inferred_use_case: "[coding|web-development|data-science|knowledge-base|office|research|academic-writing|content-creator|devops|design|graphify|unknown]"
-  repo_signals: ["[list of detected signals, e.g. pyproject.toml, *.py files, *.ipynb, next.config.ts, package.json:next]"]
-  graphify_candidate: [true/false]
+```json
+{
+  "detected_language": "<ISO 639-1 code, e.g. en, de, es>",
+  "existing_claude_md": false,
+  "inferred_use_case": "<coding|web-development|data-science|knowledge-base|office|research|academic-writing|content-creator|devops|design|graphify|unknown>",
+  "repo_signals": {
+    "signals": ["<short evidence strings, e.g. pyproject.toml, *.ipynb, package.json:next>"],
+    "existing_agents_md": false,
+    "repo_size_bucket": "<tiny|small|medium|large>"
+  },
+  "graphify_candidate": false,
+  "source": "orchestrator"
+}
 ```
 
 Skill routing:
