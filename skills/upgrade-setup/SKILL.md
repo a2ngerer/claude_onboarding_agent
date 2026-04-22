@@ -299,16 +299,11 @@ If `A == 0`, stop here. Do not create a backup for a no-op. Skip Pass 4. Go to P
 
 ### Step 4.1 — Create the backup folder
 
-Compute `timestamp = <YYYYMMDD-HHMMSS>` in local time (single value per invocation — all files in this upgrade share it). Create `./.claude/backups/<timestamp>/` via Bash (`mkdir -p`).
+Delegate to the shared helper: read `skills/_shared/backup-before-write.md` and follow it with `trigger: upgrade`. Capture the returned `rebuild_backup_path` (e.g. `.claude/backups/<timestamp>-upgrade/`) — every reference to `.claude/backups/<timestamp>/` in the rest of this pass and in Pass 5 resolves to that value.
 
-For every unique file in the accepted-changes set, copy the current on-disk content into the backup folder preserving relative paths:
+The helper copies the canonical file list (`CLAUDE.md`, `AGENTS.md`, `.claude/settings.json`, `.claude/settings.local.json`, `.claude/onboarding-meta.json`, `.claude/rules/**`), which is a superset of the files this upgrade touches. Do not re-enumerate the accepted-changes set here — backing up the full canonical set is cheap and guarantees the restore point matches what onboarding and checkup produce.
 
-- `./CLAUDE.md` → `./.claude/backups/<timestamp>/CLAUDE.md`
-- `./.gitignore` → `./.claude/backups/<timestamp>/.gitignore`
-- `./.claude/rules/writing-style.md` → `./.claude/backups/<timestamp>/.claude/rules/writing-style.md`
-- `./.claude/settings.json` → `./.claude/backups/<timestamp>/.claude/settings.json`
-
-Use Bash `cp --parents` where available, otherwise `mkdir -p` the parent and `cp` the file.
+If the helper signals failure, it has already printed the standardized warning. Stop immediately; do not proceed to Step 4.2. No file is written in this upgrade.
 
 ### Step 4.2 — Apply changes in-place
 
@@ -324,7 +319,7 @@ If any single file write throws: STOP immediately. Do not attempt to continue. P
 
 ```
 ⚠ Write failed for <file>: <error>. Upgrade halted.
-   Backup of the pre-upgrade state is at .claude/backups/<timestamp>/
+   Backup of the pre-upgrade state is at <rebuild_backup_path>
    Files already updated before this failure remain updated — review them against the backup.
 ```
 
@@ -364,10 +359,10 @@ Summary:
   Skipped:      <skipped_count>
   Dry-run only: <dryrun_count>   (zero in live mode)
 
-Backup folder: <.claude/backups/<timestamp>/ | n/a — nothing applied>
+Backup folder: <<rebuild_backup_path> | n/a — nothing applied>
 
 To restore everything to the pre-upgrade state:
-  cp -R .claude/backups/<timestamp>/. ./
+  cp -R <rebuild_backup_path>. ./
   (this restores files in-place, overwriting what this upgrade wrote)
 
 Next:

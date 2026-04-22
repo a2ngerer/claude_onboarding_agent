@@ -276,7 +276,7 @@ Verdict: <rebuild | improve | fine-as-is>
 Rationale: <rationale>
 
 Delegated command (if accepted):
-  - rebuild     → /onboarding --rebuild   (backs up existing setup to .claude/backups/<timestamp>/)
+  - rebuild     → /onboarding --rebuild   (backs up existing setup to .claude/backups/<timestamp>-onboarding/)
   - improve     → /upgrade-setup          (per-change confirmation, backup, --dry-run available)
   - fine-as-is  → nothing — short summary, no changes
 
@@ -324,7 +324,7 @@ Otherwise dispatch according to `chosen_verdict`:
 
 ### 6a — `rebuild`
 
-Invoke the `onboarding` skill with the `--rebuild` flag. Onboarding handles backup + re-run.
+Invoke the `onboarding` skill with the `--rebuild` flag. Onboarding's Step 1b runs `skills/_shared/backup-before-write.md` (`trigger: onboarding-rebuild`) and is the single canonical backup for this verdict. Checkup does NOT create its own backup here — doing so would produce two redundant `.claude/backups/` directories in the same invocation.
 
 If `onboarding --rebuild` is not supported in the installed plugin version (detect by reading `skills/onboarding/SKILL.md` for the `--rebuild` keyword; if the skill file is not resolvable, attempt invocation and fall back on failure), fall back to:
 
@@ -368,7 +368,7 @@ Chosen:           <chosen_verdict>
 Override reason:  <override_reason or "(none)">
 Delegated to:     <"/onboarding --rebuild" | "/upgrade-setup" | "(none — fine-as-is)" | "(none — --no-delegate)">
 Log:              .claude/checkup-log.md
-Backup:           <".claude/backups/<timestamp>/" when onboarding --rebuild ran | "(n/a)">
+Backup:           <".claude/backups/<timestamp>-onboarding/" when onboarding --rebuild ran | "(n/a)">
 Anchor freshness: <"network" or "cache" → omit this line;
                    "fallback" → "claude-models served from fallback snapshot — re-run /anchors once upstream is reachable";
                    "embedded" → "claude-models unreachable and no fallback — deprecated-model check skipped">
