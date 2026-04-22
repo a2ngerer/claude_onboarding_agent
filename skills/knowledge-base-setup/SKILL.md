@@ -20,15 +20,21 @@ This skill configures Claude to build and maintain a structured, interlinked kno
 
 If the delimited block already exists from a previous run, replace only the content between the markers; leave the rest of the file untouched. Wrap generated `.gitignore` entries in `# onboarding-agent: knowledge-base — start` / `— end` markers so `/upgrade-setup` can refresh them non-destructively.
 
+## Supporting Files
+
+Read these on-demand at the step that invokes them. Do not read eagerly.
+
+- `skills/_shared/offer-superpowers.md` — canonical Superpowers opt-in (Step 1)
+- `skills/_shared/offer-graphify.md` — canonical Graphify opt-in (Step 4)
+
 ## Step 1: Install Dependencies
 
-Read `skills/_shared/installation-protocol.md` and follow it for each dependency below.
+Read `skills/_shared/offer-superpowers.md` and run it with `skill_slug: knowledge-base-setup`, `mandatory: true`. The helper delegates to `skills/_shared/installation-protocol.md` and sets `superpowers_installed`, `superpowers_scope`, `superpowers_method`.
 
-Note: Process Superpowers and Karpathy Guidelines here. The Obsidian CLI verification is handled inline in Step 2 (after question 2) — it is a system check, not an install.
-
-Dependencies:
-- Superpowers (required) — marketplace-id: `superpowers@claude-plugins-official`, github: `https://github.com/obra/superpowers`, name: `superpowers`
+Then read `skills/_shared/installation-protocol.md` and follow it for Karpathy Guidelines:
 - Karpathy Guidelines (optional) — github only: `https://github.com/forrestchang/andrej-karpathy-skills`, name: `karpathy-skills`
+
+Note: The Obsidian CLI verification is handled inline in Step 2 (after question 2) — it is a system check, not an install.
 
 ## Step 2: Context Questions
 
@@ -239,6 +245,10 @@ Using plain markdown files. Open the `wiki/` folder in Obsidian or any markdown 
 
 ### .gitignore
 
+Assemble the block from the knowledge-base-specific lines below plus the shared common patterns from `skills/_shared/gitignore-common.md`. Wrap in `# onboarding-agent: knowledge-base — start` / `— end` markers.
+
+Knowledge-base-specific lines:
+
 ```gitignore
 # Large source files in raw/
 raw/*.pdf
@@ -246,28 +256,25 @@ raw/*.docx
 raw/*.pptx
 raw/*.mp4
 raw/*.zip
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Claude local settings
-.claude/settings.local.json
 ```
+
+Then inline the block from `skills/_shared/gitignore-common.md` (OS noise, env files, `.claude/settings.local.json`).
 
 ## Step 4: Optional Graphify Integration
 
-A knowledge base is exactly the kind of corpus Graphify is designed for — interlinked Markdown notes and their raw/ sources. Ask ONCE (adapt to detected language):
+A knowledge base is exactly the kind of corpus Graphify is designed for — interlinked Markdown notes and their raw/ sources, so the initial build is strongly recommended. Before invoking the helper, probe whether the target folder from Q3 is under git; if not, set `install_git_hook: false` instead of `true`.
 
-> "Install Graphify knowledge-graph integration now?
->
-> Graphify indexes your `raw/` (PDFs, Markdown, code, diagrams, images, audio/video — 25 languages via tree-sitter) and `wiki/` folders into a local graph, registers a `/graphify` slash command, and adds a PreToolUse hook that consults the graph BEFORE Claude runs Grep / Glob / Read. This cuts token cost substantially on large knowledge bases. See https://github.com/safishamsi/graphify.
->
-> (yes / no / later)"
+Read `skills/_shared/offer-graphify.md` and run it with:
 
-- **yes** → set `host_setup_slug: "knowledge-base"`, `host_skill_slug: "knowledge-base-setup"`, `run_initial_build: true` (strongly recommended for a KB — the graph is most of the value), `install_git_hook: true` if the target folder is under git. Read `skills/_shared/graphify-install.md` and follow steps G1–G9 in order. The protocol writes the attributed CLAUDE.md section with `setup=knowledge-base skill=graphify-setup section=graphify`.
-- **no** → set `graphify_installed: false` and skip to Step 5.
-- **later** → invoke `skills/_shared/graphify-install.md` in "later" mode: skip G1–G7 and write only the short deferred pointer block (`"Knowledge graph: run /graphify-setup when ready."`). Set `graphify_installed: false`, `graphify_deferred: true`.
+- `host_setup_slug: "knowledge-base"`
+- `host_skill_slug: "knowledge-base-setup"`
+- `run_initial_build: true`
+- `install_git_hook: <true if target folder is under git, else false>`
+- `corpus_blurb: "your \`raw/\` (PDFs, Markdown, code, diagrams, images, audio/video — 25 languages via tree-sitter) and \`wiki/\` folders"`
+
+The helper owns the opt-in prompt and the three-way branch (yes / no / later),
+delegating to `skills/_shared/graphify-install.md`. Record the `graphify_*`
+variables it produces for use in Step 7.
 
 ## Step 5: Write Upgrade Metadata
 

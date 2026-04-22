@@ -4,6 +4,10 @@
 
 Append a delimited block at the end of the user's `.gitignore`. If the marker block already exists, replace it.
 
+The block is assembled from the data-science-specific lines below plus the canonical Python block from `skills/_shared/gitignore-python.md` and the common block from `skills/_shared/gitignore-common.md`. Do NOT duplicate Python patterns inline — read them from the shared helper.
+
+Data-science-specific lines (inside the marker block):
+
 ```gitignore
 # onboarding-agent: data-science — start
 # Raw and processed data (only if Q5 = yes)
@@ -32,14 +36,7 @@ models/**/*.onnx
 models/**/*.joblib
 models/**/*.pkl
 
-# Python
-__pycache__/
-.venv/
-*.pyc
-dist/
-.env
-
-# Claude local settings
-.claude/settings.local.json
+# ... (read skills/_shared/gitignore-python.md and inline its Python block here)
+# ... (read skills/_shared/gitignore-common.md and inline its block here)
 # onboarding-agent: data-science — end
 ```

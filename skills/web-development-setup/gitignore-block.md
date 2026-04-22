@@ -4,34 +4,21 @@
 
 ## .gitignore block
 
-Append this delimited block at the end of the user's `.gitignore`. If the marker block already exists, replace only the content between the markers.
+Append a delimited block at the end of the user's `.gitignore`. If the marker block already exists, replace only the content between the markers.
+
+The block is assembled from the canonical Node/JS patterns in `skills/_shared/gitignore-node.md`, the common patterns in `skills/_shared/gitignore-common.md`, and the web-specific additions below. Do NOT duplicate Node or common patterns inline — read them from the shared helpers.
+
+Web-specific additions (inside the marker block, after the shared patterns):
 
 ```gitignore
 # onboarding-agent: web-development — start
-# Node / package managers
-node_modules/
-.pnpm-store/
-.npm/
-.yarn/cache/
-.yarn/install-state.gz
+# ... (inline skills/_shared/gitignore-node.md here)
+# ... (inline skills/_shared/gitignore-common.md here)
 
-# Framework build output
-dist/
-build/
-.next/
-.nuxt/
-.output/
-.astro/
-.svelte-kit/
-.turbo/
+# Framework build output (web-specific — not in shared node block)
 .vercel/
 .netlify/
 .wrangler/
-
-# Env files (NEVER commit local secrets)
-.env
-.env.local
-.env.*.local
 
 # Test artifacts
 coverage/
@@ -40,18 +27,6 @@ playwright-report/
 test-results/
 cypress/videos/
 cypress/screenshots/
-
-# TypeScript / tooling caches
-*.tsbuildinfo
-.eslintcache
-.cache/
-
-# Editor / OS noise
-.DS_Store
-Thumbs.db
-
-# Claude local settings
-.claude/settings.local.json
 # onboarding-agent: web-development — end
 ```
 
