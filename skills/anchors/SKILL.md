@@ -5,7 +5,11 @@ description: Refresh the anchor-derived marker sections in this project's CLAUDE
 
 # Anchors — Refresh Anchor-Derived Sections
 
-Refresh the marker sections of CLAUDE.md / AGENTS.md that were originally rendered by a setup skill from anchor content. This skill is the narrow counterpart to `/upgrade`: `/upgrade` refreshes all plugin-owned sections (templates + anchors); `/anchors` refreshes only anchor-derived sections.
+Refresh the marker sections of CLAUDE.md / AGENTS.md that were originally rendered by a setup skill from anchor content.
+
+## Ownership
+
+This skill is the **sole writer of anchor-derived marker sections** (`section=anchor-<slug>` inside CLAUDE.md / AGENTS.md). Other skills — including `/upgrade-setup` — detect anchor markers but never rewrite them; they delegate any refresh to this skill. The boundary is: `/upgrade-setup` refreshes plugin-template-derived sections only, and `/anchors` refreshes anchor-derived sections only. Running `/upgrade-setup` never mutates anchor bodies, so a user who wants both kinds of refresh runs `/upgrade-setup` followed by `/anchors` (or just `/anchors` if only anchor content needs updating).
 
 ## Language
 

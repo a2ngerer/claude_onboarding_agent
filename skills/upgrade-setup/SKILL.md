@@ -102,11 +102,14 @@ Before diffing or previewing upgrade changes, check for legacy rule-file layouts
 
 ## Pass 2 — Plan the changes
 
+### Anchor responsibilities
+
+`/upgrade-setup` does **not** write anchor-derived marker sections. Writing those sections is the sole responsibility of `/anchors`. During Pass 2, anchor-derived markers (`section=anchor-<slug>`) are detected but never added to `proposed_changes`, never diffed against fresh anchor content, and never rewritten in Pass 4. Pass 5 points the user at `/anchors` when any such markers exist on disk, so the two commands stay complementary: `/upgrade-setup` refreshes plugin-template-derived sections, `/anchors` refreshes anchor-derived sections.
+
 For each skill in `detected_skills`, compute the **canonical current output** of that skill's generated sections. The canonical output is a function of:
 
 - `setup_type` and the structured answers it would produce today (for upgrade, questions are NOT re-asked; the plan uses the *structure* of the generated files, not their context-question-dependent values)
 - `current_version`
-- Any relevant realtime anchors (see Step 2.3)
 
 The upgrade skill treats every delimited section as a **structural template** — it proposes overwriting the marker body with the latest template but preserves any fields that were filled in from user answers (project stack, citation style, etc.). In practice this means: the LLM running this skill compares the on-disk marker body against the latest template from the relevant setup skill and proposes a structural-only diff. **Answer-derived values (Q1, Q2, …) are kept as-is — only the scaffolding around them changes.**
 
@@ -193,20 +196,19 @@ For each located section, compute a unified diff against the canonical current t
 
 #### Anchor-derived sections
 
-Marker sections whose `section=` attribute starts with `anchor-` are **anchor-derived**, not plugin-template-derived. For these, compute the diff differently:
+Marker sections whose `section=` attribute starts with `anchor-` are **anchor-derived**, not plugin-template-derived. `/upgrade-setup` does **not** rewrite these sections — writing anchor-derived marker bodies is the sole responsibility of `/anchors` (see the "Anchor responsibilities" note at the top of Pass 2).
 
-1. Extract the `anchor_slug` from the `section=anchor-<slug>` attribute.
-2. Fetch the anchor via `skills/_shared/fetch-anchor.md` (use the fallback snapshot from `skills/anchors/SKILL.md` for that slug).
-3. Mentally run `skills/_shared/render-anchor-section.md` Step R3 to extract the curated excerpt for that slug (same section-selection logic as the render protocol).
-4. Compute the unified diff between the on-disk marker body and the proposed excerpt body (3 lines of context).
+Detection-only behavior during Pass 2:
 
-The `proposed_changes` entry gets `rationale: "Anchor `<slug>` refresh — latest excerpt differs from on-disk body"`. The change behaves identically to template-derived changes in Pass 3 (same y/n/all/skip-rest prompt) and in Pass 4 (same write mechanism — only the body between markers changes).
+1. Locate every marker whose `section=` attribute starts with `anchor-` inside the candidate files.
+2. Do **not** fetch anchors, do **not** render excerpts, and do **not** add these markers to `proposed_changes`.
+3. Record the count of anchor-derived markers found (`anchor_marker_count`) for the Pass 5 hand-off.
 
-This means `/upgrade` now implicitly covers what `/anchors` does. `/anchors` remains the focused tool for users who only want to refresh the anchor parts.
+If `anchor_marker_count > 0`, Pass 5 will recommend `/anchors` as the follow-up command that actually refreshes those sections. This keeps the ownership boundary clear: `/upgrade-setup` touches template-derived sections only, and `/anchors` owns every anchor-derived write.
 
 ### Step 2.3 — (Removed)
 
-Anchor-driven checks (deprecated model IDs and similar) now live in `/tipps` Pass 5. Anchor section refreshes are handled by the anchor-derived branch of Step 2.2. Nothing to do here.
+Anchor-driven checks (deprecated model IDs and similar) now live in `/tipps` Pass 5. Anchor section refreshes are handled by `/anchors`, not by this skill — see the "Anchor responsibilities" note at the top of Pass 2. Nothing to do here.
 
 ### Step 2.4 — Project-Local Subagents
 
@@ -369,6 +371,7 @@ To restore everything to the pre-upgrade state:
 Next:
   - Run /audit-setup to audit the updated setup.
   - Re-run /upgrade-setup any time — it is idempotent and safe to repeat.
+  - If <anchor_marker_count> > 0: run /anchors to refresh the <anchor_marker_count> anchor-derived section(s) — /upgrade-setup does not touch those.
 ```
 
 If `applied_count == 0` (all rejected, or dry-run, or nothing found):
@@ -376,6 +379,7 @@ If `applied_count == 0` (all rejected, or dry-run, or nothing found):
 - Do not print a backup folder path.
 - Do not print the restore command.
 - Still recommend `/audit-setup`.
+- Still recommend `/anchors` if `anchor_marker_count > 0`.
 
 ---
 
