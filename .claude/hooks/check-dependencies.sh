@@ -19,7 +19,7 @@ emit() {
 
 case "$REL" in
   skills/_shared/installation.md)
-    emit "Shared installation protocol was modified. All 7 setup skills reference this file. Verify: (1) no setup skill (skills/coding-setup, knowledge-base-setup, office-setup, research-setup, content-creator-setup, devops-setup, design-setup) uses outdated step numbers (P1–P5) or variable names (e.g. \`superpowers_installed\`, \`superpowers_method\`, \`superpowers_scope\`). (2) docs/superpowers/specs/2026-04-17-installation-protocol.md still reflects the current contract."
+    emit "Shared installation protocol was modified. All 7 setup skills reference this file. Verify: (1) no setup skill (skills/coding-setup, knowledge-base-setup, office-setup, research-setup, content-voice-setup, devops-setup, design-setup) uses outdated step numbers (P1–P5) or variable names (e.g. \`superpowers_installed\`, \`superpowers_method\`, \`superpowers_scope\`). (2) docs/superpowers/specs/2026-04-17-installation-protocol.md still reflects the current contract."
     ;;
   skills/onboarding/SKILL.md)
     emit "Orchestrator skill was modified. Verify: (1) every path it offers in Step 3 / Step 5 corresponds to an existing skill folder under skills/. (2) README.md 'What's Inside' table matches the path list."

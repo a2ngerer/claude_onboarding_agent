@@ -36,7 +36,7 @@ Not sure where to start? Run `/onboarding` and we'll figure it out with you. Or 
 | **Writing emails, memos, reports, proposals** | `/office-setup` | Business-writing focus: Q1 branches guidelines (email path vs. report path); presentations out of scope |
 | **A researcher or academic** | `/research-setup` | Citation format, domain vocabulary, LaTeX-aware ignores |
 | **Writing a thesis, paper, or dissertation** | `/academic-writing-setup` | Thesis / paper / dissertation — LaTeX or Typst, Zotero, citation rules that prevent hallucinations |
-| **Creating content** (YouTube, blog, social) | `/content-creator-setup` | Brand voice, platform presets, audience profile |
+| **Creator brand voice** (YouTube, shortform, newsletter, podcast) | `/content-voice-setup` | Voice + audience + per-platform rule files — scope limited to writing guidance; publishing / analytics / media production out of scope |
 | **Running infra / DevOps** | `/devops-setup` | Cloud + IaC + CI config, safe-by-default infra workflow |
 | **Designing UIs** | `/design-setup` | Design tool + frontend stack, UI guidelines, no generic AI looks |
 | **Already set up, but Claude burns tokens searching large repos / docs / PDFs** | `/graphify-setup` | Local [Graphify](https://github.com/safishamsi/graphify) knowledge-graph index + `/graphify` slash command + PreToolUse hook (consulted before Grep/Glob/Read) — layers on top of any other setup |
@@ -99,7 +99,7 @@ irm https://raw.githubusercontent.com/a2ngerer/claude_onboarding_agent/main/scri
 | `/office-setup` | Business writing — emails, memos, reports, proposals. Q1 bifurcates emitted guidelines (email path / report path / both); presentations are out of scope |
 | `/research-setup` | Citation format, research domain, academic writing guidelines |
 | `/academic-writing-setup` | Thesis / paper / dissertation setup — LaTeX or Typst stack, Zotero + Better BibTeX, citation style, no-invented-citations rules, `sections/`/`bib/`/`figures/` scaffold |
-| `/content-creator-setup` | Brand voice, platform preferences, audience context |
+| `/content-voice-setup` | Creator brand voice for YouTube / shortform / newsletter / podcast. Emits per-platform rule files under `.claude/rules/` (`youtube.md`, `shortform.md`, `newsletter.md`, `podcast.md`) keyed to the platforms Q1 selects. Scope limited to writing guidance — publishing, analytics, thumbnails, and media production are out of scope |
 | `/devops-setup` | Cloud provider, IaC tool, CI/CD — safe infra workflow + agent roles |
 | `/design-setup` | Design tool, frontend stack, accessibility standard — UI guidelines without the generic AI look |
 | `/graphify-setup` | Installs [Graphify](https://github.com/safishamsi/graphify) (25-language tree-sitter + Markdown + PDF + media indexer). Registers `/graphify query / path / explain` and a PreToolUse hook consulted before file-search tool calls — cuts token cost on large codebases and mixed-media corpora. Safe to layer on top of any other setup |

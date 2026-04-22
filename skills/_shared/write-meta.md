@@ -4,7 +4,7 @@ This file is read by setup skills at the end of their flow. It writes (or merges
 
 ## Inputs (set by the calling skill before reading this file)
 
-- `setup_slug` — one of `coding`, `data-science`, `design`, `knowledge-base`, `devops`, `content-creator`, `office`, `research`, `academic-writing`
+- `setup_slug` — one of `coding`, `data-science`, `design`, `knowledge-base`, `devops`, `content-voice`, `office`, `research`, `academic-writing`
 - `skill_slug` — the skill's directory name under `skills/` (e.g. `coding-setup`, `knowledge-base-setup`)
 - `plugin_version` — read from the plugin's own `plugin.json` `"version"` field. Resolve it at runtime from `~/.claude/plugins/claude-onboarding-agent/.claude-plugin/plugin.json` or the project-local equivalent. If unreadable, use the string `"unknown"`.
 - `subagents_installed` — optional. List of project-local subagent slugs this invocation installed (e.g. `["code-reviewer"]`). Passed by skills that invoke `skills/_shared/emit-subagent.md`. Omit or pass `[]` when the skill installed no subagents.

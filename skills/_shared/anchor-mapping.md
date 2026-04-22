@@ -10,7 +10,7 @@ This file is the single source of truth for which anchors each setup type render
 | `data-science` | `claude-models`, `mcp-servers`, `claude-tools`, `subagents` |
 | `devops` | `claude-models`, `mcp-servers`, `claude-tools` |
 | `design` | `claude-models`, `mcp-servers`, `claude-tools` |
-| `content-creator` | `claude-models`, `claude-tools` |
+| `content-voice` | `claude-models`, `claude-tools` |
 | `office` | `claude-models`, `claude-tools` |
 | `research` | `claude-models`, `claude-tools` |
 | `academic-writing` | `claude-models`, `claude-tools` |
