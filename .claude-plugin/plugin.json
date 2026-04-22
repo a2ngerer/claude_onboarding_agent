@@ -56,9 +56,9 @@
     { "name": "research-setup", "skill": "research-setup" },
     { "name": "academic-writing-setup", "skill": "academic-writing-setup" },
     { "name": "graphify-setup", "skill": "graphify-setup" },
-    { "name": "audit-setup", "skill": "audit-setup" },
-    { "name": "upgrade-setup", "skill": "upgrade-setup" },
-    { "name": "checkup", "skill": "checkup" },
+    { "name": "audit-setup", "description": "Power-user tool — normally invoked via /checkup. Audit your current Claude setup and get a prioritized list of improvement suggestions.", "skill": "audit-setup" },
+    { "name": "upgrade-setup", "description": "Power-user tool — normally invoked via /checkup. Re-apply current best practices to an existing onboarding-agent setup with per-change confirmation, backups, and --dry-run.", "skill": "upgrade-setup" },
+    { "name": "checkup", "description": "Single maintenance entrypoint — runs /audit-setup internally, weighs findings + meta age + deprecated-model anchors, and routes to /onboarding --rebuild, /upgrade-setup, or a short fine-as-is summary.", "skill": "checkup" },
     { "name": "anchors", "description": "Refresh anchor-derived marker sections in CLAUDE.md/AGENTS.md", "skill": "anchors" }
   ]
 }

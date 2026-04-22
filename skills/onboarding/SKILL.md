@@ -150,7 +150,7 @@ If `graphify_candidate: true` from Step 2, also print a one-line aside under the
 9. DevOps / Cloud Engineering — CI/CD, Kubernetes, Terraform, cloud providers
 10. UI/UX Design — component design, Figma handoff, accessibility
 11. Knowledge Graph (Graphify) — install the `/graphify` command + PreToolUse hook for token-efficient search across code, docs, PDFs, and media
-12. Already set up — audit my current Claude configuration (`/audit-setup`)
+12. Already set up — check my current Claude configuration (`/checkup`)
 13. Not sure — help me decide
 
 ---
@@ -196,7 +196,7 @@ Skill routing:
 - DevOps Setup → invoke `devops-setup` skill
 - UI/UX Design Setup → invoke `design-setup` skill
 - Knowledge Graph (Graphify) → invoke `graphify-setup` skill (standalone — `host_setup_slug: "graphify"`, `host_skill_slug: "graphify-setup"`)
-- Already set up (audit) → invoke `audit-setup` skill
+- Already set up (checkup) → invoke `checkup` skill
 
 Step back completely. The setup skill handles everything from here. For the five host setups that offer Graphify conditionally (coding-setup, knowledge-base-setup, research-setup, data-science-setup, web-development-setup), the Graphify question appears AFTER the host setup's main questions, not here — those skills delegate to `skills/_shared/graphify-install.md` themselves.
 
@@ -271,13 +271,13 @@ Use the Agent tool with:
 Expected output: one `audit-summary` fenced block per the subagent's output contract (cap: 300 tokens).
 ```
 
-Parse `total`, `high`, `medium`, `low`, `top_titles`. Print a one-screen summary. If `high >= 1`, also suggest `/upgrade-setup` to apply the recommended fixes.
+Parse `total`, `high`, `medium`, `low`, `top_titles`. Print a one-screen summary. If `high >= 1`, also suggest `/checkup` to triage the findings and apply the recommended fixes (`/checkup` is the single maintenance entrypoint; it will route to `/upgrade-setup` internally when that is the right next step).
 
 ### Fallback (if the subagent fails)
 
 Trigger the fallback when the subagent dispatch errors, returns no `audit-summary` block after one retry, or returns a block whose sole `top_titles` entry begins with `error:` (the subagent's documented error signal). On dispatch error, do not retry — fall back immediately. Print (adapt to detected language):
 
-> "⚠ audit-collector unavailable — run `/audit-setup` manually to audit the new setup."
+> "⚠ audit-collector unavailable — run `/checkup` manually to check the new setup (it invokes the audit internally and picks the right next step)."
 
 ## Step 8: Final hint about /anchors
 
