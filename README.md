@@ -103,10 +103,10 @@ irm https://raw.githubusercontent.com/a2ngerer/claude_onboarding_agent/main/scri
 | `/devops-setup` | Cloud provider, IaC tool, CI/CD — safe infra workflow + agent roles |
 | `/design-setup` | Design tool, frontend stack, accessibility standard — UI guidelines without the generic AI look |
 | `/graphify-setup` | Installs [Graphify](https://github.com/safishamsi/graphify) (25-language tree-sitter + Markdown + PDF + media indexer). Registers `/graphify query / path / explain` and a PreToolUse hook consulted before file-search tool calls — cuts token cost on large codebases and mixed-media corpora. Safe to layer on top of any other setup |
-| `/audit-setup` | Audits your existing Claude setup — permissions, CLAUDE.md quality, git hygiene, tooling — and returns a prioritized improvement list |
-| `/upgrade-setup` | Re-applies current best practices to an existing setup. Per-change diff preview, dry-run flag, timestamped backups, never touches content outside the plugin's delimited sections |
-| `/checkup` | Decides whether your existing setup should be rebuilt or selectively improved — then delegates. Pure router: runs `/audit-setup`, weighs findings + meta age + deprecated-model anchors, and hands off to `/onboarding --rebuild`, `/upgrade-setup`, or a short "fine-as-is" summary |
-| `/anchors` | Refresh anchor-derived marker sections in CLAUDE.md/AGENTS.md against the latest upstream anchors. |
+| `/checkup` | The single maintenance entrypoint. Runs the audit, weighs findings + meta age + deprecated-model anchors, and either prints a short "fine-as-is" summary, hands off to `/upgrade-setup`, or invokes `/onboarding --rebuild`. Call this whenever you want to know whether your setup still matches current best practices |
+| `/anchors` | Refresh anchor-derived marker sections in CLAUDE.md/AGENTS.md against the latest upstream anchors |
+| `/audit-setup` | Power-user / internal tool — normal flow is `/checkup`. Audits your existing Claude setup (permissions, CLAUDE.md quality, git hygiene, tooling) and returns a prioritized improvement list |
+| `/upgrade-setup` | Power-user / internal tool — normal flow is `/checkup`. Re-applies current best practices to an existing setup: per-change diff preview, dry-run flag, timestamped backups, never touches content outside the plugin's delimited sections |
 
 ---
 

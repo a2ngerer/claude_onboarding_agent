@@ -1,9 +1,15 @@
 ---
 name: checkup
-description: Decide whether an existing Claude setup should be rebuilt from scratch or selectively improved — then delegate. Routes to /onboarding --rebuild, /upgrade-setup, or a short "fine-as-is" summary. Does not audit, does not apply changes.
+description: The single user-facing maintenance entrypoint. Runs /audit-setup internally, weighs findings + meta age + deprecated-model anchors, and either prints a short "fine-as-is" summary, hands off to /upgrade-setup, or invokes /onboarding --rebuild.
 ---
 
-# Checkup — Rebuild vs Improve Router
+# Checkup — Single Maintenance Entrypoint
+
+`/checkup` is the **single user-facing maintenance entrypoint** for an existing Claude setup. It runs `/audit-setup` internally, weighs findings + meta age + deprecated-model anchors, and either prints a short "fine-as-is" summary, hands off to `/upgrade-setup`, or invokes `/onboarding --rebuild`.
+
+Call `/checkup` whenever you want to know whether your existing setup still matches current best practices. You never need to decide between `/audit-setup` and `/upgrade-setup` yourself — `/checkup` picks the right next step for you.
+
+Power users may still invoke `/audit-setup` or `/upgrade-setup` directly when they already know which tool they want. Both skills keep their original behaviour and can be called independently. `/checkup` remains the canonical path for normal use.
 
 This skill owns **one decision**: given an existing Claude setup, should the user **rebuild** it, **improve** it, or leave it **fine-as-is**? It then hands off to the appropriate skill. It does not audit (delegates to `/audit-setup`), does not apply changes (delegates to `/upgrade-setup`), does not scaffold (delegates to `/onboarding`).
 
@@ -351,7 +357,7 @@ Your Claude setup looks current.
   Last upgraded:  <upgraded_at | installed_at — never upgraded | unknown>
   Meta path:      .claude/onboarding-meta.json
 
-Run `/audit-setup` any time to re-audit. Run `/checkup` again after a major project change.
+Re-run `/checkup` any time to re-evaluate your setup — it runs the audit again and picks the right next step. Power users can still call `/audit-setup` directly for raw findings.
 ```
 
 ---

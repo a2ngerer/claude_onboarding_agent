@@ -1,9 +1,11 @@
 ---
 name: upgrade-setup
-description: Re-apply current best practices to an existing onboarding-agent setup. Detects the original setup, computes per-section diffs against the latest templates, asks for per-change confirmation with a unified-diff preview, backs up everything it will touch, and never touches content outside the plugin's delimited sections. Supports --dry-run.
+description: Power-user tool — normally invoked via /checkup. Re-apply current best practices to an existing onboarding-agent setup. Detects the original setup, computes per-section diffs against the latest templates, asks for per-change confirmation with a unified-diff preview, backs up everything it will touch, and never touches content outside the plugin's delimited sections. Supports --dry-run.
 ---
 
 # Upgrade Setup — Selective Best-Practice Refresh
+
+> **Power-user / internal tool.** Normal users run `/checkup`, which decides whether `/upgrade-setup` is the right action and invokes it automatically. Running `/upgrade-setup` directly still works — use it when you already know you want to re-apply current best practices.
 
 Use this skill to bring an existing setup up to the current plugin's defaults **without destroying user customizations**. It is the non-audit counterpart to `/audit-setup`:
 
@@ -366,7 +368,7 @@ To restore everything to the pre-upgrade state:
   (this restores files in-place, overwriting what this upgrade wrote)
 
 Next:
-  - Run /audit-setup to audit the updated setup.
+  - Run /checkup in a few weeks to see what drifted.
   - Re-run /upgrade-setup any time — it is idempotent and safe to repeat.
   - If <anchor_marker_count> > 0: run /anchors to refresh the <anchor_marker_count> anchor-derived section(s) — /upgrade-setup does not touch those.
 ```
@@ -375,7 +377,7 @@ If `applied_count == 0` (all rejected, or dry-run, or nothing found):
 
 - Do not print a backup folder path.
 - Do not print the restore command.
-- Still recommend `/audit-setup`.
+- Still recommend `/checkup`.
 - Still recommend `/anchors` if `anchor_marker_count > 0`.
 
 ---

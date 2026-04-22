@@ -1,9 +1,11 @@
 ---
 name: audit-setup
-description: Audit your current Claude setup and get a prioritized list of improvement suggestions — package manager hygiene, CLAUDE.md quality, permissions, git hygiene, MCP servers, and more.
+description: Power-user tool — normally invoked via /checkup. Audit your current Claude setup and get a prioritized list of improvement suggestions — package manager hygiene, CLAUDE.md quality, permissions, git hygiene, MCP servers, and more.
 ---
 
 # Audit Setup — Claude Setup Audit
+
+> **Power-user / internal tool.** Normal users run `/checkup`, which invokes this skill as its first stage. Running `/audit-setup` directly still works and produces the same report — use it when you want the raw findings without the `/checkup` verdict and delegation.
 
 Audit the current Claude setup and print a prioritized, actionable list of improvement suggestions.
 

@@ -161,7 +161,7 @@ _Your repo is large — `/graphify-setup` can layer on top of any choice in this
 
 **Other**
 11. Knowledge Graph (Graphify) — install the `/graphify` command + PreToolUse hook for token-efficient search across code, docs, PDFs, and media
-12. Already set up — audit my current Claude configuration (`/audit-setup`)
+12. Already set up — check my current Claude configuration (`/checkup`)
 13. Not sure — help me decide
 
 ---
@@ -277,7 +277,7 @@ Skill routing:
 - DevOps Setup → invoke `devops-setup` skill
 - UI/UX Design Setup → invoke `design-setup` skill
 - Knowledge Graph (Graphify) → invoke `graphify-setup` skill (standalone — `host_setup_slug: "graphify"`, `host_skill_slug: "graphify-setup"`)
-- Already set up (audit) → invoke `audit-setup` skill
+- Already set up (checkup) → invoke `checkup` skill
 
 Step back completely. The setup skill handles everything from here. For the five host setups that offer Graphify conditionally (coding-setup, knowledge-base-setup, research-setup, data-science-setup, web-development-setup), the Graphify question appears AFTER the host setup's main questions, not here — those skills delegate to `skills/_shared/graphify-install.md` themselves.
 
@@ -374,19 +374,19 @@ Treat the audit as failed — see "Parse failure" below — when any of these ho
   - <HIGH finding title> → run `<single most appropriate command>`
   ```
 
-  One line per HIGH finding, no severity badges, no "Why" / "How to apply" detail. MEDIUM / LOW / INFO findings are never listed here — the user can run `/audit-setup` manually for the full report.
+  One line per HIGH finding, no severity badges, no "Why" / "How to apply" detail. MEDIUM / LOW / INFO findings are never listed here — the user can run `/checkup` manually for the full report.
 
 ### Mapping a HIGH finding to exactly one command
 
-Pick the single most appropriate command per finding (never stack two, never use `/upgrade-setup` as a catch-all):
+Pick the single most appropriate command per finding (never stack two). `/checkup` is the default user-facing entrypoint; it internally routes to `/audit-setup` and `/upgrade-setup` when that is the right next step.
 
-- Finding mentions secrets, tokens, or personal data in `CLAUDE.md` → `/upgrade-setup` (the fix requires a guided rewrite of the file).
-- Finding mentions overly broad permissions (`"*"`, `"Bash(*)"`) in `.claude/settings.json` → `/upgrade-setup`.
+- Finding mentions secrets, tokens, or personal data in `CLAUDE.md` → `/checkup` (the fix requires a guided rewrite of the file; `/checkup` will hand off to `/upgrade-setup`).
+- Finding mentions overly broad permissions (`"*"`, `"Bash(*)"`) in `.claude/settings.json` → `/checkup`.
 - Finding mentions a stale, deprecated, or out-of-date anchor / best-practice section → `/anchors`.
 - Finding mentions structural drift (missing delimiter, orphaned section, stale onboarding-agent marker, artifact mismatch) → `/checkup`.
-- Any other HIGH finding → `/upgrade-setup` as the default remediation path.
+- Any other HIGH finding → `/checkup` as the default remediation path.
 
-At most one command per finding. If no mapping is obvious, default to `/upgrade-setup`.
+At most one command per finding. If no mapping is obvious, default to `/checkup`.
 
 ### Parse failure
 
