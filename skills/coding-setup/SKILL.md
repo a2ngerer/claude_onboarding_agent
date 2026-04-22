@@ -215,6 +215,8 @@ Read `skills/_shared/anchor-mapping.md`. Locate the row for `setup_type: coding`
 
 Do not fail if any single `render-anchor-section.md` call returns `placeholder` — that is the designed offline path. Collect the list of rendered / placeholder slugs to mention in the completion summary.
 
+For every call, also capture `render_freshness`. When it is anything other than `network` or `cache` (i.e. `fallback` or `embedded`), record the `(anchor_slug, render_freshness)` pair in `anchor_freshness_notes`. The completion summary's `Anchor freshness` line consumes this list.
+
 ## Step 10: Completion Summary
 
 ```
@@ -239,6 +241,10 @@ Graphify (knowledge graph):
 
 MCP servers:
   [one line per MCP considered, formatted per skills/_shared/offer-mcp.md Step 6 — omit if github trigger condition was false]
+
+Anchor freshness:
+  [omit the whole block if anchor_freshness_notes is empty; otherwise one line per entry:
+   Anchor <anchor_slug> served from <render_freshness> — consider running /anchors to refresh.]
 
 Next steps:
   Start a new Claude session and run: /superpowers:using-superpowers

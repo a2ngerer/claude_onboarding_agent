@@ -237,7 +237,7 @@ Assemble the inputs:
 - `audit_findings` — from Stage 3.
 - `meta_age_days` — derived from `installed_at` (or `upgraded_at` if set and later): today's date minus installed/upgraded date, rounded down to days. If meta missing, use `delimiter_only: true` (no age signal).
 - `repo_size_bucket` — rough bucket: `tiny` (< 20 non-hidden files), `small` (20–200), `medium` (200–2000), `large` (> 2000). Use Bash `find . -not -path './.*' -type f | wc -l` or equivalent.
-- `anchor_deprecated_models` — list of deprecated model IDs referenced anywhere in `CLAUDE.md`, `AGENTS.md`, `.claude/settings.json`. Fetch `claude-models` anchor via `skills/_shared/fetch-anchor.md` with `anchor_name: claude-models` and the same embedded fallback used by `/audit-setup` Pass 5. If the anchor is unreachable (`anchor_markdown: null`), set this to `null` (do not block).
+- `anchor_deprecated_models` — list of deprecated model IDs referenced anywhere in `CLAUDE.md`, `AGENTS.md`, `.claude/settings.json`. Fetch `claude-models` anchor via `skills/_shared/fetch-anchor.md` with `anchor_name: claude-models` and the same embedded fallback used by `/audit-setup` Pass 5. If the anchor is unreachable (`anchor_markdown: null`), set this to `null` (do not block). Capture the fetch's `fetch_freshness` output into `anchor_freshness` — values other than `network` or `cache` mean the deprecated-models check ran against a stale or embedded snapshot and the verdict rationale should say so.
 - `setup_type` and `skills_used` from meta (if present).
 
 ### Step 4.2 — Derive the verdict
@@ -369,6 +369,9 @@ Override reason:  <override_reason or "(none)">
 Delegated to:     <"/onboarding --rebuild" | "/upgrade-setup" | "(none — fine-as-is)" | "(none — --no-delegate)">
 Log:              .claude/checkup-log.md
 Backup:           <".claude/backups/<timestamp>/" when onboarding --rebuild ran | "(n/a)">
+Anchor freshness: <"network" or "cache" → omit this line;
+                   "fallback" → "claude-models served from fallback snapshot — re-run /anchors once upstream is reachable";
+                   "embedded" → "claude-models unreachable and no fallback — deprecated-model check skipped">
 ```
 
 The `Backup:` path is only meaningful when onboarding with `--rebuild` actually ran and completed — if onboarding is still running when this skill returns, leave it as `"(see /onboarding output)"`.

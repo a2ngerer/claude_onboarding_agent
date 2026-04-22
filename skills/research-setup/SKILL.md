@@ -153,6 +153,8 @@ Read `skills/_shared/anchor-mapping.md`. Locate the row for `setup_type: researc
 
 Do not fail if any single `render-anchor-section.md` call returns `placeholder`. Collect rendered / placeholder slugs for the completion summary.
 
+For every call, also capture `render_freshness`. When it is anything other than `network` or `cache` (i.e. `fallback` or `embedded`), record the `(anchor_slug, render_freshness)` pair in `anchor_freshness_notes`. The completion summary's `Anchor freshness` line consumes this list.
+
 ## Step 8: Completion Summary
 
 ```
@@ -172,6 +174,10 @@ Optional community skills: [list of installed skills, or "none selected"]
 
 Graphify (knowledge graph):
   [✓ installed via <installer>, /graphify + PreToolUse hook registered | ⚠ installed but hook not verified — run /graphify in a new session | — skipped: <reason> | — deferred: run /graphify-setup when ready | — not offered]
+
+Anchor freshness:
+  [omit the whole block if anchor_freshness_notes is empty; otherwise one line per entry:
+   Anchor <anchor_slug> served from <render_freshness> — consider running /anchors to refresh.]
 
 Next steps:
   Start a new Claude session and say: "Summarize this paper: [paste abstract or upload PDF]"
