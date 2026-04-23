@@ -1,28 +1,29 @@
 ---
 name: claude-tools
 description: How to configure Claude's core tooling surface — hooks, rules, memory files, settings, slash commands, plugins
-last_updated: 2026-04-21
+last_updated: 2026-04-23
 sources:
   - https://docs.claude.com/en/docs/claude-code/hooks
   - https://docs.claude.com/en/docs/claude-code/settings
   - https://docs.claude.com/en/docs/claude-code/plugins
   - https://docs.claude.com/en/docs/claude-code/slash-commands
   - https://docs.claude.com/en/docs/claude-code/memory
-version: 1
+version: 2
 ---
 
 ## Memory files
 
-- `CLAUDE.md` — project instructions at `./CLAUDE.md` or `./.claude/CLAUDE.md`; user-level at `~/.claude/CLAUDE.md`. Loaded into every session.
+- `CLAUDE.md` — project instructions at `./CLAUDE.md` or `./.claude/CLAUDE.md`; user-level at `~/.claude/CLAUDE.md`; org-wide at `/etc/claude-code/CLAUDE.md` (Linux) or platform equivalent managed path. Loaded into every session.
 - `CLAUDE.local.md` — personal project notes; gitignored, appended after `CLAUDE.md`.
 - `AGENTS.md` — not read natively by Claude Code. If the repo needs both, `CLAUDE.md` imports it with `@AGENTS.md`.
 - Size target: keep each `CLAUDE.md` under ~200 lines. Longer files reduce adherence.
-- For modular rules, use `.claude/rules/*.md` with optional `paths:` frontmatter to scope by glob. Rules without `paths:` load unconditionally.
+- For modular rules, use `.claude/rules/*.md` with optional `paths:` frontmatter to scope by glob. Rules without `paths:` load unconditionally. User-level personal rules live at `~/.claude/rules/`.
 - Imports: `@path/to/file` inside `CLAUDE.md` pulls another file into context at launch (max depth 5).
+- **Auto memory**: Claude accumulates learnings across sessions at `~/.claude/projects/<project>/memory/` (first 200 lines / 25 KB of `MEMORY.md` per session). Toggle via `autoMemoryEnabled` setting or `/memory` command.
 
 ## Settings
 
-Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `outputStyle`, `sandbox`, `claudeMdExcludes`. Permission rules evaluate in order `deny → ask → allow`; first match wins.
+Top-level keys in `.claude/settings.json` include: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `outputStyle`, `sandbox`, `claudeMdExcludes`, `autoMode`, `attribution`, `worktree`, `autoMemoryEnabled`, `disableAllHooks`, `allowedHttpHookUrls`, `channelsEnabled`, and many others. Permission rules evaluate in order `deny → ask → allow`; first match wins.
 
 ```json
 { "permissions": { "allow": ["Bash(npm run test *)"], "deny": ["Read(./.env)"] } }
@@ -34,12 +35,22 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 |---|---|---|
 | `SessionStart` | Load context or env vars on session open | Inject current git branch |
 | `UserPromptSubmit` | Validate or enrich the user prompt | Block secret patterns |
+| `UserPromptExpansion` | Intercept a slash-command expansion | Redirect to another skill |
 | `PreToolUse` | Block or gate a tool call | Deny `Bash(rm -rf *)` |
 | `PostToolUse` | Lint or log after a tool runs | Auto-run `eslint --fix` after `Edit` |
+| `PostToolUseFailure` | React to a failed tool call | Log error details |
+| `PermissionDenied` | Fire after auto-mode classifier denials | Return `{retry:true}` to retry |
 | `Stop` | Cleanup when Claude finishes a turn | Persist session notes |
+| `StopFailure` | React when a turn ends due to API error | Notify on rate-limit or billing error |
 | `SessionEnd` | Release resources or save artifacts | Flush metrics |
+| `SubagentStart` / `SubagentStop` | Observe subagent lifecycle | Track tokens per agent |
+| `PreCompact` / `PostCompact` | Gate or react to context compaction | Block compaction (exit 2) |
+| `InstructionsLoaded` | Debug which CLAUDE.md / rules files loaded | Log load reason and path |
+| `FileChanged` | React when a watched file changes on disk | Reload `.envrc` on change |
 
-Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries. Plugins ship hooks in `hooks/hooks.json`.
+Hook types: `command` (shell), `http` (POST JSON to a URL), `prompt` (Claude evaluation), `agent` (subagent verifier), `mcp_tool` (call an MCP tool directly). All hooks accept an `if:` field (permission-rule syntax for conditional firing) and an `async:` field for background execution.
+
+Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and `{ type, command }` entries. Plugins ship hooks in `hooks/hooks.json`.
 
 ## Slash commands
 
@@ -70,3 +81,4 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 - Do not rely on `AGENTS.md` being read directly by Claude Code — import it from `CLAUDE.md` with `@AGENTS.md`.
 - Do not use legacy `.claude/commands/*.md` for new functionality — prefer `skills/<name>/SKILL.md` so supporting files and frontmatter are available.
 - Do not silently overwrite an existing `CLAUDE.md` — extend with a delimited, attributed section.
+- `includeCoAuthoredBy` is deprecated — use `attribution.commit` and `attribution.pr` in settings instead.

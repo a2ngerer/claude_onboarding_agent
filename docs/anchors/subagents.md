@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-04-21
+last_updated: 2026-04-23
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 1
+version: 2
 ---
 
 ## When to use a subagent
@@ -17,13 +17,33 @@ version: 1
 - Verification after implementation — a fresh context is less biased toward the code it just wrote.
 - A repeated worker with the same instructions — formalize it as a named subagent under `.claude/agents/`.
 
+For coordinating multiple agents **across separate sessions** with bidirectional messaging, see agent teams (`/en/agent-teams`) — a distinct feature from subagents, which operate within a single session.
+
+## Named subagents (`.claude/agents/<name>.md`)
+
+Subagent files use YAML frontmatter + a markdown system prompt. Key frontmatter fields:
+
+| Field | Purpose |
+|---|---|
+| `name` / `description` | Required; `description` controls when Claude auto-delegates |
+| `tools` / `disallowedTools` | Allowlist or denylist; inherits all if omitted |
+| `model` | `sonnet`, `opus`, `haiku`, a full model ID, or `inherit` |
+| `maxTurns` | Hard cap on agentic turns before the subagent stops |
+| `effort` | `low`, `medium`, `high`, `xhigh`, `max`; overrides session effort |
+| `isolation` | `worktree` — runs in a temporary git worktree (isolated repo copy) |
+| `memory` | `user`, `project`, or `local` — enables cross-session learning at `~/.claude/agent-memory/` |
+| `mcpServers` / `hooks` / `skills` | Scoped to this subagent only |
+| `permissionMode` | `default`, `acceptEdits`, `auto`, `dontAsk`, `bypassPermissions`, `plan` |
+
+Scope precedence (highest first): managed settings → `--agents` CLI flag → `.claude/agents/` → `~/.claude/agents/` → plugin `agents/`.
+
 ## Delegation heuristics
 
 - Prefer a direct tool call for one-shot reads (`Read`, `Grep` with a known path). Subagents add latency and tokens.
 - Dispatch via the `Agent` tool when the investigation needs many reads, unbounded exploration, or its own filesystem/network permissions.
 - Parallel vs. serial: run in parallel when subtasks are independent; serialize when a later task depends on the earlier result.
 - Split research from implementation — one subagent explores and summarizes, the main agent (or another subagent) implements against that summary.
-- Use `context: fork` on a skill when the skill itself is the task and it benefits from isolation.
+- Use `isolation: worktree` frontmatter when the subagent needs an isolated repo copy.
 
 ## Prompting a subagent
 
@@ -58,7 +78,7 @@ The main agent waits once, then relays a consolidated summary — it does not na
 
 ## Anti-patterns
 
-- Subagents dispatching other subagents without bounds — nested fan-out blows up context and latency.
+- **Subagents cannot spawn other subagents** — this is enforced by Claude Code at runtime, not merely a recommendation. Any `Agent` tool call from within a subagent is blocked.
 - The main agent narrating subagent work step-by-step instead of relaying the final summary.
 - Dispatching a subagent for a task that is one tool call — the overhead dwarfs the work.
 - Vague prompts like "research X" with no output format — produces redundant searches and unfocused summaries.
