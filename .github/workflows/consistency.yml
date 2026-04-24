@@ -1,0 +1,20 @@
+name: Repository Consistency
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  consistency:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Run repository consistency checks
+        run: ./scripts/check-consistency.sh
