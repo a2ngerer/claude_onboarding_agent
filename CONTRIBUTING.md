@@ -27,6 +27,21 @@ New setup skills are the most valuable contribution. Each skill covers a use cas
 
 Open an issue first to discuss the change, especially for changes to the orchestrator or the Coding/Knowledge Base skills. Then submit a PR with a clear description.
 
+## Maintenance Changes
+
+Beyond adding new skills, maintenance updates are encouraged:
+
+- command catalog consistency across `README.md`, `.claude-plugin/plugin.json`, and `docs/RELEASE-NOTES.md`
+- installation and uninstall robustness (`scripts/install.sh`, `scripts/uninstall.sh`, PowerShell equivalents)
+- maintenance routing quality (`/checkup`, `/audit-setup`, `/upgrade-setup`, `/anchors`)
+- anchor update guardrails and workflow reliability
+
+Run this before opening a PR:
+
+```bash
+./scripts/check-consistency.sh
+```
+
 ## Standards
 
 - All SKILL.md content must be in English; skills respond in the user's detected language at runtime
@@ -34,3 +49,10 @@ Open an issue first to discuss the change, especially for changes to the orchest
 - Every skill must gracefully handle failed external dependency installation
 - Never silently overwrite an existing CLAUDE.md — always extend with a clearly delimited section
 - Keep skills focused: one use case per skill, 3–7 questions maximum
+
+## PR Checklist
+
+- [ ] Updated command references in docs where relevant (`README.md`, release notes, manifest)
+- [ ] Verified maintenance command behavior if touched (`/checkup`, `/audit-setup`, `/upgrade-setup`, `/anchors`)
+- [ ] Ran `./scripts/check-consistency.sh`
+- [ ] Included user-facing rationale and scope in the PR description
