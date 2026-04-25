@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-04-21
+last_updated: 2026-04-25
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 1
+version: 2
 ---
 
 ## When to use a subagent
@@ -16,6 +16,8 @@ version: 1
 - The task is breadth-first: three or more independent queries that can run in parallel.
 - Verification after implementation — a fresh context is less biased toward the code it just wrote.
 - A repeated worker with the same instructions — formalize it as a named subagent under `.claude/agents/`.
+
+**Subagents vs. agent teams:** Subagents run within a single session (same context, dispatched via the `Agent` tool). *Agent teams* coordinate across fully separate sessions in parallel and can communicate with each other — use agent teams only when subagents would exceed the session's context budget or when tasks must run in truly isolated environments.
 
 ## Delegation heuristics
 
@@ -54,7 +56,7 @@ The main agent waits once, then relays a consolidated summary — it does not na
 - Scope tool access per subagent: read-only agents list only `Read, Grep, Glob, Bash`; write-capable agents require a deliberate carve-out.
 - Route high-volume or low-stakes work to Haiku via the subagent's `model:` field.
 - Preserve important facts by having subagents persist artifacts (files, memory) rather than stuffing them back into the main context.
-- Reuse frequently-spawned workers as named subagents in `.claude/agents/<name>.md` with a clear `description:` so the main agent picks them deterministically.
+- Reuse frequently-spawned workers as named subagents in `.claude/agents/<name>.md` with a clear `description:` so the main agent picks them deterministically. Named agent files support `tools:`, `disallowedTools:`, and `mcpServers:` frontmatter for per-agent tool and server scoping.
 
 ## Anti-patterns
 

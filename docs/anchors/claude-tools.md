@@ -1,14 +1,14 @@
 ---
 name: claude-tools
 description: How to configure Claude's core tooling surface — hooks, rules, memory files, settings, slash commands, plugins
-last_updated: 2026-04-21
+last_updated: 2026-04-25
 sources:
   - https://docs.claude.com/en/docs/claude-code/hooks
   - https://docs.claude.com/en/docs/claude-code/settings
   - https://docs.claude.com/en/docs/claude-code/plugins
   - https://docs.claude.com/en/docs/claude-code/slash-commands
   - https://docs.claude.com/en/docs/claude-code/memory
-version: 1
+version: 2
 ---
 
 ## Memory files
@@ -22,24 +22,45 @@ version: 1
 
 ## Settings
 
-Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `outputStyle`, `sandbox`, `claudeMdExcludes`. Permission rules evaluate in order `deny → ask → allow`; first match wins.
+Top-level key groups in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `outputStyle`, `sandbox`, `autoMode`, `effortLevel`, `alwaysThinkingEnabled`, `prUrlTemplate`, `attribution`, `editorMode`, and more — see the full reference at `code.claude.com/docs/en/settings`.
+
+Permission rules evaluate in order `deny → ask → allow`; first match wins.
 
 ```json
 { "permissions": { "allow": ["Bash(npm run test *)"], "deny": ["Read(./.env)"] } }
 ```
 
+**Settings hierarchy** (highest → lowest precedence):
+1. Managed settings (IT/admin-deployed via MDM or system directory — cannot be overridden)
+2. CLI arguments (session-only)
+3. `.claude/settings.local.json` (personal project, gitignored)
+4. `.claude/settings.json` (shared project, in source control)
+5. `~/.claude/settings.json` (user global)
+
+Array settings (e.g. `permissions.allow`) **merge** across all scopes rather than being replaced.
+
 ## Hooks
 
-| Event | Typical use | Example |
+| Event | When it fires | Practical use |
 |---|---|---|
-| `SessionStart` | Load context or env vars on session open | Inject current git branch |
-| `UserPromptSubmit` | Validate or enrich the user prompt | Block secret patterns |
-| `PreToolUse` | Block or gate a tool call | Deny `Bash(rm -rf *)` |
-| `PostToolUse` | Lint or log after a tool runs | Auto-run `eslint --fix` after `Edit` |
-| `Stop` | Cleanup when Claude finishes a turn | Persist session notes |
-| `SessionEnd` | Release resources or save artifacts | Flush metrics |
+| `SessionStart` | Session opens or resumes | Inject context or env vars |
+| `SessionEnd` | Session terminates | Flush metrics or save artifacts |
+| `InstructionsLoaded` | A `CLAUDE.md` or `.claude/rules/*.md` file loads | Log or gate which rule files are active |
+| `UserPromptSubmit` | User submits a prompt | Block secret patterns, enrich input |
+| `UserPromptExpansion` | Slash command expands to a prompt | Transform or cancel command expansion |
+| `PreToolUse` | Before a tool call executes | Block dangerous commands |
+| `PostToolUse` | After a tool call succeeds | Auto-run linters; input includes `duration_ms` |
+| `PostToolUseFailure` | After a tool call fails | Alert or retry; also includes `duration_ms` |
+| `PostToolBatch` | After a batch of parallel tool calls resolves | Aggregate results from parallel work |
+| `Stop` | Claude finishes a turn | Persist session notes |
+| `StopFailure` | Turn ends due to API error | Surface or handle the error |
+| `SubagentStart` / `SubagentStop` | Subagent spawned / finishes | Observe delegation boundaries |
+| `PreCompact` / `PostCompact` | Before / after context compaction | Save or restore state around compaction |
+| `WorktreeCreate` / `WorktreeRemove` | Worktree created / removed | Replace default git worktree behaviour |
 
-Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries. Plugins ship hooks in `hooks/hooks.json`.
+Hook entry types: `command` (shell), `http` (webhook), `prompt` (Claude turn), `agent` (subagent), `mcp_tool` (invoke an MCP server tool directly — available after Claude Code connects to MCP servers).
+
+Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, ... }` entries. Plugins ship hooks in `hooks/hooks.json`.
 
 ## Slash commands
 
@@ -51,7 +72,7 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 ## Plugins
 
 - Manifest: `.claude-plugin/plugin.json` with `name`, `version` (semver), `description`, optional `author`, `homepage`, `repository`.
-- Components sit at the plugin root, not inside `.claude-plugin/`: `skills/`, `agents/`, `commands/`, `hooks/`, `.mcp.json`, `.lsp.json`, `monitors/`, `settings.json`.
+- Components sit at the plugin root, not inside `.claude-plugin/`: `skills/`, `agents/`, `commands/`, `hooks/`, `.mcp.json`, `.lsp.json`, `monitors/`, `settings.json`, `themes/`.
 - Version every release; users update through the marketplace. `/reload-plugins` picks up local edits.
 
 ## Recommendations
