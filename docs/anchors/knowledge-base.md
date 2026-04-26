@@ -1,12 +1,12 @@
 ---
 name: knowledge-base
 description: Recommended vault layouts, frontmatter patterns, and KB-agent structures for Obsidian-style knowledge bases
-last_updated: 2026-04-21
+last_updated: 2026-04-26
 sources:
   - https://help.obsidian.md/
   - https://help.obsidian.md/properties
   - https://publish.obsidian.md/hub/01+-+Community+Vaults
-version: 1
+version: 2
 ---
 
 ## Vault layout
@@ -51,6 +51,19 @@ Reserved Obsidian keys: `aliases`, `tags`, `cssclasses`. Dates use `YYYY-MM-DD` 
 - **Frontmatter validator** — reads notes, checks required keys (`created`, `updated`, `tags`, `type`), reports missing/malformed entries. Read-only, Haiku-class model.
 - **Tag normalizer** — scans `tags:` across the vault, flags near-duplicates (`ai`, `AI`, `artificial-intelligence`), proposes a canonical form. Read-only.
 - **Ingester** — watches `raw/` for new files, summarizes into `wiki/` notes with backlinks into related concepts. Write-capable; dispatched only on explicit user request.
+
+## Obsidian CLI (v1.12+)
+
+Obsidian Desktop v1.12 ships a standalone CLI binary (replaces the older Electron-based method; faster startup). Commands default to silent mode — omit `--active` unless you want Obsidian to take focus.
+
+Key commands:
+
+| Command | Purpose |
+|---|---|
+| `obsidian note:open <path>` | Open a note |
+| `obsidian note:rename <path> <new-name>` | Rename note and rewrite all backlinks |
+| `obsidian search:context <query>` | Full-text search with surrounding context |
+| `obsidian daily:path` | Print today's daily note path |
 
 ## Recommended layout
 

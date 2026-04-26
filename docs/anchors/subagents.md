@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-04-21
+last_updated: 2026-04-26
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 1
+version: 2
 ---
 
 ## When to use a subagent
@@ -53,6 +53,10 @@ The main agent waits once, then relays a consolidated summary — it does not na
 - Parallelize independent investigations; serialize only on real dependencies.
 - Scope tool access per subagent: read-only agents list only `Read, Grep, Glob, Bash`; write-capable agents require a deliberate carve-out.
 - Route high-volume or low-stakes work to Haiku via the subagent's `model:` field.
+- Use `disallowedTools` to deny specific tools from the inherited set without enumerating every allowed tool.
+- Cap runaway agents with `maxTurns`; set `effort` to `low` or `xhigh` to tune reasoning depth per task.
+- Use `isolation: worktree` to give an agent its own git worktree — it auto-cleans if the agent makes no changes.
+- Give subagents persistent cross-session memory with `memory: user` or `memory: project`.
 - Preserve important facts by having subagents persist artifacts (files, memory) rather than stuffing them back into the main context.
 - Reuse frequently-spawned workers as named subagents in `.claude/agents/<name>.md` with a clear `description:` so the main agent picks them deterministically.
 
@@ -66,3 +70,4 @@ The main agent waits once, then relays a consolidated summary — it does not na
 - "Endless search" loops where the subagent scours for sources that do not exist; include a stop condition.
 - Duplicate work from overlapping task boundaries — partition the problem space explicitly.
 - Write-capable subagents invoked without parsing a contracted output — "run it and hope" corrupts state silently.
+- Using subagents when agents need to communicate across sessions — use agent teams instead (subagents work within a single session only).

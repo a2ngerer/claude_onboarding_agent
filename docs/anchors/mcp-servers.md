@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-04-21
+last_updated: 2026-04-26
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 2
+version: 3
 ---
 
 ## Recommended
@@ -46,6 +46,16 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 - **kubernetes** — cluster read access, kubectl-equivalent queries. Community servers available; pin a version before production use.
 - **aws / gcp** — prefer official CLIs wrapped via allowed Bash permissions; MCP wrappers exist but are less mature.
+
+## Discovery
+
+Anthropic maintains an official MCP registry at `https://api.anthropic.com/mcp-registry` covering first-party and commercial servers. The Claude Code MCP settings page (`/en/mcp`) renders from this registry; query it to find servers not listed above.
+
+## Advanced features
+
+- **OAuth (RFC 9728)** — MCP servers can now require OAuth via Protected Resource Metadata discovery. Claude Code handles the auth flow automatically when the server declares a `WWW-Authenticate: Bearer` header.
+- **Large tool results** — servers can annotate results with `_meta["anthropic/maxResultSizeChars"]` (up to 500K) to return large payloads like full DB schemas without truncation.
+- **Hooks invoking MCP tools** — hook entries support `type: "mcp_tool"` to call an MCP tool directly in a hook response, enabling reactive workflows (e.g. query a DB after a file edit).
 
 ## Selection tips
 

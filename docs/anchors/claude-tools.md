@@ -1,14 +1,14 @@
 ---
 name: claude-tools
 description: How to configure Claude's core tooling surface — hooks, rules, memory files, settings, slash commands, plugins
-last_updated: 2026-04-21
+last_updated: 2026-04-26
 sources:
   - https://docs.claude.com/en/docs/claude-code/hooks
   - https://docs.claude.com/en/docs/claude-code/settings
   - https://docs.claude.com/en/docs/claude-code/plugins
   - https://docs.claude.com/en/docs/claude-code/slash-commands
   - https://docs.claude.com/en/docs/claude-code/memory
-version: 1
+version: 2
 ---
 
 ## Memory files
@@ -22,11 +22,13 @@ version: 1
 
 ## Settings
 
-Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `outputStyle`, `sandbox`, `claudeMdExcludes`. Permission rules evaluate in order `deny → ask → allow`; first match wins.
+Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `effortLevel`, `outputStyle`, `sandbox`, `claudeMdExcludes`. Permission rules evaluate in order `deny → ask → allow`; first match wins.
 
 ```json
 { "permissions": { "allow": ["Bash(npm run test *)"], "deny": ["Read(./.env)"] } }
 ```
+
+Administrators can deploy modular policy fragments via `managed-settings.d/` (files merged alphabetically; arrays concatenated and de-duplicated).
 
 ## Hooks
 
@@ -37,9 +39,15 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 | `PreToolUse` | Block or gate a tool call | Deny `Bash(rm -rf *)` |
 | `PostToolUse` | Lint or log after a tool runs | Auto-run `eslint --fix` after `Edit` |
 | `Stop` | Cleanup when Claude finishes a turn | Persist session notes |
+| `StopFailure` | React to API errors (rate limit, auth failure) | Alert on rate-limit hits |
 | `SessionEnd` | Release resources or save artifacts | Flush metrics |
+| `CwdChanged` | Reactive environment management on directory change | Trigger `direnv allow` |
+| `FileChanged` | React when a watched file changes on disk | Reload `.env` on save |
+| `PreCompact` | Gate or back up before context compaction | Block auto-compact |
+| `PermissionDenied` | React to auto-mode denials; return `{retry:true}` to allow retry | Log denied calls |
+| `TaskCreated` | Intercept task creation in agentic workflows | Validate before queue |
 
-Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries. Plugins ship hooks in `hooks/hooks.json`.
+Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries. Type may be `command`, `http`, or `mcp_tool` (to invoke an MCP tool directly). Plugins ship hooks in `hooks/hooks.json`.
 
 ## Slash commands
 
