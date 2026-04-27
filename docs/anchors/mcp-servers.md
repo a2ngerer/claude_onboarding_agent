@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-04-21
+last_updated: 2026-04-27
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 2
+version: 3
 ---
 
 ## Recommended
@@ -26,7 +26,8 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 - **filesystem** — scoped filesystem access beyond the working directory. Install: `claude mcp add filesystem npx -- -y @modelcontextprotocol/server-filesystem <path>`
 - **git** — read git history, blame, diffs without shelling out. Install: `claude mcp add git uvx -- mcp-server-git`
-- **github** — issues, PRs, reviews via the GitHub API. Install: `claude mcp add github npx -- -y @modelcontextprotocol/server-github` (needs `GITHUB_PERSONAL_ACCESS_TOKEN`)
+- **github** — issues, PRs, reviews via the GitHub API. Install: `claude mcp add github npx -- -y @modelcontextprotocol/server-github` (needs `GITHUB_PERSONAL_ACCESS_TOKEN`). Note: moved from the reference server repo to the community archive; the npm package and install command remain valid.
+- **fetch** — fetch web content for LLM-friendly use (official reference server). Install: `claude mcp add fetch uvx -- mcp-server-fetch`
 
 ## Knowledge base
 
@@ -52,3 +53,4 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 - Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server. (Convention, not part of the official schema — but this plugin promotes it.)
 - Keep the installed set small. Every MCP server adds tool-selection overhead and expands the trust surface.
 - For read-only inspection tasks, prefer a dedicated CLI + Bash allowlist over an MCP server.
+- The MCP Registry at `registry.modelcontextprotocol.io` is the canonical source for discovering community servers. The reference repo (`modelcontextprotocol/servers`) now focuses on seven core servers: `filesystem`, `git`, `memory`, `fetch`, `time`, `sequential-thinking`, `everything`.
