@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-04-21
+last_updated: 2026-04-28
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 1
+version: 2
 ---
 
 ## When to use a subagent
@@ -14,8 +14,9 @@ version: 1
 - A side task would flood the main context with file contents, search hits, or logs that are not referenced again.
 - The work needs a different tool-set, a different model (e.g. Haiku for cheap scans), or a separate permission profile.
 - The task is breadth-first: three or more independent queries that can run in parallel.
-- Verification after implementation — a fresh context is less biased toward the code it just wrote.
+- Verification after implementation — a fresh context is less biased toward the code it just wrote (Writer/Reviewer pattern).
 - A repeated worker with the same instructions — formalize it as a named subagent under `.claude/agents/`.
+- For multi-agent coordination across separate sessions with shared tasks and messaging, use **agent teams** instead.
 
 ## Delegation heuristics
 
@@ -23,7 +24,7 @@ version: 1
 - Dispatch via the `Agent` tool when the investigation needs many reads, unbounded exploration, or its own filesystem/network permissions.
 - Parallel vs. serial: run in parallel when subtasks are independent; serialize when a later task depends on the earlier result.
 - Split research from implementation — one subagent explores and summarizes, the main agent (or another subagent) implements against that summary.
-- Use `context: fork` on a skill when the skill itself is the task and it benefits from isolation.
+- Scale effort to complexity: simple fact-finding uses one subagent with 3–10 tool calls; complex research deploys 10+ subagents with explicitly divided responsibilities.
 
 ## Prompting a subagent
 
@@ -46,6 +47,15 @@ Agent(task="audit db/ for missing indexes", ...)
 ```
 
 The main agent waits once, then relays a consolidated summary — it does not narrate each subagent's progress.
+
+## Agent frontmatter options
+
+Named subagents in `.claude/agents/<name>.md` support these frontmatter fields beyond `name`, `description`, `tools`, and `model`:
+
+- `mcpServers` — MCP servers to load for this agent's sessions via `--agent`
+- `initialPrompt` — auto-submits a first turn when the agent starts, without user input
+- `skills` — preloads named skill content into the subagent's context at startup
+- `autoMemoryEnabled: true` — lets the subagent maintain its own persistent memory in the project memory directory
 
 ## Recommendations
 
