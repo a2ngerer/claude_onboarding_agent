@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-04-21
+last_updated: 2026-04-29
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 2
+version: 3
 ---
 
 ## Recommended
@@ -14,6 +14,7 @@ version: 2
 - `filesystem` — scoped filesystem access beyond the working directory
 - `git` — read git history, blame, diffs without shelling out
 - `github` — issues, PRs, reviews via the GitHub API
+- `memory` — knowledge graph persistent memory across sessions
 - `obsidian` (official CLI + `obsidian-vault-keeper` subagent) — vault I/O without always-on tool schemas
 - `figma-context` — read Figma frames into context for UI work
 - `slack` — read channels, post messages
@@ -27,6 +28,7 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 - **filesystem** — scoped filesystem access beyond the working directory. Install: `claude mcp add filesystem npx -- -y @modelcontextprotocol/server-filesystem <path>`
 - **git** — read git history, blame, diffs without shelling out. Install: `claude mcp add git uvx -- mcp-server-git`
 - **github** — issues, PRs, reviews via the GitHub API. Install: `claude mcp add github npx -- -y @modelcontextprotocol/server-github` (needs `GITHUB_PERSONAL_ACCESS_TOKEN`)
+- **memory** — knowledge graph persistent memory system; useful for agents that accumulate cross-session state. Install: `claude mcp add memory npx -- -y @modelcontextprotocol/server-memory`
 
 ## Knowledge base
 
@@ -52,3 +54,5 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 - Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server. (Convention, not part of the official schema — but this plugin promotes it.)
 - Keep the installed set small. Every MCP server adds tool-selection overhead and expands the trust surface.
 - For read-only inspection tasks, prefer a dedicated CLI + Bash allowlist over an MCP server.
+- Use `"alwaysLoad": true` in a server's config entry for tools that must skip deferral and be available from session start.
+- Concurrent MCP startup is now the default — no configuration needed to parallelize server initialization.
