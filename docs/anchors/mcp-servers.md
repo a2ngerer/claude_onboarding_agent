@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-04-21
+last_updated: 2026-04-30
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 2
+version: 3
 ---
 
 ## Recommended
@@ -24,9 +24,9 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Coding
 
-- **filesystem** — scoped filesystem access beyond the working directory. Install: `claude mcp add filesystem npx -- -y @modelcontextprotocol/server-filesystem <path>`
-- **git** — read git history, blame, diffs without shelling out. Install: `claude mcp add git uvx -- mcp-server-git`
-- **github** — issues, PRs, reviews via the GitHub API. Install: `claude mcp add github npx -- -y @modelcontextprotocol/server-github` (needs `GITHUB_PERSONAL_ACCESS_TOKEN`)
+- **filesystem** — scoped filesystem access beyond the working directory. Install: `claude mcp add filesystem --transport stdio -- npx -y @modelcontextprotocol/server-filesystem <path>`
+- **git** — read git history, blame, diffs without shelling out. Install: `claude mcp add git --transport stdio -- uvx mcp-server-git`
+- **github** — issues, PRs, reviews via the GitHub API. Install: `claude mcp add github --transport stdio --env GITHUB_PERSONAL_ACCESS_TOKEN=... -- npx -y @modelcontextprotocol/server-github`
 
 ## Knowledge base
 
@@ -38,7 +38,7 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Productivity
 
-- **slack** — read channels, post messages. Install: `claude mcp add slack npx -- -y @modelcontextprotocol/server-slack`
+- **slack** — read channels, post messages. Install: `claude mcp add slack --transport stdio -- npx -y @modelcontextprotocol/server-slack`
 - **linear** — issues and projects. Install via Linear's official MCP integration.
 - **gmail / calendar** — via official Google MCP integrations where available; otherwise the community `gmail-mcp-server`.
 
@@ -49,6 +49,9 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Selection tips
 
-- Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server. (Convention, not part of the official schema — but this plugin promotes it.)
+- Browse the Anthropic MCP registry for tested servers with validated install commands; `claude mcp add` reads registry entries directly.
+- Preferred transport order: `streamable-http` > `sse` > `stdio`. Use HTTP transport for remote servers when available.
+- Add `"alwaysLoad": true` to a server entry in `.claude/settings.json` to skip tool-search deferral and keep its tools permanently in context. Use sparingly: it adds tool-selection overhead to every session.
+- Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server.
 - Keep the installed set small. Every MCP server adds tool-selection overhead and expands the trust surface.
 - For read-only inspection tasks, prefer a dedicated CLI + Bash allowlist over an MCP server.
