@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-04-21
+last_updated: 2026-05-01
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 1
+version: 2
 ---
 
 ## When to use a subagent
@@ -24,6 +24,7 @@ version: 1
 - Parallel vs. serial: run in parallel when subtasks are independent; serialize when a later task depends on the earlier result.
 - Split research from implementation — one subagent explores and summarizes, the main agent (or another subagent) implements against that summary.
 - Use `context: fork` on a skill when the skill itself is the task and it benefits from isolation.
+- For multi-agent setups that need to communicate across separate sessions, use **agent teams** (`/en/agent-teams`) rather than nested subagents.
 
 ## Prompting a subagent
 
@@ -34,6 +35,8 @@ Every subagent prompt MUST contain:
 3. Output format — exact shape of the reply (bullet list, fenced block, field names).
 4. Length cap — "< 200 words" or "≤ 5 bullets" to prevent drift.
 5. Stop conditions — when to return with partial results (e.g. "if no matches in 3 globs, report empty").
+
+Available substitutions in agent frontmatter and skill content: `${CLAUDE_EFFORT}` (active effort level), `${CLAUDE_SESSION_ID}`, `${CLAUDE_SKILL_DIR}`.
 
 ## Parallel dispatch
 
@@ -55,6 +58,8 @@ The main agent waits once, then relays a consolidated summary — it does not na
 - Route high-volume or low-stakes work to Haiku via the subagent's `model:` field.
 - Preserve important facts by having subagents persist artifacts (files, memory) rather than stuffing them back into the main context.
 - Reuse frequently-spawned workers as named subagents in `.claude/agents/<name>.md` with a clear `description:` so the main agent picks them deterministically.
+- Use `initialPrompt:` in agent frontmatter to auto-submit the first turn when the subagent starts, avoiding a manual kick-off prompt.
+- Enable auto memory for long-running subagents (`autoMemoryEnabled: true`) so they accumulate per-project learnings across sessions.
 
 ## Anti-patterns
 
