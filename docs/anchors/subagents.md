@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-04-21
+last_updated: 2026-05-02
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 1
+version: 2
 ---
 
 ## When to use a subagent
@@ -17,13 +17,43 @@ version: 1
 - Verification after implementation — a fresh context is less biased toward the code it just wrote.
 - A repeated worker with the same instructions — formalize it as a named subagent under `.claude/agents/`.
 
+## Built-in subagents
+
+Claude Code ships three built-in subagents that Claude invokes automatically:
+
+| Name | Model | Tools | When used |
+|---|---|---|---|
+| Explore | Haiku | Read-only | Codebase search and file discovery |
+| Plan | Inherits | Read-only | Research phase inside plan mode |
+| General-purpose | Inherits | All | Complex multi-step tasks requiring both read and write |
+
+Subagents cannot spawn other subagents. For multiple agents communicating across independent sessions, see `agent-teams`.
+
+## Creating named subagents
+
+**Interactive:** `/agents` opens a tabbed UI to create, edit, and delete subagents with guided setup or Claude generation. `claude agents` (CLI, no session) lists all configured agents.
+
+**Manual files:** Markdown with YAML frontmatter stored at:
+- `.claude/agents/<name>.md` — project scope (check into git for team sharing)
+- `~/.claude/agents/<name>.md` — user scope (available in all projects)
+
+Named subagents appear in `@` mention typeahead and are selected by Claude via their `description:` field.
+
+**Session-only:** pass `--agents '{"<name>": {...}}'` when launching Claude Code; not saved to disk.
+
+## Key frontmatter fields
+
+`description`, `model`, `tools`, `disallowedTools`, `permissionMode`, `maxTurns`, `isolation`, `memory`, `skills`, `hooks`, `mcpServers`, `effort`, `color`, `background`, `initialPrompt`.
+
+- `isolation: "worktree"` — run in an isolated git worktree; cleaned up automatically if no files changed.
+- `memory: "user"` or `"project"` — enable persistent memory at `~/.claude/agent-memory/` across conversations.
+
 ## Delegation heuristics
 
 - Prefer a direct tool call for one-shot reads (`Read`, `Grep` with a known path). Subagents add latency and tokens.
-- Dispatch via the `Agent` tool when the investigation needs many reads, unbounded exploration, or its own filesystem/network permissions.
+- Dispatch via the `Agent` tool when the investigation needs many reads, unbounded exploration, or its own permissions.
 - Parallel vs. serial: run in parallel when subtasks are independent; serialize when a later task depends on the earlier result.
-- Split research from implementation — one subagent explores and summarizes, the main agent (or another subagent) implements against that summary.
-- Use `context: fork` on a skill when the skill itself is the task and it benefits from isolation.
+- Split research from implementation — one subagent explores and summarizes, the main agent implements against that summary.
 
 ## Prompting a subagent
 
@@ -53,8 +83,8 @@ The main agent waits once, then relays a consolidated summary — it does not na
 - Parallelize independent investigations; serialize only on real dependencies.
 - Scope tool access per subagent: read-only agents list only `Read, Grep, Glob, Bash`; write-capable agents require a deliberate carve-out.
 - Route high-volume or low-stakes work to Haiku via the subagent's `model:` field.
-- Preserve important facts by having subagents persist artifacts (files, memory) rather than stuffing them back into the main context.
-- Reuse frequently-spawned workers as named subagents in `.claude/agents/<name>.md` with a clear `description:` so the main agent picks them deterministically.
+- Preserve important facts by having subagents persist artifacts (files, memory) rather than stuffing them into the main context.
+- Reuse frequently-spawned workers as named subagents with a clear `description:` so Claude picks them deterministically.
 
 ## Anti-patterns
 

@@ -1,11 +1,11 @@
 ---
 name: claude-models
 description: Current Claude model IDs, aliases, context limits, and recommended defaults
-last_updated: 2026-04-21
+last_updated: 2026-05-02
 sources:
   - https://docs.claude.com/en/docs/about-claude/models
   - https://docs.claude.com/en/docs/about-claude/pricing
-version: 1
+version: 2
 ---
 
 ## Latest family
@@ -14,25 +14,24 @@ Claude 4.x is the current family as of `last_updated`. Default to the latest IDs
 
 ## Model IDs
 
-| Tier   | Model ID              | Alias              | Context | Typical use case |
-|--------|-----------------------|--------------------|---------|------------------|
-| Opus   | `claude-opus-4-7`     | claude-opus-latest | 200k    | Hardest reasoning, deep code analysis, agentic workflows |
-| Sonnet | `claude-sonnet-4-6`   | claude-sonnet-latest | 200k  | Balanced default — most coding and general tasks |
-| Haiku  | `claude-haiku-4-5-20251001` | claude-haiku-latest | 200k | Fast, cheap, high-volume tasks and subagents |
+| Tier   | Model ID                    | Alias               | Context | Typical use case |
+|--------|-----------------------------|---------------------|---------|------------------|
+| Opus   | `claude-opus-4-7`           | `claude-opus-4-7`   | 1M      | Hardest reasoning, deep code analysis, agentic workflows |
+| Sonnet | `claude-sonnet-4-6`         | `claude-sonnet-4-6` | 1M      | Balanced default — most coding and general tasks |
+| Haiku  | `claude-haiku-4-5-20251001` | `claude-haiku-4-5`  | 200k    | Fast, cheap, high-volume tasks and subagents |
+
+> Opus 4.7 ships with a new tokenizer: the same text uses 1.0–1.35× more tokens than on 4.6. Account for this when migrating prompt budgets.
 
 ## Deprecated
 
-Do not use these IDs in new code or configs. They will stop working on their retirement date and generally point to weaker models than the current family.
+Retiring **June 15, 2026** — migrate now:
+- `claude-sonnet-4-20250514` (alias `claude-sonnet-4-0`) → use `claude-sonnet-4-6`
+- `claude-opus-4-20250514` (alias `claude-opus-4-0`) → use `claude-opus-4-7`
 
-- `claude-3-opus-20240229`
-- `claude-3-sonnet-20240229`
-- `claude-3-haiku-20240307`
-- `claude-3-5-sonnet-20240620`
-- `claude-3-5-sonnet-20241022`
-- `claude-3-5-haiku-20241022`
-- `claude-2.1`
-- `claude-2.0`
-- `claude-instant-1.2`
+Do not use in new code (no retirement date announced yet):
+- `claude-3-opus-20240229`, `claude-3-sonnet-20240229`, `claude-3-haiku-20240307`
+- `claude-3-5-sonnet-20240620`, `claude-3-5-sonnet-20241022`, `claude-3-5-haiku-20241022`
+- `claude-2.1`, `claude-2.0`, `claude-instant-1.2`
 
 ## Defaults
 
@@ -43,5 +42,7 @@ Do not use these IDs in new code or configs. They will stop working on their ret
 
 ## Tips
 
-- Prefer the **dated ID** (`claude-sonnet-4-6`) over an alias in production — aliases move silently.
+- Prefer the **dated ID** (`claude-haiku-4-5-20251001`) over a short alias in production — aliases advance on minor releases.
 - When migrating between versions, re-run your eval suite; prompts tuned for one model family may need light adjustment.
+- Opus 4.7 supports `effortLevel: "xhigh"` in `settings.json` for tasks requiring maximum reasoning depth.
+- Sonnet 4.6 and Haiku 4.5 support extended thinking; Opus 4.7 uses adaptive thinking instead.
