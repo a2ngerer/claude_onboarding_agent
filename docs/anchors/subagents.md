@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-04-21
+last_updated: 2026-05-03
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 1
+version: 2
 ---
 
 ## When to use a subagent
@@ -16,6 +16,7 @@ version: 1
 - The task is breadth-first: three or more independent queries that can run in parallel.
 - Verification after implementation — a fresh context is less biased toward the code it just wrote.
 - A repeated worker with the same instructions — formalize it as a named subagent under `.claude/agents/`.
+- The task modifies code and needs an isolated repo copy — use `isolation: worktree` to give the subagent a clean git worktree.
 
 ## Delegation heuristics
 
@@ -23,7 +24,7 @@ version: 1
 - Dispatch via the `Agent` tool when the investigation needs many reads, unbounded exploration, or its own filesystem/network permissions.
 - Parallel vs. serial: run in parallel when subtasks are independent; serialize when a later task depends on the earlier result.
 - Split research from implementation — one subagent explores and summarizes, the main agent (or another subagent) implements against that summary.
-- Use `context: fork` on a skill when the skill itself is the task and it benefits from isolation.
+- Use `isolation: worktree` on a named subagent when the task benefits from repo isolation; use `context: fork` on a skill for fork-based skill isolation.
 
 ## Prompting a subagent
 
@@ -46,6 +47,25 @@ Agent(task="audit db/ for missing indexes", ...)
 ```
 
 The main agent waits once, then relays a consolidated summary — it does not narrate each subagent's progress.
+
+## Named subagents (`.claude/agents/`)
+
+Store a subagent as `.claude/agents/<name>.md` to reuse it across conversations. Key frontmatter fields:
+
+```yaml
+---
+name: code-reviewer
+description: Reviews code for quality. Use proactively after code changes.
+tools: Read, Glob, Grep, Bash        # allowlist; use disallowedTools for a denylist instead
+model: sonnet
+isolation: worktree                  # isolated git worktree; auto-cleaned if no changes
+memory: project                      # accumulate learnings across sessions
+background: true                     # always run as a background task
+---
+```
+
+- Subagents do **not** inherit `CLAUDE.md`; their system prompt is the file body only.
+- Manage named subagents via `/agents` (interactive UI) or `claude agents` (CLI list).
 
 ## Recommendations
 
