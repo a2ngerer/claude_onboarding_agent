@@ -1,14 +1,14 @@
 ---
 name: claude-tools
 description: How to configure Claude's core tooling surface — hooks, rules, memory files, settings, slash commands, plugins
-last_updated: 2026-04-21
+last_updated: 2026-05-04
 sources:
   - https://docs.claude.com/en/docs/claude-code/hooks
   - https://docs.claude.com/en/docs/claude-code/settings
   - https://docs.claude.com/en/docs/claude-code/plugins
   - https://docs.claude.com/en/docs/claude-code/slash-commands
   - https://docs.claude.com/en/docs/claude-code/memory
-version: 1
+version: 2
 ---
 
 ## Memory files
@@ -22,24 +22,30 @@ version: 1
 
 ## Settings
 
-Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `outputStyle`, `sandbox`, `claudeMdExcludes`. Permission rules evaluate in order `deny → ask → allow`; first match wins.
+Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `effortLevel`, `outputStyle`, `sandbox`, `claudeMdExcludes`. Permission rules evaluate in order `deny → ask → allow`; first match wins.
 
 ```json
 { "permissions": { "allow": ["Bash(npm run test *)"], "deny": ["Read(./.env)"] } }
 ```
 
+`effortLevel` persists the thinking budget across sessions (`"low"`, `"medium"`, `"high"`, `"xhigh"`).
+
 ## Hooks
 
-| Event | Typical use | Example |
+| Event | When | Typical use |
 |---|---|---|
-| `SessionStart` | Load context or env vars on session open | Inject current git branch |
-| `UserPromptSubmit` | Validate or enrich the user prompt | Block secret patterns |
-| `PreToolUse` | Block or gate a tool call | Deny `Bash(rm -rf *)` |
-| `PostToolUse` | Lint or log after a tool runs | Auto-run `eslint --fix` after `Edit` |
-| `Stop` | Cleanup when Claude finishes a turn | Persist session notes |
-| `SessionEnd` | Release resources or save artifacts | Flush metrics |
+| `SessionStart` | Session opens or resumes | Inject env vars, load context |
+| `UserPromptSubmit` | Before processing a user prompt | Validate input, block secret patterns |
+| `PreToolUse` | Before a tool call | Block or gate calls; return `allow`/`deny`/`ask`/`defer` |
+| `PostToolUse` | After a tool call succeeds | Lint/format; can replace output via `hookSpecificOutput.updatedToolOutput` |
+| `PermissionDenied` | Auto-mode classifier denies a tool | Log denied commands |
+| `PreCompact` | Before context compaction | Block with exit 2 or save a snapshot |
+| `TaskCreated` | Task created via `TaskCreate` | Notify external systems |
+| `SubagentStart` / `SubagentStop` | Agent spawned or finished | Lifecycle logging |
+| `Stop` | Claude finishes a turn | Persist session notes |
+| `SessionEnd` | Session terminates | Flush metrics |
 
-Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries. Plugins ship hooks in `hooks/hooks.json`.
+Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of entries. Handler types: `command` (shell), `http` (HTTP endpoint), `mcp_tool` (call an MCP tool), `prompt` (LLM gate), `agent` (full agent hook). Add an `if` field (permission-rule syntax) to fire a hook only when the condition matches. Plugins ship hooks in `hooks/hooks.json`.
 
 ## Slash commands
 

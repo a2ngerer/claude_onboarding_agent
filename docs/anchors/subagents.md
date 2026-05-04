@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-04-21
+last_updated: 2026-05-04
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 1
+version: 2
 ---
 
 ## When to use a subagent
@@ -17,13 +17,15 @@ version: 1
 - Verification after implementation — a fresh context is less biased toward the code it just wrote.
 - A repeated worker with the same instructions — formalize it as a named subagent under `.claude/agents/`.
 
+Subagents work **within a single session**. For coordinating independent agents across separate sessions, use agent teams instead.
+
 ## Delegation heuristics
 
 - Prefer a direct tool call for one-shot reads (`Read`, `Grep` with a known path). Subagents add latency and tokens.
 - Dispatch via the `Agent` tool when the investigation needs many reads, unbounded exploration, or its own filesystem/network permissions.
 - Parallel vs. serial: run in parallel when subtasks are independent; serialize when a later task depends on the earlier result.
 - Split research from implementation — one subagent explores and summarizes, the main agent (or another subagent) implements against that summary.
-- Use `context: fork` on a skill when the skill itself is the task and it benefits from isolation.
+- Use the `isolation: "worktree"` frontmatter field on a subagent when it needs an isolated copy of the repo for write-heavy work.
 
 ## Prompting a subagent
 
@@ -47,6 +49,10 @@ Agent(task="audit db/ for missing indexes", ...)
 
 The main agent waits once, then relays a consolidated summary — it does not narrate each subagent's progress.
 
+## Named subagents
+
+Define a named subagent in `.claude/agents/<name>.md` (project scope) or `~/.claude/agents/<name>.md` (user scope). Key frontmatter fields: `name`, `description`, `tools`, `model`, `permissionMode`, `mcpServers`, `hooks`, `maxTurns`, `memory`, `isolation`, `background`, `color`. Set `memory: true` to give a subagent a persistent directory that survives across sessions. Named subagents appear in `@` mention typeahead and are manageable via `/agents` (interactive) or `claude agents` (non-interactive listing).
+
 ## Recommendations
 
 - Give each subagent a written objective, output contract, and length cap — vague prompts waste tokens.
@@ -58,7 +64,7 @@ The main agent waits once, then relays a consolidated summary — it does not na
 
 ## Anti-patterns
 
-- Subagents dispatching other subagents without bounds — nested fan-out blows up context and latency.
+- Nested dispatch — subagents cannot spawn other subagents in Claude Code; any nesting attempt errors.
 - The main agent narrating subagent work step-by-step instead of relaying the final summary.
 - Dispatching a subagent for a task that is one tool call — the overhead dwarfs the work.
 - Vague prompts like "research X" with no output format — produces redundant searches and unfocused summaries.
