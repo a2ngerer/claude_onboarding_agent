@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-04-21
+last_updated: 2026-05-05
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 1
+version: 2
 ---
 
 ## When to use a subagent
@@ -16,6 +16,7 @@ version: 1
 - The task is breadth-first: three or more independent queries that can run in parallel.
 - Verification after implementation — a fresh context is less biased toward the code it just wrote.
 - A repeated worker with the same instructions — formalize it as a named subagent under `.claude/agents/`.
+- The subagent needs its own MCP servers or preloaded skills — declare them via `mcpServers:` and `skills:` frontmatter in the agent file.
 
 ## Delegation heuristics
 
@@ -24,6 +25,8 @@ version: 1
 - Parallel vs. serial: run in parallel when subtasks are independent; serialize when a later task depends on the earlier result.
 - Split research from implementation — one subagent explores and summarizes, the main agent (or another subagent) implements against that summary.
 - Use `context: fork` on a skill when the skill itself is the task and it benefits from isolation.
+- For multi-session parallel coordination across separate context windows, use **agent teams** rather than subagents; subagents are single-session only.
+- Named agents appear in the `@` typeahead; prefer `@agent-name` in prompts for deterministic dispatch over prose descriptions.
 
 ## Prompting a subagent
 
@@ -54,7 +57,10 @@ The main agent waits once, then relays a consolidated summary — it does not na
 - Scope tool access per subagent: read-only agents list only `Read, Grep, Glob, Bash`; write-capable agents require a deliberate carve-out.
 - Route high-volume or low-stakes work to Haiku via the subagent's `model:` field.
 - Preserve important facts by having subagents persist artifacts (files, memory) rather than stuffing them back into the main context.
-- Reuse frequently-spawned workers as named subagents in `.claude/agents/<name>.md` with a clear `description:` so the main agent picks them deterministically.
+- Reuse frequently-spawned workers as named subagents in `.claude/agents/<name>.md` with a clear `description:`; augment with `mcpServers:` and `skills:` frontmatter when the agent needs dedicated tools or reference material.
+- Named agents are discoverable via `@` typeahead; users and Claude can invoke by `@agent-name` for fast, deterministic dispatch.
+- Subagents run with `AI_AGENT` set in the environment — downstream scripts can detect they are inside a Claude Code subagent.
+- Enable auto memory per-subagent (add `autoMemoryEnabled: true` in the agent's settings block) so it accumulates learnings across invocations.
 
 ## Anti-patterns
 
