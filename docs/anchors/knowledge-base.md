@@ -1,12 +1,12 @@
 ---
 name: knowledge-base
 description: Recommended vault layouts, frontmatter patterns, and KB-agent structures for Obsidian-style knowledge bases
-last_updated: 2026-04-21
+last_updated: 2026-05-07
 sources:
   - https://help.obsidian.md/
   - https://help.obsidian.md/properties
   - https://publish.obsidian.md/hub/01+-+Community+Vaults
-version: 1
+version: 2
 ---
 
 ## Vault layout
@@ -44,6 +44,20 @@ Reserved Obsidian keys: `aliases`, `tags`, `cssclasses`. Dates use `YYYY-MM-DD` 
 - Daily notes: `YYYY-MM-DD.md` under a dedicated `daily/` folder only.
 - Avoid reserved characters: `:`, `/`, `\`, `?`, `*`, `"`, `<`, `>`, `|`. Obsidian rejects them on write.
 - One concept per note — resist multi-topic dumps. Break out subtopics into linked notes.
+
+## Obsidian CLI commands (v1.12.0+)
+
+The official Obsidian CLI is the recommended way to automate vault I/O from Claude Code. It defaults to silent operation and does not require an active file. Route all vault writes through the CLI (or the `obsidian-vault-keeper` subagent) to keep wikilinks and backlinks consistent.
+
+| Command | Description |
+|---|---|
+| `obsidian rename <old> <new>` | Rename a note and update all wikilinks |
+| `obsidian daily:path` | Print the path of today's daily note |
+| `obsidian daily:prepend <text>` | Insert text **after** the frontmatter block in today's daily note |
+| `obsidian search <query>` | Full-text search across the vault |
+| `obsidian search:context <query>` | Search with surrounding context lines |
+
+`daily:prepend` inserts after frontmatter, not at the file beginning — it will not corrupt YAML properties.
 
 ## Agent patterns
 

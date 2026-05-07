@@ -1,13 +1,21 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-04-21
+last_updated: 2026-05-07
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 2
+version: 3
 ---
+
+## Transport types
+
+Three transports are supported. Choose based on where the server runs:
+
+- **HTTP** (recommended for remote/cloud services): `claude mcp add --transport http <name> <url>`
+- **stdio** (local process, direct system access): `claude mcp add <name> -- <command> [args...]`
+- **SSE** (deprecated — migrate to HTTP): `claude mcp add --transport sse <name> <url>`
 
 ## Recommended
 
@@ -49,6 +57,8 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Selection tips
 
-- Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server. (Convention, not part of the official schema — but this plugin promotes it.)
+- Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server.
+- Set `"alwaysLoad": true` on a server to skip tool-search deferral and always make all its tools available — use sparingly, as it adds to the tool-selection surface on every turn.
 - Keep the installed set small. Every MCP server adds tool-selection overhead and expands the trust surface.
 - For read-only inspection tasks, prefer a dedicated CLI + Bash allowlist over an MCP server.
+- Prefer HTTP transport over SSE for remote servers; SSE transport is deprecated.
