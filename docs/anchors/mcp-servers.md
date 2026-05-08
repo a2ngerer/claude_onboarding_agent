@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-04-21
+last_updated: 2026-05-08
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 2
+version: 3
 ---
 
 ## Recommended
@@ -16,7 +16,7 @@ version: 2
 - `github` — issues, PRs, reviews via the GitHub API
 - `obsidian` (official CLI + `obsidian-vault-keeper` subagent) — vault I/O without always-on tool schemas
 - `figma-context` — read Figma frames into context for UI work
-- `slack` — read channels, post messages
+- `slack` — read channels, post messages (community-maintained by Zencoder as of 2026)
 - `linear` — issues and projects (official Linear MCP)
 - `gmail` / `calendar` — Google productivity via official MCPs where available
 
@@ -38,7 +38,7 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Productivity
 
-- **slack** — read channels, post messages. Install: `claude mcp add slack npx -- -y @modelcontextprotocol/server-slack`
+- **slack** — read channels, post messages. The server previously in the official `modelcontextprotocol/servers` repo is now community-maintained by Zencoder at https://github.com/zencoderai/slack-mcp-server. Use the Zencoder repo for the latest install instructions.
 - **linear** — issues and projects. Install via Linear's official MCP integration.
 - **gmail / calendar** — via official Google MCP integrations where available; otherwise the community `gmail-mcp-server`.
 
@@ -49,6 +49,9 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Selection tips
 
-- Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server. (Convention, not part of the official schema — but this plugin promotes it.)
+- Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server.
 - Keep the installed set small. Every MCP server adds tool-selection overhead and expands the trust surface.
 - For read-only inspection tasks, prefer a dedicated CLI + Bash allowlist over an MCP server.
+- Use `alwaysLoad: true` in a server's config to bypass tool-search deferral and always load its tools on startup — useful for servers you use in every session.
+- The server name `workspace` is reserved by Claude Code; do not use it for custom MCP server entries.
+- MCP tool results can return up to 500K characters when the server annotates its response with `_meta["anthropic/maxResultSizeChars"]`.

@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-04-21
+last_updated: 2026-05-08
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 1
+version: 2
 ---
 
 ## When to use a subagent
@@ -23,7 +23,24 @@ version: 1
 - Dispatch via the `Agent` tool when the investigation needs many reads, unbounded exploration, or its own filesystem/network permissions.
 - Parallel vs. serial: run in parallel when subtasks are independent; serialize when a later task depends on the earlier result.
 - Split research from implementation — one subagent explores and summarizes, the main agent (or another subagent) implements against that summary.
-- Use `context: fork` on a skill when the skill itself is the task and it benefits from isolation.
+- Use `context: fork` on a skill when the skill itself is the task and it benefits from isolation (the skill's body drives the subagent).
+
+## Subagent configuration
+
+Key frontmatter fields for `.claude/agents/<name>.md`:
+
+| Field | Purpose |
+|---|---|
+| `name`, `description` | Required. Description drives automatic delegation. |
+| `tools` / `disallowedTools` | Allowlist or denylist tools; omit to inherit all. |
+| `model` | `sonnet`, `opus`, `haiku`, a full model ID, or `inherit`. |
+| `permissionMode` | `default`, `acceptEdits`, `auto`, `bypassPermissions`, `plan`. |
+| `mcpServers` | MCP servers to load (project/user subagents only). |
+| `skills` | List of skill names to preload into the subagent's context. |
+| `memory` | Set to `user` to give the subagent persistent memory at `~/.claude/agent-memory/`. |
+| `isolation` | `worktree` to give the subagent an isolated git worktree. |
+| `maxTurns` | Cap on agentic turns before the subagent stops. |
+| `effort` | Effort level override (`low`, `medium`, `high`, `xhigh`, `max`). |
 
 ## Prompting a subagent
 
@@ -55,6 +72,8 @@ The main agent waits once, then relays a consolidated summary — it does not na
 - Route high-volume or low-stakes work to Haiku via the subagent's `model:` field.
 - Preserve important facts by having subagents persist artifacts (files, memory) rather than stuffing them back into the main context.
 - Reuse frequently-spawned workers as named subagents in `.claude/agents/<name>.md` with a clear `description:` so the main agent picks them deterministically.
+- Use the `skills` frontmatter field to preload reference material into a subagent's context instead of repeating instructions in the system prompt.
+- For multiple coordinating agents that need to communicate across sessions, consider agent teams rather than nested subagents.
 
 ## Anti-patterns
 
