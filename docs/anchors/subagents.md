@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-04-21
+last_updated: 2026-05-09
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 1
+version: 2
 ---
 
 ## When to use a subagent
@@ -23,7 +23,17 @@ version: 1
 - Dispatch via the `Agent` tool when the investigation needs many reads, unbounded exploration, or its own filesystem/network permissions.
 - Parallel vs. serial: run in parallel when subtasks are independent; serialize when a later task depends on the earlier result.
 - Split research from implementation — one subagent explores and summarizes, the main agent (or another subagent) implements against that summary.
-- Use `context: fork` on a skill when the skill itself is the task and it benefits from isolation.
+- Use `isolation: worktree` on a subagent definition when it should work in an isolated copy of the repository.
+
+## Scope and priority
+
+Named subagent definitions in `.claude/agents/<name>.md` resolve in this order (highest wins):
+
+1. Managed settings (org-wide)
+2. `--agents` CLI flag (current session only)
+3. Project (`.claude/agents/`)
+4. User (`~/.claude/agents/`)
+5. Plugin (`agents/` in plugin root)
 
 ## Prompting a subagent
 
@@ -47,13 +57,30 @@ Agent(task="audit db/ for missing indexes", ...)
 
 The main agent waits once, then relays a consolidated summary — it does not narrate each subagent's progress.
 
+## Subagent definition frontmatter
+
+Key fields in `.claude/agents/<name>.md` (only `name` and `description` are required):
+
+| Field | Purpose |
+|---|---|
+| `name`, `description` | Required. `description` is how Claude decides when to delegate. |
+| `tools` / `disallowedTools` | Allowlist or denylist tool access. |
+| `model` | `sonnet`, `opus`, `haiku`, full model ID, or `inherit` (default). |
+| `memory` | `user`, `project`, or `local` — persistent memory directory across sessions. |
+| `background` | `true` to always run this subagent as a background task. |
+| `effort` | `low`/`medium`/`high`/`xhigh`/`max` — overrides session effort level. |
+| `isolation` | `worktree` — run in a temporary isolated git worktree. |
+| `skills` | Skills to preload into context at startup. |
+| `hooks` | Lifecycle hooks scoped to this subagent only. |
+| `mcpServers` | MCP servers connected only while this subagent runs. |
+
 ## Recommendations
 
 - Give each subagent a written objective, output contract, and length cap — vague prompts waste tokens.
 - Parallelize independent investigations; serialize only on real dependencies.
 - Scope tool access per subagent: read-only agents list only `Read, Grep, Glob, Bash`; write-capable agents require a deliberate carve-out.
 - Route high-volume or low-stakes work to Haiku via the subagent's `model:` field.
-- Preserve important facts by having subagents persist artifacts (files, memory) rather than stuffing them back into the main context.
+- Preserve important facts by having subagents persist artifacts (files, memory) rather than stuffing them back into the main context. Use `memory: project` for cross-session learning.
 - Reuse frequently-spawned workers as named subagents in `.claude/agents/<name>.md` with a clear `description:` so the main agent picks them deterministically.
 
 ## Anti-patterns

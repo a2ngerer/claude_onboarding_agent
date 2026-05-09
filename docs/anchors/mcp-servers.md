@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-04-21
+last_updated: 2026-05-09
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 2
+version: 3
 ---
 
 ## Recommended
@@ -26,7 +26,7 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 - **filesystem** — scoped filesystem access beyond the working directory. Install: `claude mcp add filesystem npx -- -y @modelcontextprotocol/server-filesystem <path>`
 - **git** — read git history, blame, diffs without shelling out. Install: `claude mcp add git uvx -- mcp-server-git`
-- **github** — issues, PRs, reviews via the GitHub API. Install: `claude mcp add github npx -- -y @modelcontextprotocol/server-github` (needs `GITHUB_PERSONAL_ACCESS_TOKEN`)
+- **github** — issues, PRs, reviews via the GitHub API. Install: `claude mcp add --transport http github https://api.githubcopilot.com/mcp/ --header "Authorization: Bearer YOUR_PAT"`
 
 ## Knowledge base
 
@@ -49,6 +49,9 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Selection tips
 
+- Use **HTTP transport** (`--transport http`) for remote servers — SSE transport is deprecated.
 - Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server. (Convention, not part of the official schema — but this plugin promotes it.)
-- Keep the installed set small. Every MCP server adds tool-selection overhead and expands the trust surface.
+- Keep the installed set small. Every MCP server adds tool-selection overhead and expands the trust surface. MCP tools are deferred by default (Tool Search) and fetched into context only when Claude needs them.
+- Use `alwaysLoad: true` in a server's config entry to exempt critical servers from deferral — their tools load at session start unconditionally.
 - For read-only inspection tasks, prefer a dedicated CLI + Bash allowlist over an MCP server.
+- The server name `workspace` is reserved by Claude Code; rename any server that uses it.
