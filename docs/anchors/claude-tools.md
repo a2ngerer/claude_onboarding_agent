@@ -1,14 +1,14 @@
 ---
 name: claude-tools
 description: How to configure Claude's core tooling surface — hooks, rules, memory files, settings, slash commands, plugins
-last_updated: 2026-04-21
+last_updated: 2026-05-10
 sources:
   - https://docs.claude.com/en/docs/claude-code/hooks
   - https://docs.claude.com/en/docs/claude-code/settings
   - https://docs.claude.com/en/docs/claude-code/plugins
   - https://docs.claude.com/en/docs/claude-code/slash-commands
   - https://docs.claude.com/en/docs/claude-code/memory
-version: 1
+version: 2
 ---
 
 ## Memory files
@@ -22,7 +22,7 @@ version: 1
 
 ## Settings
 
-Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `outputStyle`, `sandbox`, `claudeMdExcludes`. Permission rules evaluate in order `deny → ask → allow`; first match wins.
+Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `outputStyle`, `sandbox`, `claudeMdExcludes`, `worktree`. Permission rules evaluate in order `deny → ask → allow`; first match wins.
 
 ```json
 { "permissions": { "allow": ["Bash(npm run test *)"], "deny": ["Read(./.env)"] } }
@@ -30,28 +30,51 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 
 ## Hooks
 
-| Event | Typical use | Example |
-|---|---|---|
-| `SessionStart` | Load context or env vars on session open | Inject current git branch |
-| `UserPromptSubmit` | Validate or enrich the user prompt | Block secret patterns |
-| `PreToolUse` | Block or gate a tool call | Deny `Bash(rm -rf *)` |
-| `PostToolUse` | Lint or log after a tool runs | Auto-run `eslint --fix` after `Edit` |
-| `Stop` | Cleanup when Claude finishes a turn | Persist session notes |
-| `SessionEnd` | Release resources or save artifacts | Flush metrics |
+Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of hook entries. Plugins ship hooks in `hooks/hooks.json`.
 
-Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries. Plugins ship hooks in `hooks/hooks.json`.
+**Hook types:** `command` (shell; exit 2 blocks), `http` (POST endpoint), `mcp_tool` (calls an MCP server tool), `prompt` (LLM yes/no evaluation), `agent` (subagent verification). JSON `hookSpecificOutput` returns structured decisions.
+
+**Session lifecycle:**
+
+| Event | Fires when |
+|---|---|
+| `SessionStart` / `Setup` | Session opens / one-time init (`--init`) |
+| `SessionEnd` | Session terminates |
+| `UserPromptSubmit` | User submits prompt; `sessionTitle` output sets session title |
+| `Stop` / `StopFailure` | Turn ends (success / API error) |
+| `PreCompact` / `PostCompact` | Before / after context compaction; `PreCompact` exit 2 blocks compaction |
+
+**Tool execution:**
+
+| Event | Fires when |
+|---|---|
+| `PreToolUse` | Before a tool call (can block) |
+| `PostToolUse` | After success; `updatedToolOutput` replaces result; `duration_ms` reports execution time |
+| `PostToolUseFailure` | After a tool call fails |
+| `PostToolBatch` | After all parallel tool calls in a batch resolve |
+| `PermissionRequest` / `PermissionDenied` | Permission dialog appears / auto-mode classifier denies |
+
+**Agent & file events:**
+
+| Event | Fires when |
+|---|---|
+| `SubagentStart` / `SubagentStop` | Subagent spawned / finishes |
+| `WorktreeCreate` / `WorktreeRemove` | Worktree created / removed |
+| `FileChanged` / `ConfigChange` | Watched file or config file changes during session |
+| `InstructionsLoaded` | CLAUDE.md or `.claude/rules/` file loaded |
 
 ## Slash commands
 
-- Skills and custom commands are merged. Project skills live at `.claude/skills/<name>/SKILL.md`; user skills at `~/.claude/skills/<name>/SKILL.md`. Legacy `.claude/commands/*.md` files still work.
+- Skills live at `.claude/skills/<name>/SKILL.md` (project) or `~/.claude/skills/<name>/SKILL.md` (user). Legacy `.claude/commands/*.md` files still work.
 - Plugin-provided skills are namespaced: `/<plugin-name>:<skill-name>` to prevent collisions.
-- Arguments: `$ARGUMENTS` (full string), `$0`/`$1`/… or `$ARGUMENTS[N]` (positional), named args via `arguments:` frontmatter.
+- Arguments: `$ARGUMENTS` (full string), `$0`/`$1`/… positional, named args via `arguments:` frontmatter; current effort level via `${CLAUDE_EFFORT}`.
 - Name slugs: lowercase letters, digits, hyphens only; max 64 chars.
 
 ## Plugins
 
 - Manifest: `.claude-plugin/plugin.json` with `name`, `version` (semver), `description`, optional `author`, `homepage`, `repository`.
 - Components sit at the plugin root, not inside `.claude-plugin/`: `skills/`, `agents/`, `commands/`, `hooks/`, `.mcp.json`, `.lsp.json`, `monitors/`, `settings.json`.
+- Declare `themes` and `monitors` under `"experimental": { ... }` in `plugin.json`; top-level still works but triggers a deprecation warning.
 - Version every release; users update through the marketplace. `/reload-plugins` picks up local edits.
 
 ## Recommendations

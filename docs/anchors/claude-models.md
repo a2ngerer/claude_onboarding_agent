@@ -1,11 +1,11 @@
 ---
 name: claude-models
 description: Current Claude model IDs, aliases, context limits, and recommended defaults
-last_updated: 2026-04-21
+last_updated: 2026-05-10
 sources:
   - https://docs.claude.com/en/docs/about-claude/models
   - https://docs.claude.com/en/docs/about-claude/pricing
-version: 1
+version: 2
 ---
 
 ## Latest family
@@ -16,14 +16,19 @@ Claude 4.x is the current family as of `last_updated`. Default to the latest IDs
 
 | Tier   | Model ID              | Alias              | Context | Typical use case |
 |--------|-----------------------|--------------------|---------|------------------|
-| Opus   | `claude-opus-4-7`     | claude-opus-latest | 200k    | Hardest reasoning, deep code analysis, agentic workflows |
-| Sonnet | `claude-sonnet-4-6`   | claude-sonnet-latest | 200k  | Balanced default — most coding and general tasks |
-| Haiku  | `claude-haiku-4-5-20251001` | claude-haiku-latest | 200k | Fast, cheap, high-volume tasks and subagents |
+| Opus   | `claude-opus-4-7`     | `claude-opus-4-7`  | 1M      | Hardest reasoning, deep code analysis, agentic workflows |
+| Sonnet | `claude-sonnet-4-6`   | `claude-sonnet-4-6` | 1M     | Balanced default — most coding and general tasks |
+| Haiku  | `claude-haiku-4-5-20251001` | `claude-haiku-4-5` | 200k | Fast, cheap, high-volume tasks and subagents |
 
 ## Deprecated
 
 Do not use these IDs in new code or configs. They will stop working on their retirement date and generally point to weaker models than the current family.
 
+**Retiring June 15, 2026:**
+- `claude-sonnet-4-20250514` — migrate to `claude-sonnet-4-6`
+- `claude-opus-4-20250514` — migrate to `claude-opus-4-7`
+
+**Previously retired:**
 - `claude-3-opus-20240229`
 - `claude-3-sonnet-20240229`
 - `claude-3-haiku-20240307`
@@ -43,5 +48,7 @@ Do not use these IDs in new code or configs. They will stop working on their ret
 
 ## Tips
 
-- Prefer the **dated ID** (`claude-sonnet-4-6`) over an alias in production — aliases move silently.
+- For Claude 4.6+ models, the alias and model ID are the same pinned snapshot — neither is an evergreen pointer. For Haiku, the alias drops the date: `claude-haiku-4-5` resolves to `claude-haiku-4-5-20251001`.
+- Prefer the **dated ID** (`claude-haiku-4-5-20251001`) over an alias in production for explicitness.
+- Opus 4.7 uses a new tokenizer; image token counts run 1–3× higher than earlier models.
 - When migrating between versions, re-run your eval suite; prompts tuned for one model family may need light adjustment.

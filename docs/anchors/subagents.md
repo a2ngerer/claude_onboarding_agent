@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-04-21
+last_updated: 2026-05-10
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 1
+version: 2
 ---
 
 ## When to use a subagent
@@ -16,6 +16,17 @@ version: 1
 - The task is breadth-first: three or more independent queries that can run in parallel.
 - Verification after implementation — a fresh context is less biased toward the code it just wrote.
 - A repeated worker with the same instructions — formalize it as a named subagent under `.claude/agents/`.
+- **Agent teams vs. subagents:** subagents work within a single session; use agent teams when you need multiple agents communicating across separate sessions.
+
+## Built-in subagents
+
+Claude Code ships three always-available subagents:
+
+| Name | Model | Tools | When Claude delegates |
+|---|---|---|---|
+| Explore | Haiku | Read-only | Codebase search and file discovery |
+| Plan | Inherits | Read-only | Codebase research during plan mode |
+| general-purpose | Inherits | All tools | Complex multi-step tasks requiring both exploration and action |
 
 ## Delegation heuristics
 
@@ -55,6 +66,10 @@ The main agent waits once, then relays a consolidated summary — it does not na
 - Route high-volume or low-stakes work to Haiku via the subagent's `model:` field.
 - Preserve important facts by having subagents persist artifacts (files, memory) rather than stuffing them back into the main context.
 - Reuse frequently-spawned workers as named subagents in `.claude/agents/<name>.md` with a clear `description:` so the main agent picks them deterministically.
+- Use `/agents` to create and manage subagents interactively; `claude agents` lists all configured subagents by scope and priority.
+- Agent frontmatter supports `permissionMode` (honored when running via `--agent <name>`) and `mcpServers` (loaded for main-thread sessions via `--agent`).
+- Grant a subagent persistent memory by enabling user-scope memory during `/agents` setup; data lands in `~/.claude/agent-memory/`.
+- Scope priority (highest to lowest): managed settings → `--agents` CLI flag → `.claude/agents/` → `~/.claude/agents/` → plugin `agents/`.
 
 ## Anti-patterns
 
