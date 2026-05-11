@@ -1,13 +1,21 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-04-21
+last_updated: 2026-05-11
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 1
+version: 2
 ---
+
+## Subagents vs. agent teams
+
+**Subagents** run within a single session and cannot communicate with each other. Use one when a side task would flood the main context window. **Agent teams** coordinate multiple sessions running in parallel and communicating — use them for truly parallel, cross-session workflows (`/agent-teams` or the Teams API).
+
+## Built-in subagents
+
+Claude Code ships three built-in subagents invoked automatically: **Explore** (Haiku, read-only, codebase search), **Plan** (inherits model, read-only, planning research), and **general-purpose** (inherits model, all tools, multi-step tasks). Additional helpers include `statusline-setup` (Sonnet) and `claude-code-guide` (Haiku).
 
 ## When to use a subagent
 
@@ -55,6 +63,9 @@ The main agent waits once, then relays a consolidated summary — it does not na
 - Route high-volume or low-stakes work to Haiku via the subagent's `model:` field.
 - Preserve important facts by having subagents persist artifacts (files, memory) rather than stuffing them back into the main context.
 - Reuse frequently-spawned workers as named subagents in `.claude/agents/<name>.md` with a clear `description:` so the main agent picks them deterministically.
+- Create and manage subagents interactively with the `/agents` command (Library tab → Create new agent).
+- Enable persistent memory for a subagent by setting memory scope to `user` — the subagent accumulates insights in `~/.claude/agent-memory/` across sessions.
+- Set `worktree.baseRef` to `"head"` in `settings.json` when worktree subagents must see unpushed commits; the default `"fresh"` branches from `origin/<default>` instead.
 
 ## Anti-patterns
 

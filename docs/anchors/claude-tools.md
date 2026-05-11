@@ -1,14 +1,14 @@
 ---
 name: claude-tools
 description: How to configure Claude's core tooling surface — hooks, rules, memory files, settings, slash commands, plugins
-last_updated: 2026-04-21
+last_updated: 2026-05-11
 sources:
   - https://docs.claude.com/en/docs/claude-code/hooks
   - https://docs.claude.com/en/docs/claude-code/settings
   - https://docs.claude.com/en/docs/claude-code/plugins
   - https://docs.claude.com/en/docs/claude-code/slash-commands
   - https://docs.claude.com/en/docs/claude-code/memory
-version: 1
+version: 2
 ---
 
 ## Memory files
@@ -22,24 +22,36 @@ version: 1
 
 ## Settings
 
-Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `outputStyle`, `sandbox`, `claudeMdExcludes`. Permission rules evaluate in order `deny → ask → allow`; first match wins.
+Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `outputStyle`, `sandbox`, `claudeMdExcludes`, `worktree`, `effortLevel`, `autoMemoryEnabled`. Permission rules evaluate in order `deny → ask → allow`; first match wins.
 
 ```json
-{ "permissions": { "allow": ["Bash(npm run test *)"], "deny": ["Read(./.env)"] } }
+{ "permissions": { "allow": ["Bash(npm run test *)"], "deny": ["Read(./.env)"] },
+  "worktree": { "baseRef": "fresh" } }
 ```
+
+`worktree.baseRef`: `"fresh"` (default) branches worktrees from `origin/<default>`; `"head"` branches from local HEAD (keeps unpushed commits).
 
 ## Hooks
 
-| Event | Typical use | Example |
-|---|---|---|
-| `SessionStart` | Load context or env vars on session open | Inject current git branch |
-| `UserPromptSubmit` | Validate or enrich the user prompt | Block secret patterns |
-| `PreToolUse` | Block or gate a tool call | Deny `Bash(rm -rf *)` |
-| `PostToolUse` | Lint or log after a tool runs | Auto-run `eslint --fix` after `Edit` |
-| `Stop` | Cleanup when Claude finishes a turn | Persist session notes |
-| `SessionEnd` | Release resources or save artifacts | Flush metrics |
+Hooks fire at 28 lifecycle events grouped by phase:
 
-Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries. Plugins ship hooks in `hooks/hooks.json`.
+| Phase | Events |
+|---|---|
+| Session | `SessionStart`, `Setup`, `SessionEnd` |
+| User input | `UserPromptSubmit`, `UserPromptExpansion` |
+| Tool | `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `PostToolBatch` |
+| Permission | `PermissionRequest`, `PermissionDenied` |
+| Compaction | `PreCompact`, `PostCompact` |
+| Subagent / task | `SubagentStart`, `SubagentStop`, `TaskCreated`, `TaskCompleted` |
+| System | `Notification`, `InstructionsLoaded`, `ConfigChange`, `CwdChanged`, `FileChanged`, `StopFailure`, `TeammateIdle` |
+| Worktree | `WorktreeCreate`, `WorktreeRemove` |
+| MCP elicitation | `Elicitation`, `ElicitationResult` |
+
+Hook handler types: `command` (shell), `http` (POST to URL), `mcp_tool` (call an MCP server tool), `prompt` (ask Claude inline), `agent` (spawn a subagent).
+
+All hook inputs include `effort.level` (`"low"` – `"max"`) and the `$CLAUDE_EFFORT` env var. `PostToolUse` / `PostToolUseFailure` include `duration_ms`. `UserPromptSubmit` can set the session title via `hookSpecificOutput.sessionTitle`. `PreCompact` can block compaction by exiting with code 2.
+
+Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and `{ type, command }` entries. Plugins ship hooks in `hooks/hooks.json`.
 
 ## Slash commands
 
@@ -47,6 +59,8 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 - Plugin-provided skills are namespaced: `/<plugin-name>:<skill-name>` to prevent collisions.
 - Arguments: `$ARGUMENTS` (full string), `$0`/`$1`/… or `$ARGUMENTS[N]` (positional), named args via `arguments:` frontmatter.
 - Name slugs: lowercase letters, digits, hyphens only; max 64 chars.
+- Added 2026: `/ultrareview`, `/ultraplan`, `/team-onboarding`, `/focus`, `/tui`, `/powerup`, `/less-permission-prompts`.
+- Removed: `/tag`, `/vim` — use `/config` → Editor mode to toggle vim keybindings.
 
 ## Plugins
 
@@ -70,3 +84,4 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 - Do not rely on `AGENTS.md` being read directly by Claude Code — import it from `CLAUDE.md` with `@AGENTS.md`.
 - Do not use legacy `.claude/commands/*.md` for new functionality — prefer `skills/<name>/SKILL.md` so supporting files and frontmatter are available.
 - Do not silently overwrite an existing `CLAUDE.md` — extend with a delimited, attributed section.
+- Do not use `/vim` directly — toggle vim keybindings via `/config` → Editor mode instead.
