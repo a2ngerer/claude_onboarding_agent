@@ -1,14 +1,14 @@
 ---
 name: claude-tools
 description: How to configure Claude's core tooling surface — hooks, rules, memory files, settings, slash commands, plugins
-last_updated: 2026-04-21
+last_updated: 2026-05-12
 sources:
   - https://docs.claude.com/en/docs/claude-code/hooks
   - https://docs.claude.com/en/docs/claude-code/settings
   - https://docs.claude.com/en/docs/claude-code/plugins
   - https://docs.claude.com/en/docs/claude-code/slash-commands
   - https://docs.claude.com/en/docs/claude-code/memory
-version: 1
+version: 2
 ---
 
 ## Memory files
@@ -19,10 +19,11 @@ version: 1
 - Size target: keep each `CLAUDE.md` under ~200 lines. Longer files reduce adherence.
 - For modular rules, use `.claude/rules/*.md` with optional `paths:` frontmatter to scope by glob. Rules without `paths:` load unconditionally.
 - Imports: `@path/to/file` inside `CLAUDE.md` pulls another file into context at launch (max depth 5).
+- **Auto memory**: Claude writes session learnings automatically to `~/.claude/projects/<project>/memory/MEMORY.md`. Toggle with `autoMemoryEnabled` in settings or the `/memory` command.
 
 ## Settings
 
-Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `outputStyle`, `sandbox`, `claudeMdExcludes`. Permission rules evaluate in order `deny → ask → allow`; first match wins.
+Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `modelOverrides`, `agent`, `outputStyle`, `sandbox`, `effortLevel`, `alwaysThinkingEnabled`, `autoMemoryEnabled`, `skillOverrides`, `worktree`, `claudeMdExcludes`. Permission rules evaluate in order `deny → ask → allow`; first match wins.
 
 ```json
 { "permissions": { "allow": ["Bash(npm run test *)"], "deny": ["Read(./.env)"] } }
@@ -30,29 +31,41 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 
 ## Hooks
 
-| Event | Typical use | Example |
-|---|---|---|
-| `SessionStart` | Load context or env vars on session open | Inject current git branch |
-| `UserPromptSubmit` | Validate or enrich the user prompt | Block secret patterns |
-| `PreToolUse` | Block or gate a tool call | Deny `Bash(rm -rf *)` |
-| `PostToolUse` | Lint or log after a tool runs | Auto-run `eslint --fix` after `Edit` |
-| `Stop` | Cleanup when Claude finishes a turn | Persist session notes |
-| `SessionEnd` | Release resources or save artifacts | Flush metrics |
+31 hook events total. Five handler types: `command`, `http`, `mcp_tool`, `prompt`, `agent`. Key events:
 
-Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries. Plugins ship hooks in `hooks/hooks.json`.
+| Event | Typical use |
+|---|---|
+| `SessionStart` | Load context or env vars on session open |
+| `UserPromptSubmit` | Validate or enrich the user prompt |
+| `UserPromptExpansion` | Intercept skill expansions before Claude sees them |
+| `PreToolUse` | Block or gate a tool call (`permissionDecision: allow/deny/ask/defer`) |
+| `PostToolUse` | Lint/log after a tool; replace output via `hookSpecificOutput.updatedToolOutput` |
+| `PostToolBatch` | After a full parallel batch of tool calls completes |
+| `PermissionRequest` | Auto-approve or deny permission dialogs |
+| `SubagentStart` / `SubagentStop` | React to subagent lifecycle events |
+| `FileChanged` / `CwdChanged` | Reactive environment management (e.g. direnv) |
+| `PreCompact` / `PostCompact` | Before/after context compaction |
+| `InstructionsLoaded` | Audit which CLAUDE.md/rules files were loaded |
+| `WorktreeCreate` / `WorktreeRemove` | Override default worktree git behavior |
+| `Stop` | Cleanup when Claude finishes a turn; can prevent stopping |
+| `SessionEnd` | Release resources or save artifacts |
+
+Hooks live in `.claude/settings.json` under `hooks.<EventName>[]`. Use `args: ["cmd", "arg"]` exec form to eliminate shell-quoting issues. Plugins ship hooks in `hooks/hooks.json`.
 
 ## Slash commands
 
-- Skills and custom commands are merged. Project skills live at `.claude/skills/<name>/SKILL.md`; user skills at `~/.claude/skills/<name>/SKILL.md`. Legacy `.claude/commands/*.md` files still work.
-- Plugin-provided skills are namespaced: `/<plugin-name>:<skill-name>` to prevent collisions.
-- Arguments: `$ARGUMENTS` (full string), `$0`/`$1`/… or `$ARGUMENTS[N]` (positional), named args via `arguments:` frontmatter.
+- Skills and custom commands are merged. Project skills live at `.claude/skills/<name>/SKILL.md` (preferred); flat `.claude/commands/*.md` files still work.
+- User skills at `~/.claude/skills/<name>/SKILL.md`. Plugin-provided skills are namespaced: `/<plugin-name>:<skill-name>`.
+- Arguments: `$ARGUMENTS` (full string), `$0`/`$1`/… (positional), named args via `arguments:` frontmatter.
+- Frontmatter fields: `description`, `disable-model-invocation`, `user-invocable`, `allowed-tools`, `context`, `agent`, `model`, `effort`, `paths`, `hooks`.
 - Name slugs: lowercase letters, digits, hyphens only; max 64 chars.
 
 ## Plugins
 
 - Manifest: `.claude-plugin/plugin.json` with `name`, `version` (semver), `description`, optional `author`, `homepage`, `repository`.
-- Components sit at the plugin root, not inside `.claude-plugin/`: `skills/`, `agents/`, `commands/`, `hooks/`, `.mcp.json`, `.lsp.json`, `monitors/`, `settings.json`.
+- Components sit at the plugin root: `skills/`, `agents/`, `commands/`, `hooks/`, `.mcp.json`, `.lsp.json`, `monitors/`, `bin/`, `settings.json`.
 - Version every release; users update through the marketplace. `/reload-plugins` picks up local edits.
+- Test locally with `--plugin-dir ./my-plugin` or `--plugin-url <archive-url>`.
 
 ## Recommendations
 
@@ -62,6 +75,7 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 - Scope permissions explicitly: allowlist safe commands (`Bash(npm run test *)`), deny reads of secrets (`Read(./.env)`).
 - Pin plugin versions in team repos; run `/reload-plugins` after edits instead of restarting.
 - Namespace plugin skills; never rely on a collision-prone flat name.
+- Use exec-form `args: ["cmd", "arg"]` in command hooks to eliminate shell-quoting pitfalls.
 
 ## Deprecated patterns
 

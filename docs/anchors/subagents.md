@@ -1,13 +1,23 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-04-21
+last_updated: 2026-05-12
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 1
+version: 2
 ---
+
+## Built-in subagents
+
+Claude Code ships three built-in subagents. Use `/agents` to view and manage all subagents (built-in and custom).
+
+| Agent | Model | Tools | Purpose |
+|---|---|---|---|
+| `Explore` | Haiku (fast) | Read-only | File discovery, codebase search, exploration |
+| `Plan` | Inherits | Read-only | Context gathering during plan mode |
+| `general-purpose` | Inherits | All | Complex multi-step research and implementation |
 
 ## When to use a subagent
 
@@ -46,6 +56,27 @@ Agent(task="audit db/ for missing indexes", ...)
 ```
 
 The main agent waits once, then relays a consolidated summary — it does not narrate each subagent's progress.
+
+## Custom subagent file format
+
+Files live at `.claude/agents/<name>.md` (project) or `~/.claude/agents/<name>.md` (user). Required: `name`, `description`. Key optional fields:
+
+| Field | Purpose |
+|---|---|
+| `tools` / `disallowedTools` | Allowlist or blocklist specific tools |
+| `model` | `sonnet`, `opus`, `haiku`, full model ID, or `inherit` |
+| `memory` | Persistent cross-session memory: `user`, `project`, or `local` |
+| `isolation` | `worktree` — run in an isolated temporary git worktree |
+| `background` | `true` — always run as a background task |
+| `effort` | `low`, `medium`, `high`, `xhigh`, or `max` |
+| `color` | Visual identifier (`red`, `blue`, `green`, `yellow`, `purple`, etc.) |
+| `maxTurns` | Cap agentic turns before the subagent stops |
+| `skills` | Skills preloaded into context at startup (full content, not just description) |
+| `mcpServers` | MCP servers available to this subagent |
+| `hooks` | Lifecycle hooks scoped to this subagent |
+| `permissionMode` | `default`, `acceptEdits`, `auto`, `bypassPermissions`, or `plan` |
+
+Plugin subagents: `hooks`, `mcpServers`, and `permissionMode` are ignored for security reasons.
 
 ## Recommendations
 

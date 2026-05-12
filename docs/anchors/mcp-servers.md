@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-04-21
+last_updated: 2026-05-12
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 2
+version: 3
 ---
 
 ## Recommended
@@ -22,11 +22,23 @@ version: 2
 
 Per-category details follow. Keep the set small: every installed MCP expands the tool-selection surface and the trust boundary.
 
+## Transport types
+
+| Transport | Status | Install syntax |
+|---|---|---|
+| **HTTP** (`streamable-http`) | Recommended | `claude mcp add --transport http <name> <url>` |
+| **SSE** | Deprecated — migrate to HTTP | `claude mcp add --transport sse <name> <url>` |
+| **stdio** | Current for local servers | `claude mcp add <name> -- <command> [args…]` |
+
+When configuring via JSON (`.mcp.json`, `~/.claude.json`), `streamable-http` is an accepted alias for `http`.
+
 ## Coding
 
-- **filesystem** — scoped filesystem access beyond the working directory. Install: `claude mcp add filesystem npx -- -y @modelcontextprotocol/server-filesystem <path>`
-- **git** — read git history, blame, diffs without shelling out. Install: `claude mcp add git uvx -- mcp-server-git`
-- **github** — issues, PRs, reviews via the GitHub API. Install: `claude mcp add github npx -- -y @modelcontextprotocol/server-github` (needs `GITHUB_PERSONAL_ACCESS_TOKEN`)
+- **filesystem** — scoped filesystem access. Install: `claude mcp add filesystem npx -- -y @modelcontextprotocol/server-filesystem <path>`
+- **git** — read git history, blame, diffs. Install: `claude mcp add git uvx -- mcp-server-git`
+- **github** — issues, PRs, reviews. Install: `claude mcp add github npx -- -y @modelcontextprotocol/server-github` (needs `GITHUB_PERSONAL_ACCESS_TOKEN`)
+
+Stdio servers receive `CLAUDE_PROJECT_DIR` in their environment — use it for project-relative path resolution inside your server process.
 
 ## Knowledge base
 
@@ -52,3 +64,5 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 - Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server. (Convention, not part of the official schema — but this plugin promotes it.)
 - Keep the installed set small. Every MCP server adds tool-selection overhead and expands the trust surface.
 - For read-only inspection tasks, prefer a dedicated CLI + Bash allowlist over an MCP server.
+- Set `alwaysLoad: true` on a server whose tools Claude should always resolve immediately (skips deferred tool-search for that server).
+- `.mcp.json` edits are picked up live via `/mcp Reconnect` — no session restart needed.
