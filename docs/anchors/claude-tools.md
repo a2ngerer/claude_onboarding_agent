@@ -1,14 +1,14 @@
 ---
 name: claude-tools
 description: How to configure Claude's core tooling surface — hooks, rules, memory files, settings, slash commands, plugins
-last_updated: 2026-04-21
+last_updated: 2026-05-14
 sources:
   - https://docs.claude.com/en/docs/claude-code/hooks
   - https://docs.claude.com/en/docs/claude-code/settings
   - https://docs.claude.com/en/docs/claude-code/plugins
   - https://docs.claude.com/en/docs/claude-code/slash-commands
   - https://docs.claude.com/en/docs/claude-code/memory
-version: 1
+version: 2
 ---
 
 ## Memory files
@@ -22,11 +22,13 @@ version: 1
 
 ## Settings
 
-Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `outputStyle`, `sandbox`, `claudeMdExcludes`. Permission rules evaluate in order `deny → ask → allow`; first match wins.
+Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `outputStyle`, `sandbox`, `claudeMdExcludes`, `worktree`, `skillOverrides`, `parentSettingsBehavior`, `autoMode`. Permission rules evaluate in order `deny → ask → allow`; first match wins.
 
 ```json
 { "permissions": { "allow": ["Bash(npm run test *)"], "deny": ["Read(./.env)"] } }
 ```
+
+New keys (2026): `worktree.baseRef` (`"fresh"` | `"head"` — which ref new worktrees branch from), `skillOverrides` (per-skill visibility: `"on"` | `"user-invocable-only"` | `"off"`), `parentSettingsBehavior` (`"first-wins"` | `"merge"` — how managed tiers interact), `autoMode.hard_deny` (unconditional denial rules), `prUrlTemplate` (custom PR badge URL).
 
 ## Hooks
 
@@ -34,12 +36,21 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 |---|---|---|
 | `SessionStart` | Load context or env vars on session open | Inject current git branch |
 | `UserPromptSubmit` | Validate or enrich the user prompt | Block secret patterns |
+| `UserPromptExpansion` | Intercept slash command expansion | Block or rewrite specific commands |
 | `PreToolUse` | Block or gate a tool call | Deny `Bash(rm -rf *)` |
 | `PostToolUse` | Lint or log after a tool runs | Auto-run `eslint --fix` after `Edit` |
+| `PreCompact` | Block or pause context compaction | Block if session is mid-transaction |
+| `PostCompact` | Log or react after compaction completes | Observability |
+| `SubagentStart` | Monitor or gate subagent spawning | Log delegation |
+| `SubagentStop` | Validate subagent results before returning | Fail turn on bad output |
+| `WorktreeCreate` | Replace default worktree creation logic | Custom git setup |
+| `Elicitation` | Auto-fill MCP server user-input requests | Programmatic form responses |
 | `Stop` | Cleanup when Claude finishes a turn | Persist session notes |
 | `SessionEnd` | Release resources or save artifacts | Flush metrics |
 
-Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries. Plugins ship hooks in `hooks/hooks.json`.
+Hook handler types: `command` (shell/exec), `http` (POST to URL), `mcp_tool` (call an MCP server tool directly), `prompt` (single-turn Claude eval), `agent` (spawned subagent — experimental). Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, ... }` entries. Plugins ship hooks in `hooks/hooks.json`.
+
+New hook features (2026): `args` exec form (spawns commands without shell, paths never need quoting), `continueOnBlock` on `PostToolUse` (feed rejection reason back to Claude and continue the turn), `effort.level` in hook JSON input and `$CLAUDE_EFFORT` env var, `duration_ms` on `PostToolUse`/`PostToolUseFailure`.
 
 ## Slash commands
 
@@ -47,6 +58,7 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 - Plugin-provided skills are namespaced: `/<plugin-name>:<skill-name>` to prevent collisions.
 - Arguments: `$ARGUMENTS` (full string), `$0`/`$1`/… or `$ARGUMENTS[N]` (positional), named args via `arguments:` frontmatter.
 - Name slugs: lowercase letters, digits, hyphens only; max 64 chars.
+- `/goal` — set multi-turn completion conditions; Claude works across turns until the goal is met (v2.1.139+).
 
 ## Plugins
 
@@ -62,6 +74,7 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 - Scope permissions explicitly: allowlist safe commands (`Bash(npm run test *)`), deny reads of secrets (`Read(./.env)`).
 - Pin plugin versions in team repos; run `/reload-plugins` after edits instead of restarting.
 - Namespace plugin skills; never rely on a collision-prone flat name.
+- Use `skillOverrides` in settings to hide or restrict skills on a per-skill basis without editing the skill files.
 
 ## Deprecated patterns
 

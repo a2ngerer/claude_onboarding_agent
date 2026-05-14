@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-04-21
+last_updated: 2026-05-14
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 2
+version: 3
 ---
 
 ## Recommended
@@ -21,6 +21,8 @@ version: 2
 - `gmail` / `calendar` — Google productivity via official MCPs where available
 
 Per-category details follow. Keep the set small: every installed MCP expands the tool-selection surface and the trust boundary.
+
+**Discovery:** Browse reviewed connectors at the [Anthropic Directory](https://claude.ai/directory). Any remote server listed there can be added with `claude mcp add`.
 
 ## Coding
 
@@ -47,8 +49,13 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 - **kubernetes** — cluster read access, kubectl-equivalent queries. Community servers available; pin a version before production use.
 - **aws / gcp** — prefer official CLIs wrapped via allowed Bash permissions; MCP wrappers exist but are less mature.
 
-## Selection tips
+## Configuration tips
 
-- Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server. (Convention, not part of the official schema — but this plugin promotes it.)
+- Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server.
+- Set `"alwaysLoad": true` on a server to skip tool-search deferral — use for servers you always want active in context.
+- The server name `workspace` is reserved; Claude Code skips any server with that name and warns at load time.
+- MCP stdio servers receive `CLAUDE_PROJECT_DIR` automatically; no need to pass the project path as a server argument.
 - Keep the installed set small. Every MCP server adds tool-selection overhead and expands the trust surface.
 - For read-only inspection tasks, prefer a dedicated CLI + Bash allowlist over an MCP server.
+- **Channels:** An MCP server can push messages into your session so Claude reacts to external events (CI results, chat messages, webhooks) while you're away — opt in with `--channels` at startup.
+- **Transports:** Prefer HTTP (`--transport http`) over SSE for remote servers — SSE transport is deprecated. Stdio is for local process tools.

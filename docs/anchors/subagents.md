@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-04-21
+last_updated: 2026-05-14
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 1
+version: 2
 ---
 
 ## When to use a subagent
@@ -17,13 +17,15 @@ version: 1
 - Verification after implementation — a fresh context is less biased toward the code it just wrote.
 - A repeated worker with the same instructions — formalize it as a named subagent under `.claude/agents/`.
 
+**Scope note:** Subagents run inside a single session. For many independent sessions monitored from one dashboard, use background agents (`/bg` or `←←`). For sessions that share state and communicate with each other, use agent teams. These are distinct orchestration modes; only inline subagents are covered here.
+
 ## Delegation heuristics
 
 - Prefer a direct tool call for one-shot reads (`Read`, `Grep` with a known path). Subagents add latency and tokens.
 - Dispatch via the `Agent` tool when the investigation needs many reads, unbounded exploration, or its own filesystem/network permissions.
 - Parallel vs. serial: run in parallel when subtasks are independent; serialize when a later task depends on the earlier result.
 - Split research from implementation — one subagent explores and summarizes, the main agent (or another subagent) implements against that summary.
-- Use `context: fork` on a skill when the skill itself is the task and it benefits from isolation.
+- Use `context: fork` on a skill dispatch to isolate it in a forked context — it inherits parent context but keeps skill exploration out of the main window.
 
 ## Prompting a subagent
 
@@ -55,6 +57,8 @@ The main agent waits once, then relays a consolidated summary — it does not na
 - Route high-volume or low-stakes work to Haiku via the subagent's `model:` field.
 - Preserve important facts by having subagents persist artifacts (files, memory) rather than stuffing them back into the main context.
 - Reuse frequently-spawned workers as named subagents in `.claude/agents/<name>.md` with a clear `description:` so the main agent picks them deterministically.
+- Manage subagents with `/agents` (interactive UI: create, edit, delete, view running) or `claude agents` from the CLI (listing grouped by source with override indicators).
+- Subagents can discover and invoke project, user, and plugin skills via the Skill tool — useful when a subagent needs to delegate to a specialized skill rather than reimplement it.
 
 ## Anti-patterns
 
