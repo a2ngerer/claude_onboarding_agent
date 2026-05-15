@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-04-21
+last_updated: 2026-05-15
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 1
+version: 2
 ---
 
 ## When to use a subagent
@@ -16,6 +16,8 @@ version: 1
 - The task is breadth-first: three or more independent queries that can run in parallel.
 - Verification after implementation — a fresh context is less biased toward the code it just wrote.
 - A repeated worker with the same instructions — formalize it as a named subagent under `.claude/agents/`.
+
+**Note:** Same-session subagents (dispatched via the `Agent` tool) run inside your current session. Background agents launched via `claude agents` are separate long-running sessions with their own process and lifecycle — use these for multi-session parallelism, not for in-context delegation.
 
 ## Delegation heuristics
 
@@ -55,6 +57,9 @@ The main agent waits once, then relays a consolidated summary — it does not na
 - Route high-volume or low-stakes work to Haiku via the subagent's `model:` field.
 - Preserve important facts by having subagents persist artifacts (files, memory) rather than stuffing them back into the main context.
 - Reuse frequently-spawned workers as named subagents in `.claude/agents/<name>.md` with a clear `description:` so the main agent picks them deterministically.
+- Enable persistent memory on a named subagent to accumulate cross-session knowledge in its own memory directory.
+- Preload relevant skills into a subagent via the `skills:` frontmatter field so domain knowledge is available without a separate invocation.
+- Use `context: fork` in a skill's frontmatter to run that skill as a subagent with an isolated context and a chosen `agent:` type.
 
 ## Anti-patterns
 
