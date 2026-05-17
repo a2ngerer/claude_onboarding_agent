@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-04-21
+last_updated: 2026-05-17
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 1
+version: 2
 ---
 
 ## When to use a subagent
@@ -23,7 +23,7 @@ version: 1
 - Dispatch via the `Agent` tool when the investigation needs many reads, unbounded exploration, or its own filesystem/network permissions.
 - Parallel vs. serial: run in parallel when subtasks are independent; serialize when a later task depends on the earlier result.
 - Split research from implementation — one subagent explores and summarizes, the main agent (or another subagent) implements against that summary.
-- Use `context: fork` on a skill when the skill itself is the task and it benefits from isolation.
+- Use `context: fork` in a skill's frontmatter to run the skill as a one-shot isolated subagent.
 
 ## Prompting a subagent
 
@@ -46,6 +46,20 @@ Agent(task="audit db/ for missing indexes", ...)
 ```
 
 The main agent waits once, then relays a consolidated summary — it does not narrate each subagent's progress.
+
+## Lifecycle hooks
+
+- `SubagentStart` — fires when a subagent is spawned. Use for initialization or logging. Supports `command` handler type only.
+- `SubagentStop` — fires when a subagent finishes.
+- Do NOT configure `prompt`- or `agent`-type hooks for `SubagentStart` — use `command` instead.
+
+## Capabilities
+
+- Subagents discover and invoke project, user, and plugin skills via the `Skill` tool.
+- Subagents can maintain their own auto memory (controlled by `autoMemoryEnabled`).
+- API requests from subagents carry `x-claude-code-agent-id` and `x-claude-code-parent-agent-id` headers for distributed tracing.
+- Preload skills into a subagent by listing them in the `skills:` frontmatter field of the agent definition.
+- Background agents run in independent sessions; monitor all sessions with `claude agents` (agent view).
 
 ## Recommendations
 

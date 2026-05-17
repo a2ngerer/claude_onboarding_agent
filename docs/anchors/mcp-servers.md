@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-04-21
+last_updated: 2026-05-17
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 2
+version: 3
 ---
 
 ## Recommended
@@ -49,6 +49,10 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Selection tips
 
-- Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server. (Convention, not part of the official schema — but this plugin promotes it.)
+- Browse reviewed connectors at the **Anthropic Directory** (`claude.ai/directory`) — any remote server listed there can be added with `claude mcp add`.
+- Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server.
+- Use `"alwaysLoad": true` in an MCP server config entry to skip tool-search deferral and keep all that server's tools always available in context (use sparingly — increases per-request cost).
+- Set `MCP_TOOL_TIMEOUT` to raise the per-request fetch timeout for slow remote HTTP/SSE servers.
+- stdio MCP servers receive `CLAUDE_PROJECT_DIR` in their environment — use it to resolve project-relative paths without depending on the working directory.
 - Keep the installed set small. Every MCP server adds tool-selection overhead and expands the trust surface.
 - For read-only inspection tasks, prefer a dedicated CLI + Bash allowlist over an MCP server.
