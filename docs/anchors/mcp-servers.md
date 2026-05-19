@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-04-21
+last_updated: 2026-05-19
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 2
+version: 3
 ---
 
 ## Recommended
@@ -20,13 +20,25 @@ version: 2
 - `linear` — issues and projects (official Linear MCP)
 - `gmail` / `calendar` — Google productivity via official MCPs where available
 
-Per-category details follow. Keep the set small: every installed MCP expands the tool-selection surface and the trust boundary.
+For discovery, browse the [Anthropic Directory](https://claude.ai/directory) — it lists reviewed connectors for Claude Code. Per-category details follow. Keep the set small: every installed MCP expands the tool-selection surface and the trust boundary.
+
+## Active reference implementations
+
+The `modelcontextprotocol/servers` repository currently maintains these official reference servers:
+
+- **filesystem** — scoped file access. Install: `claude mcp add filesystem npx -- -y @modelcontextprotocol/server-filesystem <path>`
+- **git** — git history, blame, diffs. Install: `claude mcp add git uvx -- mcp-server-git`
+- **fetch** — web content retrieval optimized for LLM processing
+- **memory** — knowledge-graph-based persistent memory across sessions
+- **sequential-thinking** — dynamic problem-solving through thought sequences
+
+Note: Several previously maintained reference implementations (GitHub, GitLab, Slack, Google Drive, PostgreSQL, Redis, SQLite, Brave Search) have been archived to a separate `servers-archived` repository. For these integrations use official vendor MCPs or entries in the Anthropic Directory.
 
 ## Coding
 
-- **filesystem** — scoped filesystem access beyond the working directory. Install: `claude mcp add filesystem npx -- -y @modelcontextprotocol/server-filesystem <path>`
+- **filesystem** — scoped filesystem access. Install: `claude mcp add filesystem npx -- -y @modelcontextprotocol/server-filesystem <path>`
 - **git** — read git history, blame, diffs without shelling out. Install: `claude mcp add git uvx -- mcp-server-git`
-- **github** — issues, PRs, reviews via the GitHub API. Install: `claude mcp add github npx -- -y @modelcontextprotocol/server-github` (needs `GITHUB_PERSONAL_ACCESS_TOKEN`)
+- **github** — issues, PRs, reviews. Use an official vendor-provided MCP or the Anthropic Directory entry (reference implementation archived).
 
 ## Knowledge base
 
@@ -38,7 +50,7 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Productivity
 
-- **slack** — read channels, post messages. Install: `claude mcp add slack npx -- -y @modelcontextprotocol/server-slack`
+- **slack** — read channels, post messages. Use a vendor-provided or Anthropic Directory entry (reference implementation archived).
 - **linear** — issues and projects. Install via Linear's official MCP integration.
 - **gmail / calendar** — via official Google MCP integrations where available; otherwise the community `gmail-mcp-server`.
 
@@ -49,6 +61,7 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Selection tips
 
-- Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server. (Convention, not part of the official schema — but this plugin promotes it.)
+- Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server.
 - Keep the installed set small. Every MCP server adds tool-selection overhead and expands the trust surface.
+- The server name `workspace` is reserved (v2.1.128+); servers using that name are skipped with a warning.
 - For read-only inspection tasks, prefer a dedicated CLI + Bash allowlist over an MCP server.

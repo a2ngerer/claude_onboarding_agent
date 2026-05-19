@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-04-21
+last_updated: 2026-05-19
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 1
+version: 2
 ---
 
 ## When to use a subagent
@@ -47,6 +47,29 @@ Agent(task="audit db/ for missing indexes", ...)
 
 The main agent waits once, then relays a consolidated summary — it does not narrate each subagent's progress.
 
+## Named subagent frontmatter
+
+Frontmatter fields for `.claude/agents/<name>.md`:
+
+```yaml
+---
+name: my-agent
+description: Use when...   # case- and separator-insensitive matching (v2.1.140+)
+tools: Read, Grep, Glob, Bash
+model: haiku
+hooks:        # fire when running as main-thread agent or within a session (v2.1.119+)
+  PreToolUse: [...]
+mcpServers:   # MCP servers scoped to this subagent (v2.1.117+)
+  my_server: {...}
+---
+```
+
+Agent `subagent_type` values are case- and separator-insensitive: `"Code Reviewer"` resolves to `code-reviewer`.
+
+## Monitoring
+
+- `claude agents` (v2.1.139+, Research Preview) — CLI command listing all sessions (running, blocked, done). Supports `--add-dir`, `--model`, `--effort`, and other flags. Equivalent view available in the interactive UI's Agent View panel.
+
 ## Recommendations
 
 - Give each subagent a written objective, output contract, and length cap — vague prompts waste tokens.
@@ -55,6 +78,7 @@ The main agent waits once, then relays a consolidated summary — it does not na
 - Route high-volume or low-stakes work to Haiku via the subagent's `model:` field.
 - Preserve important facts by having subagents persist artifacts (files, memory) rather than stuffing them back into the main context.
 - Reuse frequently-spawned workers as named subagents in `.claude/agents/<name>.md` with a clear `description:` so the main agent picks them deterministically.
+- Enable auto memory for subagents that accumulate domain knowledge across sessions (`autoMemoryEnabled: true` in their settings scope).
 
 ## Anti-patterns
 
