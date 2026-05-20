@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-04-21
+last_updated: 2026-05-20
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 2
+version: 3
 ---
 
 ## Recommended
@@ -21,6 +21,10 @@ version: 2
 - `gmail` / `calendar` — Google productivity via official MCPs where available
 
 Per-category details follow. Keep the set small: every installed MCP expands the tool-selection surface and the trust boundary.
+
+## Finding servers
+
+Browse reviewed connectors in the Anthropic Directory (`claude.ai/directory`). Directory servers use the same MCP infrastructure and can be added with `claude mcp add`.
 
 ## Coding
 
@@ -52,3 +56,7 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 - Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server. (Convention, not part of the official schema — but this plugin promotes it.)
 - Keep the installed set small. Every MCP server adds tool-selection overhead and expands the trust surface.
 - For read-only inspection tasks, prefer a dedicated CLI + Bash allowlist over an MCP server.
+- Use `"alwaysLoad": true` in a server entry to bypass tool-search deferral — tools are always available without a ToolSearch step.
+- Prefer HTTP transport (`--transport http`) over SSE — SSE transport is deprecated.
+- The server name `workspace` is reserved; Claude Code skips any server configured with that name.
+- Channels: an MCP server can push messages into your session by declaring the `claude/channel` capability — useful for reactive workflows (CI alerts, monitoring, chat triggers).

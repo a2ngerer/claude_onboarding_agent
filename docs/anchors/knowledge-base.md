@@ -1,12 +1,12 @@
 ---
 name: knowledge-base
 description: Recommended vault layouts, frontmatter patterns, and KB-agent structures for Obsidian-style knowledge bases
-last_updated: 2026-04-21
+last_updated: 2026-05-20
 sources:
   - https://help.obsidian.md/
   - https://help.obsidian.md/properties
   - https://publish.obsidian.md/hub/01+-+Community+Vaults
-version: 1
+version: 2
 ---
 
 ## Vault layout
@@ -45,6 +45,10 @@ Reserved Obsidian keys: `aliases`, `tags`, `cssclasses`. Dates use `YYYY-MM-DD` 
 - Avoid reserved characters: `:`, `/`, `\`, `?`, `*`, `"`, `<`, `>`, `|`. Obsidian rejects them on write.
 - One concept per note — resist multi-topic dumps. Break out subtopics into linked notes.
 
+## Obsidian CLI
+
+Obsidian v1.12 ships a dedicated CLI binary bundled with the installer — faster than the earlier Electron-shim approach and includes shell autocompletion for commands using the `id=` parameter. The `obsidian-vault-keeper` subagent delegates all vault I/O to this CLI.
+
 ## Agent patterns
 
 - **Vault keeper** — dispatched subagent owning all vault I/O via the Obsidian CLI. Forbids direct `Edit`/`Write` so wikilinks and backlinks stay consistent. Reference: `.claude/agents/obsidian-vault-keeper.md`.
@@ -62,5 +66,5 @@ Reserved Obsidian keys: `aliases`, `tags`, `cssclasses`. Dates use `YYYY-MM-DD` 
 - Mixing daily notes with topical notes in one folder — date prefixes pollute the index and the graph.
 - Frontmatter type drift — `tags: "one, two"` (string) vs. `tags: [one, two]` (list) across notes breaks dataview queries.
 - Editing vault files with plain `Edit`/`Write` or `mv` — skips Obsidian's link-rewrite logic and silently corrupts backlinks.
-- Using the third-party Obsidian MCP for vault I/O — its tool schemas load into every session. Prefer the official CLI plus the vault-keeper subagent.
+- Using the third-party Obsidian MCP for vault I/O — its tool schemas load into every session. Prefer the official CLI (v1.12+ bundled binary) plus the vault-keeper subagent.
 - Dumping raw source material into `wiki/` — `wiki/` is for curated notes only; raw inputs belong in `raw/`.

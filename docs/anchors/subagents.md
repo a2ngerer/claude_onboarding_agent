@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-04-21
+last_updated: 2026-05-20
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 1
+version: 2
 ---
 
 ## When to use a subagent
@@ -17,13 +17,23 @@ version: 1
 - Verification after implementation — a fresh context is less biased toward the code it just wrote.
 - A repeated worker with the same instructions — formalize it as a named subagent under `.claude/agents/`.
 
+## Built-in subagents
+
+Claude Code ships ready-to-use built-in subagents. Invoke them via `subagent_type` — matching is case- and separator-insensitive (`"Code Reviewer"` resolves to `code-reviewer`).
+
+| Agent | Model | Tools | When used |
+|---|---|---|---|
+| `Explore` | Haiku | Read-only | Fast codebase search; skips CLAUDE.md for speed |
+| `Plan` | Inherited | Read-only | Codebase research during plan mode |
+| `general-purpose` | Inherited | All | Complex multi-step tasks needing exploration and action |
+
 ## Delegation heuristics
 
 - Prefer a direct tool call for one-shot reads (`Read`, `Grep` with a known path). Subagents add latency and tokens.
 - Dispatch via the `Agent` tool when the investigation needs many reads, unbounded exploration, or its own filesystem/network permissions.
 - Parallel vs. serial: run in parallel when subtasks are independent; serialize when a later task depends on the earlier result.
 - Split research from implementation — one subagent explores and summarizes, the main agent (or another subagent) implements against that summary.
-- Use `context: fork` on a skill when the skill itself is the task and it benefits from isolation.
+- Use `isolation: "worktree"` when the task makes git changes that should not touch the working tree until reviewed; the worktree is auto-cleaned if no changes were made.
 
 ## Prompting a subagent
 
@@ -55,6 +65,7 @@ The main agent waits once, then relays a consolidated summary — it does not na
 - Route high-volume or low-stakes work to Haiku via the subagent's `model:` field.
 - Preserve important facts by having subagents persist artifacts (files, memory) rather than stuffing them back into the main context.
 - Reuse frequently-spawned workers as named subagents in `.claude/agents/<name>.md` with a clear `description:` so the main agent picks them deterministically.
+- Agent frontmatter may specify `model`, `tools`, `permissionMode`, `hooks`, and `mcpServers` — scope each to the agent's purpose.
 
 ## Anti-patterns
 
@@ -66,3 +77,4 @@ The main agent waits once, then relays a consolidated summary — it does not na
 - "Endless search" loops where the subagent scours for sources that do not exist; include a stop condition.
 - Duplicate work from overlapping task boundaries — partition the problem space explicitly.
 - Write-capable subagents invoked without parsing a contracted output — "run it and hope" corrupts state silently.
+- Confusing subagents (single-session context delegation) with background agents or agent teams (parallel independent sessions visible in `claude agents`) — use the right primitive for the scale of task.
