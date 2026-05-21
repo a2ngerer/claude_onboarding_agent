@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-04-21
+last_updated: 2026-05-21
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 1
+version: 2
 ---
 
 ## When to use a subagent
@@ -17,13 +17,23 @@ version: 1
 - Verification after implementation — a fresh context is less biased toward the code it just wrote.
 - A repeated worker with the same instructions — formalize it as a named subagent under `.claude/agents/`.
 
+**Note:** Subagents run within a single session. For many independent sessions monitored from one place, use background agents (`/agents` → Running tab). For sessions that communicate with each other, see agent teams.
+
+## Scoping and management
+
+Subagents are Markdown files with YAML frontmatter. Priority order (highest first): managed settings → `--agents` CLI flag (session-only JSON) → `.claude/agents/` (project) → `~/.claude/agents/` (user) → plugin `agents/`.
+
+Key frontmatter fields: `name`, `description`, `tools`, `disallowedTools`, `model` (`sonnet`/`opus`/`haiku`/full ID/`inherit`), `permissionMode`, `maxTurns`, `skills` (preloaded skill content), `memory` (`user`/`project`/`local` for cross-session persistence), `background` (always run as background task), `effort`, `isolation` (`worktree` for isolated git worktree), `color`.
+
+Manage with `/agents` (interactive UI for create/edit/delete and live Running tab) or `claude agents --json` (list live sessions as JSON for tmux or status bars).
+
 ## Delegation heuristics
 
 - Prefer a direct tool call for one-shot reads (`Read`, `Grep` with a known path). Subagents add latency and tokens.
 - Dispatch via the `Agent` tool when the investigation needs many reads, unbounded exploration, or its own filesystem/network permissions.
 - Parallel vs. serial: run in parallel when subtasks are independent; serialize when a later task depends on the earlier result.
 - Split research from implementation — one subagent explores and summarizes, the main agent (or another subagent) implements against that summary.
-- Use `context: fork` on a skill when the skill itself is the task and it benefits from isolation.
+- Use `context: fork` in a SKILL.md to run the skill in an isolated subagent context without explicit `Agent` tool dispatch.
 
 ## Prompting a subagent
 
@@ -55,6 +65,7 @@ The main agent waits once, then relays a consolidated summary — it does not na
 - Route high-volume or low-stakes work to Haiku via the subagent's `model:` field.
 - Preserve important facts by having subagents persist artifacts (files, memory) rather than stuffing them back into the main context.
 - Reuse frequently-spawned workers as named subagents in `.claude/agents/<name>.md` with a clear `description:` so the main agent picks them deterministically.
+- Use `memory: user` on subagents that should accumulate codebase insights across sessions.
 
 ## Anti-patterns
 
