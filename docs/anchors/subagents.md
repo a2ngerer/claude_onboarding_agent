@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-04-21
+last_updated: 2026-05-23
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 1
+version: 2
 ---
 
 ## When to use a subagent
@@ -23,7 +23,7 @@ version: 1
 - Dispatch via the `Agent` tool when the investigation needs many reads, unbounded exploration, or its own filesystem/network permissions.
 - Parallel vs. serial: run in parallel when subtasks are independent; serialize when a later task depends on the earlier result.
 - Split research from implementation — one subagent explores and summarizes, the main agent (or another subagent) implements against that summary.
-- Use `context: fork` on a skill when the skill itself is the task and it benefits from isolation.
+- Subagents inherit the configured model and effort level from the parent session; override with the subagent's `model:` frontmatter field only when you need a different tier.
 
 ## Prompting a subagent
 
@@ -34,6 +34,8 @@ Every subagent prompt MUST contain:
 3. Output format — exact shape of the reply (bullet list, fenced block, field names).
 4. Length cap — "< 200 words" or "≤ 5 bullets" to prevent drift.
 5. Stop conditions — when to return with partial results (e.g. "if no matches in 3 globs, report empty").
+
+`subagent_type` matching is **case- and separator-insensitive**: `"Code Reviewer"`, `"code-reviewer"`, and `"code_reviewer"` all resolve to `code-reviewer.md`.
 
 ## Parallel dispatch
 
@@ -47,6 +49,12 @@ Agent(task="audit db/ for missing indexes", ...)
 
 The main agent waits once, then relays a consolidated summary — it does not narrate each subagent's progress.
 
+## Background agents and teams
+
+- **Background agents** (`claude agents` command): independent sessions running in parallel, visible in a unified dashboard showing running, awaiting-input, and completed states. Use for long-running or highly-parallelizable work that doesn't fit a single conversation.
+- **Agent teams**: sessions that communicate with each other via `SendMessage`. One session acts as orchestrator; others are workers. `SendMessage` restores the explicit `cwd` when resuming a subagent.
+- Background sessions preserve model and effort level after waking from idle.
+
 ## Recommendations
 
 - Give each subagent a written objective, output contract, and length cap — vague prompts waste tokens.
@@ -55,6 +63,7 @@ The main agent waits once, then relays a consolidated summary — it does not na
 - Route high-volume or low-stakes work to Haiku via the subagent's `model:` field.
 - Preserve important facts by having subagents persist artifacts (files, memory) rather than stuffing them back into the main context.
 - Reuse frequently-spawned workers as named subagents in `.claude/agents/<name>.md` with a clear `description:` so the main agent picks them deterministically.
+- Use `context: fork` on a skill when the skill itself is the task and it benefits from isolation.
 
 ## Anti-patterns
 
