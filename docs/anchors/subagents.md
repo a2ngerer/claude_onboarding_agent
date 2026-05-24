@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-04-21
+last_updated: 2026-05-24
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 1
+version: 2
 ---
 
 ## When to use a subagent
@@ -16,6 +16,16 @@ version: 1
 - The task is breadth-first: three or more independent queries that can run in parallel.
 - Verification after implementation — a fresh context is less biased toward the code it just wrote.
 - A repeated worker with the same instructions — formalize it as a named subagent under `.claude/agents/`.
+
+## Built-in subagents
+
+| Agent | Model | Purpose |
+|---|---|---|
+| `Explore` | Haiku | Fast read-only codebase search; specify `quick`, `medium`, or `very thorough` |
+| `Plan` | Inherits parent | Research during plan mode; skips CLAUDE.md and git status for speed |
+| `general-purpose` | Inherits parent | Multi-step tasks requiring both exploration and modification |
+
+Subagents work within a single session. For many independent parallel sessions with a monitoring dashboard, use background agents (`claude agents` command).
 
 ## Delegation heuristics
 
@@ -52,8 +62,8 @@ The main agent waits once, then relays a consolidated summary — it does not na
 - Give each subagent a written objective, output contract, and length cap — vague prompts waste tokens.
 - Parallelize independent investigations; serialize only on real dependencies.
 - Scope tool access per subagent: read-only agents list only `Read, Grep, Glob, Bash`; write-capable agents require a deliberate carve-out.
-- Route high-volume or low-stakes work to Haiku via the subagent's `model:` field.
-- Preserve important facts by having subagents persist artifacts (files, memory) rather than stuffing them back into the main context.
+- Route high-volume or low-stakes work to Haiku via the subagent's `model:` field; or set `CLAUDE_CODE_SUBAGENT_MODEL` in `.claude/settings.json` `env` to override the model for all subagents globally.
+- Preserve important facts by having subagents persist artifacts (files, memory) rather than stuffing them back into the main context; subagents can maintain their own auto memory (`autoMemoryEnabled`).
 - Reuse frequently-spawned workers as named subagents in `.claude/agents/<name>.md` with a clear `description:` so the main agent picks them deterministically.
 
 ## Anti-patterns
