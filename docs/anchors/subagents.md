@@ -1,13 +1,20 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-04-21
+last_updated: 2026-05-25
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 1
+version: 2
 ---
+
+## Built-in subagents
+
+Claude Code ships three built-in subagents invoked automatically:
+- **Explore** — fast read-only codebase search (Haiku). Accepts thoroughness: `quick`, `medium`, `very thorough`.
+- **Plan** — read-only research used during plan mode (inherits parent model).
+- **general-purpose** — all-tools agent for complex multi-step tasks.
 
 ## When to use a subagent
 
@@ -23,7 +30,6 @@ version: 1
 - Dispatch via the `Agent` tool when the investigation needs many reads, unbounded exploration, or its own filesystem/network permissions.
 - Parallel vs. serial: run in parallel when subtasks are independent; serialize when a later task depends on the earlier result.
 - Split research from implementation — one subagent explores and summarizes, the main agent (or another subagent) implements against that summary.
-- Use `context: fork` on a skill when the skill itself is the task and it benefits from isolation.
 
 ## Prompting a subagent
 
@@ -46,6 +52,28 @@ Agent(task="audit db/ for missing indexes", ...)
 ```
 
 The main agent waits once, then relays a consolidated summary — it does not narrate each subagent's progress.
+
+## Custom subagent file format
+
+```markdown
+---
+name: code-reviewer          # required; kebab-case; drives SubagentStart hook agent_type
+description: Reviews code…   # required — Claude uses this to decide when to delegate
+tools: Read, Glob, Grep      # omit to inherit all tools from parent session
+model: sonnet                # sonnet | opus | haiku | full model ID | inherit (default)
+isolation: worktree          # run in an isolated git worktree copy (cleaned up if no changes)
+memory: project              # user | project | local — enable cross-session learning
+background: true             # always run this subagent as a background task
+effort: high                 # low | medium | high | xhigh | max (xhigh only on Opus 4.7)
+maxTurns: 20                 # cap agentic loops
+color: blue                  # display color: red|blue|green|yellow|purple|orange|pink|cyan
+---
+(system prompt body)
+```
+
+**Scope priority** (highest wins): managed settings > `--agents` CLI flag > `.claude/agents/` (project) > `~/.claude/agents/` (user) > plugin `agents/`.
+
+Use `/agents` in Claude Code to create, browse, edit, and manage subagents interactively without restarting.
 
 ## Recommendations
 
