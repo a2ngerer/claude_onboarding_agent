@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-04-21
+last_updated: 2026-05-26
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 1
+version: 2
 ---
 
 ## When to use a subagent
@@ -46,6 +46,16 @@ Agent(task="audit db/ for missing indexes", ...)
 ```
 
 The main agent waits once, then relays a consolidated summary — it does not narrate each subagent's progress.
+
+## Named subagent frontmatter
+
+Named subagents (`.claude/agents/<name>.md`) support these frontmatter fields beyond `name`, `description`, `tools`, and `model`:
+
+- `mcpServers` — load specific MCP servers for this agent's session.
+- `hooks` — fire lifecycle hooks scoped to this agent's session.
+- `permissionMode` — override the default permission mode for this agent.
+
+Subagents discover and invoke project, user, and plugin skills via the Skill tool. The `subagent_type` field in `Agent` tool calls is case- and separator-insensitive (`"Code Reviewer"` → `code-reviewer`).
 
 ## Recommendations
 

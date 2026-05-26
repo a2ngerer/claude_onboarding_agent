@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-04-21
+last_updated: 2026-05-26
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 2
+version: 3
 ---
 
 ## Recommended
@@ -52,3 +52,6 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 - Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server. (Convention, not part of the official schema — but this plugin promotes it.)
 - Keep the installed set small. Every MCP server adds tool-selection overhead and expands the trust surface.
 - For read-only inspection tasks, prefer a dedicated CLI + Bash allowlist over an MCP server.
+- Set `"alwaysLoad": true` on a server to skip tool-search deferral and load all its tools at session start. Use sparingly — each always-loaded server expands the default context.
+- The server name `workspace` is reserved; Claude Code skips any server configured with that name and warns to rename it.
+- Browse `claude.ai/directory` for a wider ecosystem: Sentry, Notion, Asana, Stripe, HubSpot, and others now have official MCP servers.
