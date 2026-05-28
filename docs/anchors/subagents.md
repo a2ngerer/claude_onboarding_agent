@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-04-21
+last_updated: 2026-05-28
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 1
+version: 2
 ---
 
 ## When to use a subagent
@@ -16,6 +16,7 @@ version: 1
 - The task is breadth-first: three or more independent queries that can run in parallel.
 - Verification after implementation — a fresh context is less biased toward the code it just wrote.
 - A repeated worker with the same instructions — formalize it as a named subagent under `.claude/agents/`.
+- Very long-running parallel work across multiple independent repos or sessions — use **background agents** (`claude agents`) instead of in-session subagents.
 
 ## Delegation heuristics
 
@@ -23,7 +24,6 @@ version: 1
 - Dispatch via the `Agent` tool when the investigation needs many reads, unbounded exploration, or its own filesystem/network permissions.
 - Parallel vs. serial: run in parallel when subtasks are independent; serialize when a later task depends on the earlier result.
 - Split research from implementation — one subagent explores and summarizes, the main agent (or another subagent) implements against that summary.
-- Use `context: fork` on a skill when the skill itself is the task and it benefits from isolation.
 
 ## Prompting a subagent
 
@@ -55,6 +55,9 @@ The main agent waits once, then relays a consolidated summary — it does not na
 - Route high-volume or low-stakes work to Haiku via the subagent's `model:` field.
 - Preserve important facts by having subagents persist artifacts (files, memory) rather than stuffing them back into the main context.
 - Reuse frequently-spawned workers as named subagents in `.claude/agents/<name>.md` with a clear `description:` so the main agent picks them deterministically.
+- Give named subagents their own persistent memory directory (`memory: user` scope) when they accumulate insights across conversations.
+- Use the `/agents` TUI command to create, browse, and manage named subagents interactively.
+- For independent long-running sessions, use the `claude agents` background-agent view with `/goal` to set a completion condition.
 
 ## Anti-patterns
 
