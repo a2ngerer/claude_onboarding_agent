@@ -1,12 +1,12 @@
 ---
 name: knowledge-base
 description: Recommended vault layouts, frontmatter patterns, and KB-agent structures for Obsidian-style knowledge bases
-last_updated: 2026-04-21
+last_updated: 2026-05-30
 sources:
   - https://help.obsidian.md/
   - https://help.obsidian.md/properties
   - https://publish.obsidian.md/hub/01+-+Community+Vaults
-version: 1
+version: 2
 ---
 
 ## Vault layout
@@ -45,6 +45,10 @@ Reserved Obsidian keys: `aliases`, `tags`, `cssclasses`. Dates use `YYYY-MM-DD` 
 - Avoid reserved characters: `:`, `/`, `\`, `?`, `*`, `"`, `<`, `>`, `|`. Obsidian rejects them on write.
 - One concept per note — resist multi-topic dumps. Break out subtopics into linked notes.
 
+## Obsidian Bases (v1.12+)
+
+Bases is a built-in database-like view that surfaces notes as structured rows using frontmatter properties — filter, sort, and group without a separate Dataview plugin. Bases files use the `.base` extension and live in the vault like any other file. Use them for managing collections of papers, projects, or concepts that share a common schema.
+
 ## Agent patterns
 
 - **Vault keeper** — dispatched subagent owning all vault I/O via the Obsidian CLI. Forbids direct `Edit`/`Write` so wikilinks and backlinks stay consistent. Reference: `.claude/agents/obsidian-vault-keeper.md`.
@@ -54,7 +58,7 @@ Reserved Obsidian keys: `aliases`, `tags`, `cssclasses`. Dates use `YYYY-MM-DD` 
 
 ## Recommended layout
 
-**`raw/` + `wiki/` (Karpathy LLM-Wiki pattern).** Exactly two top-level folders: `raw/` for ingested material, `wiki/` for curated, interlinked notes. Templates and daily notes go into dedicated subfolders (`templates/`, `daily/`) only when they are actually used. Vault ops are routed through the `obsidian-vault-keeper` subagent so the Obsidian CLI owns every write.
+**`raw/` + `wiki/` (Karpathy LLM-Wiki pattern).** Exactly two top-level folders: `raw/` for ingested material, `wiki/` for curated, interlinked notes. Templates and daily notes go into dedicated subfolders (`templates/`, `daily/`) only when actually used. Vault ops are routed through the `obsidian-vault-keeper` subagent so the Obsidian CLI owns every write.
 
 ## Anti-patterns
 

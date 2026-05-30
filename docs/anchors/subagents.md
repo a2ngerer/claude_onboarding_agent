@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-04-21
+last_updated: 2026-05-30
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 1
+version: 2
 ---
 
 ## When to use a subagent
@@ -22,8 +22,8 @@ version: 1
 - Prefer a direct tool call for one-shot reads (`Read`, `Grep` with a known path). Subagents add latency and tokens.
 - Dispatch via the `Agent` tool when the investigation needs many reads, unbounded exploration, or its own filesystem/network permissions.
 - Parallel vs. serial: run in parallel when subtasks are independent; serialize when a later task depends on the earlier result.
-- Split research from implementation — one subagent explores and summarizes, the main agent (or another subagent) implements against that summary.
-- Use `context: fork` on a skill when the skill itself is the task and it benefits from isolation.
+- Split research from implementation — one subagent explores and summarizes, the main agent implements against that summary.
+- Use `context: fork` on a skill when the skill benefits from isolation. In SDK/headless mode, set `CLAUDE_CODE_FORK_SUBAGENT=1` to enable it.
 
 ## Prompting a subagent
 
@@ -47,6 +47,18 @@ Agent(task="audit db/ for missing indexes", ...)
 
 The main agent waits once, then relays a consolidated summary — it does not narrate each subagent's progress.
 
+## Agent view and background sessions
+
+- `claude agents` (or `←←` in TUI) — dashboard listing all running, blocked, and completed sessions.
+- `claude --bg` — launch a pinned background session that stays alive when idle.
+- `claude --bg --exec '<command>'` — run a shell command in a background session.
+- Sessions awaiting input appear as "blocked" in the dashboard; resume them from the agent view.
+- Set `CLAUDE_CODE_SUBAGENT_MODEL` to control the model for background/teammate sessions.
+
+## Dynamic workflows
+
+`/workflows` — new orchestration mode that fans out work across dozens to hundreds of background agents and aggregates results. Use for large-scale parallel tasks (e.g., scan every file in a repo, run independent tests across many modules). Claude manages spawning, retry, and result consolidation.
+
 ## Recommendations
 
 - Give each subagent a written objective, output contract, and length cap — vague prompts waste tokens.
@@ -55,6 +67,7 @@ The main agent waits once, then relays a consolidated summary — it does not na
 - Route high-volume or low-stakes work to Haiku via the subagent's `model:` field.
 - Preserve important facts by having subagents persist artifacts (files, memory) rather than stuffing them back into the main context.
 - Reuse frequently-spawned workers as named subagents in `.claude/agents/<name>.md` with a clear `description:` so the main agent picks them deterministically.
+- Use the `TeammateIdle` hook to act when a background teammate is about to go idle (e.g., save state or emit a summary).
 
 ## Anti-patterns
 
@@ -62,7 +75,7 @@ The main agent waits once, then relays a consolidated summary — it does not na
 - The main agent narrating subagent work step-by-step instead of relaying the final summary.
 - Dispatching a subagent for a task that is one tool call — the overhead dwarfs the work.
 - Vague prompts like "research X" with no output format — produces redundant searches and unfocused summaries.
-- Unbounded spawning — e.g. 50 subagents for a simple query; cap the fan-out in the orchestrator prompt.
+- Unbounded spawning — cap the fan-out in the orchestrator prompt.
 - "Endless search" loops where the subagent scours for sources that do not exist; include a stop condition.
 - Duplicate work from overlapping task boundaries — partition the problem space explicitly.
 - Write-capable subagents invoked without parsing a contracted output — "run it and hope" corrupts state silently.
