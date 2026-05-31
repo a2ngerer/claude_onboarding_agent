@@ -1,12 +1,12 @@
 ---
 name: knowledge-base
 description: Recommended vault layouts, frontmatter patterns, and KB-agent structures for Obsidian-style knowledge bases
-last_updated: 2026-04-21
+last_updated: 2026-05-31
 sources:
   - https://help.obsidian.md/
   - https://help.obsidian.md/properties
   - https://publish.obsidian.md/hub/01+-+Community+Vaults
-version: 1
+version: 2
 ---
 
 ## Vault layout
@@ -35,7 +35,9 @@ Obsidian properties live in YAML frontmatter delimited by `---`. Reserved keys h
 | `aliases` | list | No | Alternate names that resolve in wikilinks and search |
 | `type` | text | Recommended | Custom discriminator (`concept`, `person`, `project`, `daily`) |
 
-Reserved Obsidian keys: `aliases`, `tags`, `cssclasses`. Dates use `YYYY-MM-DD` or ISO-8601 with time; lists may use YAML block or flow syntax.
+Reserved Obsidian keys: `aliases`, `tags`, `cssclasses`. Additional reserved keys for Obsidian Publish: `publish`, `permalink`, `description`, `image`, `cover`. Dates use `YYYY-MM-DD` or ISO-8601 with time; lists may use YAML block or flow syntax.
+
+The old singular forms `tag`, `alias`, and `cssclass` had their support **dropped** in Obsidian v1.9 (not merely deprecated — they no longer work). Use the Format Converter plugin to migrate a vault en masse.
 
 ## Naming conventions
 

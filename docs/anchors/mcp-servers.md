@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-04-21
+last_updated: 2026-05-31
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 2
+version: 3
 ---
 
 ## Recommended
@@ -20,13 +20,13 @@ version: 2
 - `linear` — issues and projects (official Linear MCP)
 - `gmail` / `calendar` — Google productivity via official MCPs where available
 
-Per-category details follow. Keep the set small: every installed MCP expands the tool-selection surface and the trust boundary.
+Browse reviewed connectors at the [Anthropic Directory](https://claude.ai/directory). Keep the set small: every installed MCP expands tool-selection overhead and the trust boundary.
 
 ## Coding
 
-- **filesystem** — scoped filesystem access beyond the working directory. Install: `claude mcp add filesystem npx -- -y @modelcontextprotocol/server-filesystem <path>`
-- **git** — read git history, blame, diffs without shelling out. Install: `claude mcp add git uvx -- mcp-server-git`
-- **github** — issues, PRs, reviews via the GitHub API. Install: `claude mcp add github npx -- -y @modelcontextprotocol/server-github` (needs `GITHUB_PERSONAL_ACCESS_TOKEN`)
+- **filesystem** — scoped filesystem access. Install: `claude mcp add -- filesystem -- npx -y @modelcontextprotocol/server-filesystem <path>`
+- **git** — read git history, blame, diffs. Install: `claude mcp add git uvx -- mcp-server-git`
+- **github** — issues, PRs, reviews. Install: `claude mcp add --transport http github https://api.githubcopilot.com/mcp/ --header "Authorization: Bearer <PAT>"`
 
 ## Knowledge base
 
@@ -34,7 +34,7 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Design
 
-- **figma-context** — read Figma frames into context for UI work. Install: see https://github.com/GLips/Figma-Context-MCP
+- **figma-context** — read Figma frames into context for UI work. See https://github.com/GLips/Figma-Context-MCP
 
 ## Productivity
 
@@ -49,6 +49,8 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Selection tips
 
-- Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server. (Convention, not part of the official schema — but this plugin promotes it.)
-- Keep the installed set small. Every MCP server adds tool-selection overhead and expands the trust surface.
+- **Transport**: prefer `--transport http` for remote servers. SSE (`--transport sse`) is deprecated — migrate to HTTP.
+- **Tool Search**: MCP tools are deferred by default — only tool names load at session start, schemas load on demand. Set `"alwaysLoad": true` in a server's config entry to force upfront loading for tools Claude needs every turn.
+- **Scopes**: `local` (default, private to you in this project, stored in `~/.claude.json`), `project` (shared via `.mcp.json` in version control), `user` (your personal cross-project servers, stored in `~/.claude.json`).
+- Add a `"description"` field to each entry in `.mcp.json` so Claude knows when to pick the server.
 - For read-only inspection tasks, prefer a dedicated CLI + Bash allowlist over an MCP server.

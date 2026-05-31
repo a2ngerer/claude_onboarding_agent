@@ -1,11 +1,11 @@
 ---
 name: claude-models
 description: Current Claude model IDs, aliases, context limits, and recommended defaults
-last_updated: 2026-04-21
+last_updated: 2026-05-31
 sources:
   - https://docs.claude.com/en/docs/about-claude/models
   - https://docs.claude.com/en/docs/about-claude/pricing
-version: 1
+version: 2
 ---
 
 ## Latest family
@@ -14,16 +14,24 @@ Claude 4.x is the current family as of `last_updated`. Default to the latest IDs
 
 ## Model IDs
 
-| Tier   | Model ID              | Alias              | Context | Typical use case |
-|--------|-----------------------|--------------------|---------|------------------|
-| Opus   | `claude-opus-4-7`     | claude-opus-latest | 200k    | Hardest reasoning, deep code analysis, agentic workflows |
-| Sonnet | `claude-sonnet-4-6`   | claude-sonnet-latest | 200k  | Balanced default — most coding and general tasks |
-| Haiku  | `claude-haiku-4-5-20251001` | claude-haiku-latest | 200k | Fast, cheap, high-volume tasks and subagents |
+| Tier   | Model ID                    | Alias                | Context | Typical use case |
+|--------|-----------------------------|----------------------|---------|------------------|
+| Opus   | `claude-opus-4-8`           | claude-opus-latest   | 1M      | Hardest reasoning, deep code analysis, agentic workflows |
+| Sonnet | `claude-sonnet-4-6`         | claude-sonnet-latest | 1M      | Balanced default — most coding and general tasks |
+| Haiku  | `claude-haiku-4-5-20251001` | claude-haiku-latest  | 200k    | Fast, cheap, high-volume tasks and subagents |
+
+Notes:
+- Opus 4.8 context window is 200k on Microsoft Foundry only; 1M everywhere else.
+- Opus 4.8 max output: 128k tokens. Sonnet 4.6 max output: 64k tokens.
+- Opus 4.8 defaults to `effort: high`; set it explicitly to use a different level.
+- `claude-opus-4-7` (1M context) is still available as a legacy model.
 
 ## Deprecated
 
 Do not use these IDs in new code or configs. They will stop working on their retirement date and generally point to weaker models than the current family.
 
+- `claude-sonnet-4-20250514` ← retires 2026-06-15
+- `claude-opus-4-20250514` ← retires 2026-06-15
 - `claude-3-opus-20240229`
 - `claude-3-sonnet-20240229`
 - `claude-3-haiku-20240307`
@@ -37,7 +45,7 @@ Do not use these IDs in new code or configs. They will stop working on their ret
 ## Defaults
 
 - **General coding (Claude Code default):** `claude-sonnet-4-6`
-- **Deep reasoning / agentic planning:** `claude-opus-4-7`
+- **Deep reasoning / agentic planning:** `claude-opus-4-8`
 - **High-throughput subagents / background tasks:** `claude-haiku-4-5-20251001`
 - **Building AI apps on the Anthropic SDK:** start with `claude-sonnet-4-6`; upgrade to Opus only when quality demands it.
 
