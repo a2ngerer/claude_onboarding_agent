@@ -1,13 +1,17 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-04-21
+last_updated: 2026-06-01
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 2
+version: 3
 ---
+
+## Finding servers
+
+Browse reviewed connectors at `claude.ai/directory`. Any remote server listed there can be added with `claude mcp add --transport http <name> <url>`. To scaffold a custom server, use the `mcp-server-dev` plugin.
 
 ## Recommended
 
@@ -18,15 +22,16 @@ version: 2
 - `figma-context` — read Figma frames into context for UI work
 - `slack` — read channels, post messages
 - `linear` — issues and projects (official Linear MCP)
+- `sentry` — error monitoring: recent errors, stack traces, deployment diffs
 - `gmail` / `calendar` — Google productivity via official MCPs where available
 
 Per-category details follow. Keep the set small: every installed MCP expands the tool-selection surface and the trust boundary.
 
 ## Coding
 
-- **filesystem** — scoped filesystem access beyond the working directory. Install: `claude mcp add filesystem npx -- -y @modelcontextprotocol/server-filesystem <path>`
-- **git** — read git history, blame, diffs without shelling out. Install: `claude mcp add git uvx -- mcp-server-git`
-- **github** — issues, PRs, reviews via the GitHub API. Install: `claude mcp add github npx -- -y @modelcontextprotocol/server-github` (needs `GITHUB_PERSONAL_ACCESS_TOKEN`)
+- **filesystem** — scoped filesystem access. Install: `claude mcp add filesystem npx -- -y @modelcontextprotocol/server-filesystem <path>`
+- **git** — read git history, blame, diffs. Install: `claude mcp add git uvx -- mcp-server-git`
+- **github** — issues, PRs, reviews. Install: `claude mcp add --transport http github https://api.githubcopilot.com/mcp/ --header "Authorization: Bearer YOUR_GITHUB_PAT"`
 
 ## Knowledge base
 
@@ -34,7 +39,7 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Design
 
-- **figma-context** — read Figma frames into context for UI work. Install: see https://github.com/GLips/Figma-Context-MCP
+- **figma-context** — read Figma frames into context for UI work. See https://github.com/GLips/Figma-Context-MCP
 
 ## Productivity
 
@@ -44,11 +49,16 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## DevOps / cloud
 
+- **sentry** — error monitoring. Install: `claude mcp add --transport http sentry https://mcp.sentry.dev/mcp` (OAuth via `/mcp`)
 - **kubernetes** — cluster read access, kubectl-equivalent queries. Community servers available; pin a version before production use.
 - **aws / gcp** — prefer official CLIs wrapped via allowed Bash permissions; MCP wrappers exist but are less mature.
 
 ## Selection tips
 
-- Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server. (Convention, not part of the official schema — but this plugin promotes it.)
-- Keep the installed set small. Every MCP server adds tool-selection overhead and expands the trust surface.
+- **HTTP transport is preferred for remote servers.** SSE transport is deprecated; use `--transport http` for new installs. Stdio is for local processes only.
+- By default, tools from all MCP servers are deferred and discovered on demand via tool search — adding more servers does not bloat the context window upfront.
+- Set `alwaysLoad: true` in `.mcp.json` for servers whose tools Claude needs on every turn (skips deferral but costs context on every session).
+- Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server.
 - For read-only inspection tasks, prefer a dedicated CLI + Bash allowlist over an MCP server.
+- Scopes: `local` (this project, private — default), `project` (shared via `.mcp.json` in VCS), `user` (all your projects, private).
+- Project-scoped servers from `.mcp.json` require explicit approval before first use; reset with `claude mcp reset-project-choices`.

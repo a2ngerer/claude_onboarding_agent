@@ -1,12 +1,12 @@
 ---
 name: knowledge-base
 description: Recommended vault layouts, frontmatter patterns, and KB-agent structures for Obsidian-style knowledge bases
-last_updated: 2026-04-21
+last_updated: 2026-06-01
 sources:
   - https://help.obsidian.md/
   - https://help.obsidian.md/properties
   - https://publish.obsidian.md/hub/01+-+Community+Vaults
-version: 1
+version: 2
 ---
 
 ## Vault layout
@@ -47,10 +47,20 @@ Reserved Obsidian keys: `aliases`, `tags`, `cssclasses`. Dates use `YYYY-MM-DD` 
 
 ## Agent patterns
 
-- **Vault keeper** — dispatched subagent owning all vault I/O via the Obsidian CLI. Forbids direct `Edit`/`Write` so wikilinks and backlinks stay consistent. Reference: `.claude/agents/obsidian-vault-keeper.md`.
+- **Vault keeper** — dispatched subagent owning all vault I/O via the Obsidian CLI. Forbids direct `Edit`/`Write` so wikilinks and backlinks stay consistent. Reference: `.claude/agents/obsidian-vault-keeper.md`. As of v1.12.2, the official Obsidian CLI ships as a dedicated binary (faster than the previous Electron-based method); see `.claude/rules/obsidian-cli.md` for the current command reference.
 - **Frontmatter validator** — reads notes, checks required keys (`created`, `updated`, `tags`, `type`), reports missing/malformed entries. Read-only, Haiku-class model.
 - **Tag normalizer** — scans `tags:` across the vault, flags near-duplicates (`ai`, `AI`, `artificial-intelligence`), proposes a canonical form. Read-only.
 - **Ingester** — watches `raw/` for new files, summarizes into `wiki/` notes with backlinks into related concepts. Write-capable; dispatched only on explicit user request.
+
+## Obsidian CLI notes (v1.12.2+)
+
+The dedicated CLI binary replaced the old Electron-invocation method and is significantly faster. Notable parameter changes that affect vault-keeper scripts:
+
+- `all` parameter replaced by `active` (targets the currently active file)
+- `silent` replaced by `open`
+- New commands added: `rename`, `search:context`, `daily:path`
+
+If existing vault-keeper scripts use `all` or `silent`, update them to `active` / `open` to avoid breakage.
 
 ## Recommended layout
 
