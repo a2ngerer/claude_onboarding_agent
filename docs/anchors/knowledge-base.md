@@ -1,12 +1,12 @@
 ---
 name: knowledge-base
 description: Recommended vault layouts, frontmatter patterns, and KB-agent structures for Obsidian-style knowledge bases
-last_updated: 2026-04-21
+last_updated: 2026-06-02
 sources:
   - https://help.obsidian.md/
   - https://help.obsidian.md/properties
   - https://publish.obsidian.md/hub/01+-+Community+Vaults
-version: 1
+version: 2
 ---
 
 ## Vault layout
@@ -52,6 +52,10 @@ Reserved Obsidian keys: `aliases`, `tags`, `cssclasses`. Dates use `YYYY-MM-DD` 
 - **Tag normalizer** — scans `tags:` across the vault, flags near-duplicates (`ai`, `AI`, `artificial-intelligence`), proposes a canonical form. Read-only.
 - **Ingester** — watches `raw/` for new files, summarizes into `wiki/` notes with backlinks into related concepts. Write-capable; dispatched only on explicit user request.
 
+## Obsidian CLI (vault-keeper reference)
+
+Key commands for the vault-keeper subagent: `note create`, `note read`, `note update`, `rename` (rewrites backlinks automatically — prefer over direct file rename), `search`, `search:context` (returns surrounding note text for retrieval workflows), `daily:path` (resolves the filesystem path for today's daily note). All CLI commands default to silent output — check exit codes, not stdout, for success/failure.
+
 ## Recommended layout
 
 **`raw/` + `wiki/` (Karpathy LLM-Wiki pattern).** Exactly two top-level folders: `raw/` for ingested material, `wiki/` for curated, interlinked notes. Templates and daily notes go into dedicated subfolders (`templates/`, `daily/`) only when they are actually used. Vault ops are routed through the `obsidian-vault-keeper` subagent so the Obsidian CLI owns every write.
@@ -61,6 +65,6 @@ Reserved Obsidian keys: `aliases`, `tags`, `cssclasses`. Dates use `YYYY-MM-DD` 
 - Deeply nested topical folders (`wiki/tech/programming/python/django/models/`) — defeats wikilinks, buries notes from the graph view.
 - Mixing daily notes with topical notes in one folder — date prefixes pollute the index and the graph.
 - Frontmatter type drift — `tags: "one, two"` (string) vs. `tags: [one, two]` (list) across notes breaks dataview queries.
-- Editing vault files with plain `Edit`/`Write` or `mv` — skips Obsidian's link-rewrite logic and silently corrupts backlinks.
+- Editing vault files with plain `Edit`/`Write` or `mv` — skips Obsidian's link-rewrite logic and silently corrupts backlinks. Use the CLI `rename` command instead.
 - Using the third-party Obsidian MCP for vault I/O — its tool schemas load into every session. Prefer the official CLI plus the vault-keeper subagent.
 - Dumping raw source material into `wiki/` — `wiki/` is for curated notes only; raw inputs belong in `raw/`.
