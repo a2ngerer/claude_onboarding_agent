@@ -1,12 +1,12 @@
 ---
 name: knowledge-base
 description: Recommended vault layouts, frontmatter patterns, and KB-agent structures for Obsidian-style knowledge bases
-last_updated: 2026-04-21
+last_updated: 2026-06-03
 sources:
   - https://help.obsidian.md/
   - https://help.obsidian.md/properties
   - https://publish.obsidian.md/hub/01+-+Community+Vaults
-version: 1
+version: 2
 ---
 
 ## Vault layout
@@ -51,6 +51,15 @@ Reserved Obsidian keys: `aliases`, `tags`, `cssclasses`. Dates use `YYYY-MM-DD` 
 - **Frontmatter validator** — reads notes, checks required keys (`created`, `updated`, `tags`, `type`), reports missing/malformed entries. Read-only, Haiku-class model.
 - **Tag normalizer** — scans `tags:` across the vault, flags near-duplicates (`ai`, `AI`, `artificial-intelligence`), proposes a canonical form. Read-only.
 - **Ingester** — watches `raw/` for new files, summarizes into `wiki/` notes with backlinks into related concepts. Write-capable; dispatched only on explicit user request.
+
+## Obsidian CLI (v1.13.0, May 2026)
+
+New and changed commands relevant to vault-keeper agents:
+
+- `daily:prepend` — inserts content **after the frontmatter**, not at the very top of the file
+- `daily:path` — returns the path for today's (or a given date's) daily note without opening it
+- `rename` — renames a note and rewrites all vault backlinks automatically
+- `search:context` — searches with surrounding context lines returned alongside results
 
 ## Recommended layout
 
