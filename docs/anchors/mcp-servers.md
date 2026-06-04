@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-04-21
+last_updated: 2026-06-04
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 2
+version: 3
 ---
 
 ## Recommended
@@ -22,11 +22,13 @@ version: 2
 
 Per-category details follow. Keep the set small: every installed MCP expands the tool-selection surface and the trust boundary.
 
+Browse reviewed connectors in the Anthropic Directory at `https://claude.ai/directory`.
+
 ## Coding
 
 - **filesystem** — scoped filesystem access beyond the working directory. Install: `claude mcp add filesystem npx -- -y @modelcontextprotocol/server-filesystem <path>`
 - **git** — read git history, blame, diffs without shelling out. Install: `claude mcp add git uvx -- mcp-server-git`
-- **github** — issues, PRs, reviews via the GitHub API. Install: `claude mcp add github npx -- -y @modelcontextprotocol/server-github` (needs `GITHUB_PERSONAL_ACCESS_TOKEN`)
+- **github** — issues, PRs, reviews. Install: `claude mcp add --transport http github https://api.githubcopilot.com/mcp/ --header "Authorization: Bearer <PAT>"`
 
 ## Knowledge base
 
@@ -47,8 +49,24 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 - **kubernetes** — cluster read access, kubectl-equivalent queries. Community servers available; pin a version before production use.
 - **aws / gcp** — prefer official CLIs wrapped via allowed Bash permissions; MCP wrappers exist but are less mature.
 
+## Transports
+
+- **HTTP** (`--transport http`) is the recommended transport for remote servers. OAuth 2.0 authentication is supported.
+- **stdio** — local process; ideal for tools needing direct system access.
+- **WebSocket** (`ws://`) — persistent bidirectional connection; configure in `.mcp.json` with `"type": "ws"`.
+- **SSE** — deprecated. Use HTTP instead where available.
+
+## Installation scopes
+
+| Scope | Stored in | Shared |
+|---|---|---|
+| `local` (default) | `~/.claude.json` | No — personal, current project only |
+| `project` | `.mcp.json` in repo root | Yes — via version control |
+| `user` | `~/.claude.json` | No — personal, all projects |
+
 ## Selection tips
 
-- Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server. (Convention, not part of the official schema — but this plugin promotes it.)
+- Tool search is on by default: MCP tool schemas are deferred and loaded on demand, keeping startup context lean. Set `alwaysLoad: true` in `.mcp.json` for servers whose tools are needed on every turn.
 - Keep the installed set small. Every MCP server adds tool-selection overhead and expands the trust surface.
 - For read-only inspection tasks, prefer a dedicated CLI + Bash allowlist over an MCP server.
+- Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server.
