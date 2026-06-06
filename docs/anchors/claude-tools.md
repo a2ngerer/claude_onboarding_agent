@@ -1,14 +1,14 @@
 ---
 name: claude-tools
 description: How to configure Claude's core tooling surface — hooks, rules, memory files, settings, slash commands, plugins
-last_updated: 2026-04-21
+last_updated: 2026-06-06
 sources:
   - https://docs.claude.com/en/docs/claude-code/hooks
   - https://docs.claude.com/en/docs/claude-code/settings
   - https://docs.claude.com/en/docs/claude-code/plugins
   - https://docs.claude.com/en/docs/claude-code/slash-commands
   - https://docs.claude.com/en/docs/claude-code/memory
-version: 1
+version: 2
 ---
 
 ## Memory files
@@ -18,11 +18,12 @@ version: 1
 - `AGENTS.md` — not read natively by Claude Code. If the repo needs both, `CLAUDE.md` imports it with `@AGENTS.md`.
 - Size target: keep each `CLAUDE.md` under ~200 lines. Longer files reduce adherence.
 - For modular rules, use `.claude/rules/*.md` with optional `paths:` frontmatter to scope by glob. Rules without `paths:` load unconditionally.
-- Imports: `@path/to/file` inside `CLAUDE.md` pulls another file into context at launch (max depth 5).
+- Imports: `@path/to/file` inside `CLAUDE.md` pulls another file into context at launch (max depth 4).
+- **Auto memory**: Claude accumulates learnings in `~/.claude/projects/<repo>/memory/MEMORY.md` (first 200 lines loaded per session). Toggle with `autoMemoryEnabled` in settings.
 
 ## Settings
 
-Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `outputStyle`, `sandbox`, `claudeMdExcludes`. Permission rules evaluate in order `deny → ask → allow`; first match wins.
+Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `effortLevel`, `outputStyle`, `sandbox`, `claudeMdExcludes`, `autoMemoryEnabled`, `autoMemoryDirectory`. Permission rules evaluate in order `deny → ask → allow`; first match wins.
 
 ```json
 { "permissions": { "allow": ["Bash(npm run test *)"], "deny": ["Read(./.env)"] } }
@@ -30,14 +31,26 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 
 ## Hooks
 
-| Event | Typical use | Example |
-|---|---|---|
-| `SessionStart` | Load context or env vars on session open | Inject current git branch |
-| `UserPromptSubmit` | Validate or enrich the user prompt | Block secret patterns |
-| `PreToolUse` | Block or gate a tool call | Deny `Bash(rm -rf *)` |
-| `PostToolUse` | Lint or log after a tool runs | Auto-run `eslint --fix` after `Edit` |
-| `Stop` | Cleanup when Claude finishes a turn | Persist session notes |
-| `SessionEnd` | Release resources or save artifacts | Flush metrics |
+Claude Code supports 33+ hook events. Key events:
+
+| Event | Typical use |
+|---|---|
+| `SessionStart` | Load context, set env vars, set session title |
+| `SessionEnd` | Release resources or save artifacts |
+| `UserPromptSubmit` | Validate or enrich the user prompt |
+| `PreToolUse` | Block or gate a tool call |
+| `PostToolUse` | Lint or log after a tool runs |
+| `PostToolBatch` | After parallel tool calls resolve, before next model call |
+| `Stop` | Cleanup; supports `hookSpecificOutput.additionalContext` to continue the turn |
+| `SubagentStart` / `SubagentStop` | Hook into subagent lifecycle |
+| `MessageDisplay` | Transform or suppress displayed assistant text |
+| `CwdChanged` | React to directory changes (e.g. direnv) |
+| `PermissionRequest` | Auto-approve or deny permission dialogs |
+| `PreCompact` / `PostCompact` | Before/after context compaction |
+| `InstructionsLoaded` | Audit which CLAUDE.md / rules files loaded |
+| `Elicitation` | When an MCP server requests user input |
+
+Hook types: `command` (shell), `agent` (spawns a subagent), `prompt` (single-turn Claude eval), `mcp_tool` (calls an MCP tool).
 
 Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries. Plugins ship hooks in `hooks/hooks.json`.
 
@@ -45,6 +58,7 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 
 - Skills and custom commands are merged. Project skills live at `.claude/skills/<name>/SKILL.md`; user skills at `~/.claude/skills/<name>/SKILL.md`. Legacy `.claude/commands/*.md` files still work.
 - Plugin-provided skills are namespaced: `/<plugin-name>:<skill-name>` to prevent collisions.
+- Notable built-in commands: `/goal` (set completion condition), `/workflows` (view dynamic workflow runs), `/reload-skills` (re-scan skill directories mid-session), `/code-review`, `/simplify`, `/memory`, `/effort`.
 - Arguments: `$ARGUMENTS` (full string), `$0`/`$1`/… or `$ARGUMENTS[N]` (positional), named args via `arguments:` frontmatter.
 - Name slugs: lowercase letters, digits, hyphens only; max 64 chars.
 
