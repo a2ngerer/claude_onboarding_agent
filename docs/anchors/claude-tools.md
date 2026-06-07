@@ -1,14 +1,14 @@
 ---
 name: claude-tools
 description: How to configure Claude's core tooling surface — hooks, rules, memory files, settings, slash commands, plugins
-last_updated: 2026-04-21
+last_updated: 2026-06-07
 sources:
   - https://docs.claude.com/en/docs/claude-code/hooks
   - https://docs.claude.com/en/docs/claude-code/settings
   - https://docs.claude.com/en/docs/claude-code/plugins
   - https://docs.claude.com/en/docs/claude-code/slash-commands
   - https://docs.claude.com/en/docs/claude-code/memory
-version: 1
+version: 2
 ---
 
 ## Memory files
@@ -18,11 +18,12 @@ version: 1
 - `AGENTS.md` — not read natively by Claude Code. If the repo needs both, `CLAUDE.md` imports it with `@AGENTS.md`.
 - Size target: keep each `CLAUDE.md` under ~200 lines. Longer files reduce adherence.
 - For modular rules, use `.claude/rules/*.md` with optional `paths:` frontmatter to scope by glob. Rules without `paths:` load unconditionally.
-- Imports: `@path/to/file` inside `CLAUDE.md` pulls another file into context at launch (max depth 5).
+- Imports: `@path/to/file` inside `CLAUDE.md` pulls another file into context at launch (max depth 5 hops).
+- Block-level HTML comments (`<!-- ... -->`) in `CLAUDE.md` are stripped before injection into context; use them for maintainer-only notes without spending tokens.
 
 ## Settings
 
-Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `outputStyle`, `sandbox`, `claudeMdExcludes`. Permission rules evaluate in order `deny → ask → allow`; first match wins.
+Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `fallbackModel`, `agent`, `outputStyle`, `sandbox`, `claudeMdExcludes`, `effortLevel`, `alwaysThinkingEnabled`. Permission rules evaluate in order `deny → ask → allow`; first match wins. `fallbackModel` accepts up to three model IDs tried in order when the primary model is overloaded.
 
 ```json
 { "permissions": { "allow": ["Bash(npm run test *)"], "deny": ["Read(./.env)"] } }
@@ -30,16 +31,19 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 
 ## Hooks
 
-| Event | Typical use | Example |
+Five hook types: `command` (shell script), `http` (POST endpoint), `mcp_tool`, `prompt` (single-turn LLM eval), `agent` (subagent with tools).
+
+| Event | Typical use | Notes |
 |---|---|---|
 | `SessionStart` | Load context or env vars on session open | Inject current git branch |
 | `UserPromptSubmit` | Validate or enrich the user prompt | Block secret patterns |
 | `PreToolUse` | Block or gate a tool call | Deny `Bash(rm -rf *)` |
-| `PostToolUse` | Lint or log after a tool runs | Auto-run `eslint --fix` after `Edit` |
-| `Stop` | Cleanup when Claude finishes a turn | Persist session notes |
+| `PostToolUse` | Lint or log after a tool runs | `continueOnBlock: true` feeds rejection reason back to Claude; auto-run `eslint --fix` after `Edit` |
+| `Stop` | Cleanup when Claude finishes a turn | Can return `hookSpecificOutput.additionalContext` to give Claude feedback and continue the turn |
+| `SubagentStop` | Cleanup or quality check when a subagent completes | Can also return `additionalContext` |
 | `SessionEnd` | Release resources or save artifacts | Flush metrics |
 
-Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries. Plugins ship hooks in `hooks/hooks.json`.
+Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries. Use `args: string[]` for shell-free exec form (no quoting issues). Plugins ship hooks in `hooks/hooks.json`.
 
 ## Slash commands
 
@@ -50,9 +54,9 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 
 ## Plugins
 
-- Manifest: `.claude-plugin/plugin.json` with `name`, `version` (semver), `description`, optional `author`, `homepage`, `repository`.
+- Manifest: `.claude-plugin/plugin.json` with `name`, `version` (semver), `description`, optional `author`, `homepage`, `repository`, `defaultEnabled`.
 - Components sit at the plugin root, not inside `.claude-plugin/`: `skills/`, `agents/`, `commands/`, `hooks/`, `.mcp.json`, `.lsp.json`, `monitors/`, `settings.json`.
-- Version every release; users update through the marketplace. `/reload-plugins` picks up local edits.
+- Version every release; users update through the marketplace. `/reload-plugins` picks up local edits. Use `/plugin list --enabled` / `--disabled` to inspect active plugins.
 
 ## Recommendations
 

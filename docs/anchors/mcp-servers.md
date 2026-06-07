@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-04-21
+last_updated: 2026-06-07
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 2
+version: 3
 ---
 
 ## Recommended
@@ -46,6 +46,10 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 - **kubernetes** — cluster read access, kubectl-equivalent queries. Community servers available; pin a version before production use.
 - **aws / gcp** — prefer official CLIs wrapped via allowed Bash permissions; MCP wrappers exist but are less mature.
+
+## Reactive / event
+
+An MCP server can act as an **event channel** — receiving push messages from external services (Slack, webhooks, Telegram) and injecting them into your session while Claude is active. This lets Claude react to external events without polling. See the Claude Code docs for the `channels` pattern.
 
 ## Selection tips
 
