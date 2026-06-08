@@ -1,13 +1,21 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-04-21
+last_updated: 2026-06-08
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 1
+version: 2
 ---
+
+## Agent types
+
+Three related but distinct delegation models exist in Claude Code:
+
+- **Subagents** (this anchor) — spawned within the current session via the `Agent` tool; results return to the calling context.
+- **Background agents** — independent parallel sessions monitored via `claude agents` dashboard (`/agent-view`). Use when parallel work doesn't need to feed back into the main session.
+- **Agent teams** — sessions that communicate via `SendMessage`. Messages relayed from other Claude sessions do not carry user authority.
 
 ## When to use a subagent
 
@@ -24,6 +32,8 @@ version: 1
 - Parallel vs. serial: run in parallel when subtasks are independent; serialize when a later task depends on the earlier result.
 - Split research from implementation — one subagent explores and summarizes, the main agent (or another subagent) implements against that summary.
 - Use `context: fork` on a skill when the skill itself is the task and it benefits from isolation.
+- `subagent_type` matching is case- and separator-insensitive (`"Code Reviewer"` resolves to `code-reviewer`).
+- Set `CLAUDE_CODE_SUBAGENT_MODEL` env var to override the model for all subagent processes globally.
 
 ## Prompting a subagent
 
@@ -55,6 +65,7 @@ The main agent waits once, then relays a consolidated summary — it does not na
 - Route high-volume or low-stakes work to Haiku via the subagent's `model:` field.
 - Preserve important facts by having subagents persist artifacts (files, memory) rather than stuffing them back into the main context.
 - Reuse frequently-spawned workers as named subagents in `.claude/agents/<name>.md` with a clear `description:` so the main agent picks them deterministically.
+- Enable `autoMemoryEnabled` in a named subagent's settings to let it accumulate learnings across sessions.
 
 ## Anti-patterns
 
