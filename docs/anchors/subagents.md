@@ -1,13 +1,19 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-04-21
+last_updated: 2026-06-09
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 1
+version: 2
 ---
+
+## Subagents vs background agents vs workflows
+
+- **Subagents (in-session)** — spawned via the `Agent` tool within the main session. Share the session's working directory, auth, and turn context. Return a result inline. Use for side tasks that would flood main context but must complete before the next step.
+- **Background agents** — independent sessions started with `claude --bg` or via `/schedule`. Run asynchronously across turns; visible in the Agent View (`claude agents`). Use for long-running or fire-and-forget work.
+- **Dynamic workflows** — script-driven orchestration of tens-to-hundreds of agents via the `Workflow` tool or `/workflows`. Suitable when the work-list is discovered at runtime and needs structured fan-out with per-item results.
 
 ## When to use a subagent
 
@@ -66,3 +72,4 @@ The main agent waits once, then relays a consolidated summary — it does not na
 - "Endless search" loops where the subagent scours for sources that do not exist; include a stop condition.
 - Duplicate work from overlapping task boundaries — partition the problem space explicitly.
 - Write-capable subagents invoked without parsing a contracted output — "run it and hope" corrupts state silently.
+- Using an in-session subagent for work that needs to survive multiple turns — use a background agent instead.

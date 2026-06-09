@@ -1,12 +1,12 @@
 ---
 name: knowledge-base
 description: Recommended vault layouts, frontmatter patterns, and KB-agent structures for Obsidian-style knowledge bases
-last_updated: 2026-04-21
+last_updated: 2026-06-09
 sources:
   - https://help.obsidian.md/
   - https://help.obsidian.md/properties
   - https://publish.obsidian.md/hub/01+-+Community+Vaults
-version: 1
+version: 2
 ---
 
 ## Vault layout
@@ -44,6 +44,17 @@ Reserved Obsidian keys: `aliases`, `tags`, `cssclasses`. Dates use `YYYY-MM-DD` 
 - Daily notes: `YYYY-MM-DD.md` under a dedicated `daily/` folder only.
 - Avoid reserved characters: `:`, `/`, `\`, `?`, `*`, `"`, `<`, `>`, `|`. Obsidian rejects them on write.
 - One concept per note — resist multi-topic dumps. Break out subtopics into linked notes.
+
+## Obsidian CLI
+
+The official Obsidian CLI is the recommended write path for vault I/O. Key commands (all default to silent; pass `--json` for machine-readable output):
+
+| Command | Purpose |
+|---|---|
+| `obsidian daily:path` | Resolve the path for today's daily note |
+| `obsidian rename <old> <new>` | Rename a note and rewrite all backlinks |
+| `obsidian search <query>` | Full-text search across the vault |
+| `obsidian search:context <query>` | Search with surrounding context snippets |
 
 ## Agent patterns
 
