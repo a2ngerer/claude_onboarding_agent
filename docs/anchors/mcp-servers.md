@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-04-21
+last_updated: 2026-06-10
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 2
+version: 3
 ---
 
 ## Recommended
@@ -47,8 +47,14 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 - **kubernetes** — cluster read access, kubectl-equivalent queries. Community servers available; pin a version before production use.
 - **aws / gcp** — prefer official CLIs wrapped via allowed Bash permissions; MCP wrappers exist but are less mature.
 
+## Channels
+
+An MCP server can act as a **channel** — pushing external events (Slack messages, Telegram, Discord, webhooks) into your Claude Code session so Claude reacts autonomously while you're away. Channels use the MCP server's `post-session` lifecycle hook to handle cleanup after the session ends.
+
 ## Selection tips
 
 - Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server. (Convention, not part of the official schema — but this plugin promotes it.)
 - Keep the installed set small. Every MCP server adds tool-selection overhead and expands the trust surface.
 - For read-only inspection tasks, prefer a dedicated CLI + Bash allowlist over an MCP server.
+- For enterprise deployments, use `allowedMcpServers` and `deniedMcpServers` in managed settings to control which servers can be loaded organization-wide.
+- Desktop Extensions provide one-click MCP server installation in Claude Desktop; for Claude Code, use `claude mcp add` from the CLI.

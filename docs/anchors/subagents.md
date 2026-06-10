@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-04-21
+last_updated: 2026-06-10
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 1
+version: 2
 ---
 
 ## When to use a subagent
@@ -16,6 +16,7 @@ version: 1
 - The task is breadth-first: three or more independent queries that can run in parallel.
 - Verification after implementation — a fresh context is less biased toward the code it just wrote.
 - A repeated worker with the same instructions — formalize it as a named subagent under `.claude/agents/`.
+- Claude Code includes built-in subagents Explore (read-only, Haiku), Plan (read-only), and general-purpose (all tools); define custom named agents in `.claude/agents/` or `~/.claude/agents/` to extend them.
 
 ## Delegation heuristics
 
@@ -23,7 +24,7 @@ version: 1
 - Dispatch via the `Agent` tool when the investigation needs many reads, unbounded exploration, or its own filesystem/network permissions.
 - Parallel vs. serial: run in parallel when subtasks are independent; serialize when a later task depends on the earlier result.
 - Split research from implementation — one subagent explores and summarizes, the main agent (or another subagent) implements against that summary.
-- Use `context: fork` on a skill when the skill itself is the task and it benefits from isolation.
+- Use `context: fork` on a skill when the skill itself is the task and it benefits from the full conversation context.
 
 ## Prompting a subagent
 
@@ -52,9 +53,11 @@ The main agent waits once, then relays a consolidated summary — it does not na
 - Give each subagent a written objective, output contract, and length cap — vague prompts waste tokens.
 - Parallelize independent investigations; serialize only on real dependencies.
 - Scope tool access per subagent: read-only agents list only `Read, Grep, Glob, Bash`; write-capable agents require a deliberate carve-out.
-- Route high-volume or low-stakes work to Haiku via the subagent's `model:` field.
+- Route high-volume or low-stakes work to Haiku via the subagent's `model:` field; available aliases: `sonnet`, `opus`, `haiku`, `fable`.
 - Preserve important facts by having subagents persist artifacts (files, memory) rather than stuffing them back into the main context.
 - Reuse frequently-spawned workers as named subagents in `.claude/agents/<name>.md` with a clear `description:` so the main agent picks them deterministically.
+- Use `isolation: worktree` in named subagent frontmatter when the subagent needs to make file edits without affecting the main checkout.
+- Use `memory: user|project|local` in the frontmatter for repeated workers that should accumulate codebase knowledge across sessions.
 
 ## Anti-patterns
 
