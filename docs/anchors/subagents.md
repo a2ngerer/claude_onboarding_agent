@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-04-21
+last_updated: 2026-06-11
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 1
+version: 2
 ---
 
 ## When to use a subagent
@@ -35,6 +35,28 @@ Every subagent prompt MUST contain:
 4. Length cap — "< 200 words" or "≤ 5 bullets" to prevent drift.
 5. Stop conditions — when to return with partial results (e.g. "if no matches in 3 globs, report empty").
 
+## Named subagents and scope
+
+Define reusable workers as `.md` files with YAML frontmatter at one of these locations (highest priority first):
+
+1. Managed settings (org-wide)
+2. `--agents` CLI flag (current session only; not saved to disk)
+3. `.claude/agents/` — project scope; check into version control
+4. `~/.claude/agents/` — user scope, available across all projects
+5. Plugin `agents/` directory
+
+Use `/agents` to create, edit, and manage subagents interactively. Subagents can have their own hooks, skills, and permission mode. Add `memoryDir: user` in frontmatter to give a subagent a persistent memory directory that accumulates across sessions.
+
+## Nesting and background agents
+
+Sub-agents can spawn their own sub-agents up to **5 levels deep**. Beyond this depth, Claude Code blocks further spawning. Keep fan-out bounded: embed a cap in the orchestrator prompt and add a stop condition.
+
+For many independent sessions in parallel (not nested sub-agents), use **background agents** (`claude agents` dashboard). For sessions that communicate and share tasks, use **agent teams** with a designated team lead.
+
+## Hooks
+
+`SubagentStart` fires when a subagent spawns; `SubagentStop` fires when it finishes and can return `additionalContext` to give the finishing subagent feedback before it stops. Both hooks take a matcher on the agent name and live under `hooks.<EventName>[]` in settings.
+
 ## Parallel dispatch
 
 Send multiple `Agent` calls in a single message for independent work:
@@ -58,7 +80,7 @@ The main agent waits once, then relays a consolidated summary — it does not na
 
 ## Anti-patterns
 
-- Subagents dispatching other subagents without bounds — nested fan-out blows up context and latency.
+- Exceeding 3–4 nesting levels is a sign of over-engineering — the 5-level hard cap exists for a reason; redesign the orchestration to be shallower.
 - The main agent narrating subagent work step-by-step instead of relaying the final summary.
 - Dispatching a subagent for a task that is one tool call — the overhead dwarfs the work.
 - Vague prompts like "research X" with no output format — produces redundant searches and unfocused summaries.

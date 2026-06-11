@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-04-21
+last_updated: 2026-06-11
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 2
+version: 3
 ---
 
 ## Recommended
@@ -21,6 +21,15 @@ version: 2
 - `gmail` / `calendar` — Google productivity via official MCPs where available
 
 Per-category details follow. Keep the set small: every installed MCP expands the tool-selection surface and the trust boundary.
+
+## Transport types
+
+- **HTTP** (recommended) — `claude mcp add --transport http <name> <url>`. Most cloud services use this. Accepted as `streamable-http` in `.mcp.json` configs.
+- **stdio** (local) — `claude mcp add <name> -- <command> [args...]`. For tools needing direct system access. The spawned server receives `CLAUDE_PROJECT_DIR` pointing to the project root.
+- **WebSocket** (push events) — configure via JSON only (`"type":"ws"`). Use when the server pushes events unprompted; otherwise prefer HTTP.
+- **SSE** — deprecated. Existing SSE servers still work; new connections should use HTTP.
+
+Browse reviewed connectors at the Anthropic Directory (`claude.ai/directory`). Scaffold a new server with the `mcp-server-dev` plugin (`/plugin install mcp-server-dev@claude-plugins-official`).
 
 ## Coding
 
@@ -52,3 +61,4 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 - Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server. (Convention, not part of the official schema — but this plugin promotes it.)
 - Keep the installed set small. Every MCP server adds tool-selection overhead and expands the trust surface.
 - For read-only inspection tasks, prefer a dedicated CLI + Bash allowlist over an MCP server.
+- Use `--channels` on servers that declare the `claude/channel` capability to receive push messages (CI results, monitoring alerts, webhooks) directly into your session.
