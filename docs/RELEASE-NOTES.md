@@ -1,5 +1,15 @@
 # Release Notes
 
+## v1.2.1 — 2026-06-12
+
+Skill description sharpening, driven by trigger-eval findings.
+
+- `audit-setup` description now leads with its read-only, report-only nature instead of "normally invoked via /checkup", which steered the eval judge (and users browsing the catalog) to `/checkup`
+- `checkup` description no longer mentions running `/audit-setup` internally; it now emphasizes the decide-and-act contract ("checked and fixed, not just a findings report")
+- `research-setup` description is scoped to the input side of academic research (literature reviews, paper screening, Zotero reference management, reading notes) and points manuscript drafting to `academic-writing-setup` — removes the overlap that caused flaky routing of literature prompts
+- README tables updated to match the new positioning
+- Eval fixtures unchanged — descriptions were verified against the existing fixtures per the optimization loop in the eval-harness design doc
+
 ## v1.2.0 — 2026-06-12
 
 Skill trigger eval harness.

@@ -1,6 +1,6 @@
 ---
 name: checkup
-description: The single user-facing maintenance entrypoint. Runs /audit-setup internally, weighs findings + meta age + deprecated-model anchors, and either prints a short "fine-as-is" summary, hands off to /upgrade-setup, or invokes /onboarding --rebuild.
+description: The single user-facing maintenance entrypoint for an existing Claude setup. Health-checks your configuration, decides whether it is fine as-is, needs an upgrade, or needs a rebuild, and takes that action — handing off to /upgrade-setup or /onboarding --rebuild as needed. Use when you want your setup checked and fixed, not just a findings report.
 ---
 
 # Checkup — Single Maintenance Entrypoint

@@ -1,6 +1,6 @@
 ---
 name: research-setup
-description: Set up Claude for academic research and writing — configures citation format, research domain, and writing tool preferences so Claude supports your workflow from literature review to final paper.
+description: Set up Claude for the input side of academic research — literature reviews, paper screening and summaries, reference management with Zotero, annotated bibliographies, and reading notes for your research domain. For drafting the manuscript itself, use academic-writing-setup.
 ---
 
 # Research Setup
