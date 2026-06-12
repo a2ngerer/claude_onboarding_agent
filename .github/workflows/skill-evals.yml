@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       # The runner has no local `claude` CLI, so the script needs the API
       # backend. Skip gracefully (green run + warning) until the secret is
@@ -52,7 +52,7 @@ jobs:
 
       - name: Upload report
         if: always() && steps.key.outputs.present == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: skill-eval-report
           path: eval-report.json
