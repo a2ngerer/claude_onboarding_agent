@@ -34,7 +34,7 @@ Not sure where to start? Run `/onboarding` and we'll figure it out with you. Or 
 | **A data scientist / ML engineer** | `/data-science-setup` | Notebook hygiene, experiment tracking, `data/raw→processed` layout, reproducibility |
 | **Building a personal wiki / second brain** | `/knowledge-base-setup` | Karpathy-pattern wiki, optional Obsidian CLI subagent |
 | **Writing emails, memos, reports, proposals** | `/office-setup` | Business-writing focus: Q1 branches guidelines (email path vs. report path); presentations out of scope |
-| **A researcher or academic** | `/research-setup` | Citation format, domain vocabulary, LaTeX-aware ignores |
+| **A researcher or academic** | `/research-setup` | Literature review workflow, Zotero reference management, reading notes |
 | **Writing a thesis, paper, or dissertation** | `/academic-writing-setup` | Thesis / paper / dissertation — LaTeX or Typst, Zotero, citation rules that prevent hallucinations |
 | **Creator brand voice** (YouTube, shortform, newsletter, podcast) | `/content-voice-setup` | Voice + audience + per-platform rule files — scope limited to writing guidance; publishing / analytics / media production out of scope |
 | **Running infra / DevOps** | `/devops-setup` | Cloud + IaC + CI config, safe-by-default infra workflow |
@@ -98,7 +98,7 @@ irm https://raw.githubusercontent.com/a2ngerer/claude_onboarding_agent/main/scri
 | `/data-science-setup` | Notebook workflow (Jupyter/marimo), experiment tracking (MLflow/W&B/DVC), reproducible `pyproject.toml`, `data/raw/interim/processed` layout, model-card pointers |
 | `/knowledge-base-setup` | Builds a [Karpathy-pattern](https://github.com/forrestchang/andrej-karpathy-skills) wiki from your notes or codebase (+ optional [Obsidian](https://obsidian.md) CLI integration via dispatched subagent — no always-on MCP token cost) |
 | `/office-setup` | Business writing — emails, memos, reports, proposals. Q1 bifurcates emitted guidelines (email path / report path / both); presentations are out of scope |
-| `/research-setup` | Citation format, research domain, academic writing guidelines |
+| `/research-setup` | Input side of academic research — literature reviews, paper screening and summaries, Zotero reference management, reading notes. Manuscript drafting lives in `/academic-writing-setup` |
 | `/academic-writing-setup` | Thesis / paper / dissertation setup — LaTeX or Typst stack, Zotero + Better BibTeX, citation style, no-invented-citations rules, `sections/`/`bib/`/`figures/` scaffold |
 | `/content-voice-setup` | Creator brand voice for YouTube / shortform / newsletter / podcast. Emits per-platform rule files under `.claude/rules/` (`youtube.md`, `shortform.md`, `newsletter.md`, `podcast.md`) keyed to the platforms Q1 selects. Scope limited to writing guidance — publishing, analytics, thumbnails, and media production are out of scope |
 | `/devops-setup` | Cloud provider, IaC tool, CI/CD — safe infra workflow + agent roles |
@@ -106,7 +106,7 @@ irm https://raw.githubusercontent.com/a2ngerer/claude_onboarding_agent/main/scri
 | `/graphify-setup` | Installs [Graphify](https://github.com/safishamsi/graphify) (25-language tree-sitter + Markdown + PDF + media indexer). Registers `/graphify query / path / explain` and a PreToolUse hook consulted before file-search tool calls — cuts token cost on large codebases and mixed-media corpora. Safe to layer on top of any other setup |
 | `/checkup` | The single maintenance entrypoint. Runs the audit, weighs findings + meta age + deprecated-model anchors, and either prints a short "fine-as-is" summary, hands off to `/upgrade-setup`, or invokes `/onboarding --rebuild`. Call this whenever you want to know whether your setup still matches current best practices |
 | `/anchors` | Refresh anchor-derived marker sections in CLAUDE.md/AGENTS.md against the latest upstream anchors |
-| `/audit-setup` | Power-user / internal tool — normal flow is `/checkup`. Audits your existing Claude setup (permissions, CLAUDE.md quality, git hygiene, tooling) and returns a prioritized improvement list |
+| `/audit-setup` | Read-only power-user tool — normal flow is `/checkup`. Audits your existing Claude setup (permissions, CLAUDE.md quality, git hygiene, tooling) and returns a prioritized HIGH/MEDIUM/LOW findings list without changing any files |
 | `/upgrade-setup` | Power-user / internal tool — normal flow is `/checkup`. Re-applies current best practices to an existing setup: per-change diff preview, dry-run flag, timestamped backups, never touches content outside the plugin's delimited sections |
 
 ---

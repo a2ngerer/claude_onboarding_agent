@@ -1,6 +1,6 @@
 ---
 name: audit-setup
-description: Power-user tool — normally invoked via /checkup. Audit your current Claude setup and get a prioritized list of improvement suggestions — package manager hygiene, CLAUDE.md quality, permissions, git hygiene, MCP servers, and more.
+description: Read-only audit of your current Claude setup — prints a prioritized HIGH/MEDIUM/LOW findings list covering package manager hygiene, CLAUDE.md quality, permissions, git hygiene, and MCP servers, without changing any files. Power-user stage of /checkup — invoke directly when you want the raw findings report without a verdict or follow-up actions.
 ---
 
 # Audit Setup — Claude Setup Audit
