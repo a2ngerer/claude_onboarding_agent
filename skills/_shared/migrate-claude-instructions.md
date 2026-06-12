@@ -1,3 +1,5 @@
+> Consumed by checkup/SKILL.md and upgrade-setup/SKILL.md. Do not invoke directly.
+
 # Migrate claude_instructions/ → .claude/rules/
 
 Shared procedure consumed by the `checkup` and `upgrade` skills. When a user project contains a legacy `claude_instructions/` folder, this procedure offers and executes the migration to the `.claude/rules/` convention. Read before offering migration.
@@ -18,7 +20,7 @@ Only these eight filenames are migrated. Any other file in `claude_instructions/
 |---|---|
 | `writing-style.md` | academic-writing-setup |
 | `citation-rules.md` | academic-writing-setup |
-| `obsidian-cli.md` | knowledge-base-builder |
+| `obsidian-cli.md` | knowledge-base-setup |
 | `data-schema.md` | data-science-setup |
 | `evaluation-protocol.md` | data-science-setup |
 | `api-conventions.md` | web-development-setup |

@@ -27,6 +27,7 @@ If the delimited block already exists from a previous run, replace only the cont
 Read these on-demand at the step that invokes them. Do not read eagerly.
 
 - `skills/_shared/consume-handoff.md` — orchestrator handoff parse + inline fallback (preamble, before Step 1)
+- `skills/_shared/offer-superpowers.md` — canonical Superpowers opt-in (Step 1)
 
 ## Delegated Mode
 
@@ -43,10 +44,7 @@ All other steps still run so the user gets the design-tool CLAUDE.md section and
 
 Skip in delegated mode.
 
-Read `skills/_shared/installation-protocol.md` and follow it for each dependency below.
-
-Dependencies:
-- Superpowers (optional) — description: "A free Claude Code skills library (94,000+ users). The brainstorming skill is useful for exploring design directions and component structures before committing to an implementation." — marketplace-id: `superpowers@claude-plugins-official`, github: `https://github.com/obra/superpowers`, name: `superpowers`
+Read `skills/_shared/offer-superpowers.md` and run it with `skill_slug: design-setup`, `mandatory: false`, `capability_line: "A widely used free Claude Code skills library. The brainstorming skill is useful for exploring design directions and component structures before committing to an implementation."` The helper asks the user, delegates to `skills/_shared/installation-protocol.md` on `yes`, and sets `superpowers_installed`, `superpowers_scope`, `superpowers_method`.
 
 ## Step 2: Context Question
 
@@ -82,7 +80,7 @@ Skip in delegated mode — the parent skill owns this prompt.
 
 Ask ONCE (adapt to detected language):
 
-> "Install the official Anthropic `frontend-design` skill? It avoids AI-generic UI, makes bold design decisions, and is strongly recommended for design-to-code work (277k+ installs). (yes / no)"
+> "Install the official Anthropic `frontend-design` skill? It avoids AI-generic UI, makes bold design decisions, and is strongly recommended for design-to-code work (popular official plugin). (yes / no)"
 
 On `yes`: run `/plugin install frontend-design@claude-plugins-official`. On failure: warn once and continue. Record `frontend-design_installed` accordingly.
 

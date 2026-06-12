@@ -1,7 +1,8 @@
 {
   "name": "claude-onboarding-agent",
+  "displayName": "Claude Onboarding Agent",
   "description": "Guided setup for Claude Code — generates tailored CLAUDE.md, AGENTS.md, and config files for any use case in minutes.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": {
     "name": "Alexander Angerer",
     "email": "alexander.angerer@outlook.de"
@@ -26,39 +27,21 @@
     "productivity"
   ],
   "skills": [
-    "skills/onboarding/SKILL.md",
-    "skills/coding-setup/SKILL.md",
-    "skills/web-development-setup/SKILL.md",
-    "skills/data-science-setup/SKILL.md",
-    "skills/design-setup/SKILL.md",
-    "skills/knowledge-base-setup/SKILL.md",
-    "skills/devops-setup/SKILL.md",
-    "skills/content-voice-setup/SKILL.md",
-    "skills/office-setup/SKILL.md",
-    "skills/research-setup/SKILL.md",
-    "skills/academic-writing-setup/SKILL.md",
-    "skills/graphify-setup/SKILL.md",
-    "skills/audit-setup/SKILL.md",
-    "skills/upgrade-setup/SKILL.md",
-    "skills/checkup/SKILL.md",
-    "skills/anchors/SKILL.md"
-  ],
-  "commands": [
-    { "name": "onboarding", "skill": "onboarding" },
-    { "name": "coding-setup", "skill": "coding-setup" },
-    { "name": "web-development-setup", "skill": "web-development-setup" },
-    { "name": "data-science-setup", "skill": "data-science-setup" },
-    { "name": "design-setup", "skill": "design-setup" },
-    { "name": "knowledge-base-setup", "skill": "knowledge-base-setup" },
-    { "name": "devops-setup", "skill": "devops-setup" },
-    { "name": "content-voice-setup", "skill": "content-voice-setup" },
-    { "name": "office-setup", "skill": "office-setup" },
-    { "name": "research-setup", "skill": "research-setup" },
-    { "name": "academic-writing-setup", "skill": "academic-writing-setup" },
-    { "name": "graphify-setup", "skill": "graphify-setup" },
-    { "name": "audit-setup", "description": "Power-user tool — normally invoked via /checkup. Audit your current Claude setup and get a prioritized list of improvement suggestions.", "skill": "audit-setup" },
-    { "name": "upgrade-setup", "description": "Power-user tool — normally invoked via /checkup. Re-apply current best practices to an existing onboarding-agent setup with per-change confirmation, backups, and --dry-run.", "skill": "upgrade-setup" },
-    { "name": "checkup", "description": "Single maintenance entrypoint — runs /audit-setup internally, weighs findings + meta age + deprecated-model anchors, and routes to /onboarding --rebuild, /upgrade-setup, or a short fine-as-is summary.", "skill": "checkup" },
-    { "name": "anchors", "description": "Refresh anchor-derived marker sections in CLAUDE.md/AGENTS.md", "skill": "anchors" }
+    "./skills/onboarding",
+    "./skills/coding-setup",
+    "./skills/web-development-setup",
+    "./skills/data-science-setup",
+    "./skills/design-setup",
+    "./skills/knowledge-base-setup",
+    "./skills/devops-setup",
+    "./skills/content-voice-setup",
+    "./skills/office-setup",
+    "./skills/research-setup",
+    "./skills/academic-writing-setup",
+    "./skills/graphify-setup",
+    "./skills/audit-setup",
+    "./skills/upgrade-setup",
+    "./skills/checkup",
+    "./skills/anchors"
   ]
 }

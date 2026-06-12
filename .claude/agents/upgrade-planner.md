@@ -2,7 +2,7 @@
 name: upgrade-planner
 description: Read-only subagent that enumerates plugin-owned delimited sections in a user project, diffs each against the canonical current template, and returns the list of proposed changes. Never writes files.
 tools: Bash, Glob, Grep, Read
-model: opus
+model: sonnet
 ---
 
 # Upgrade Planner
@@ -86,7 +86,7 @@ Schema reference: `.claude/agents/schemas/upgrade-plan.schema.json`.
 
 ## Delimiter Recognition
 
-Match the delimiters exactly as documented in `skills/upgrade/SKILL.md` Pass 2:
+Match the delimiters exactly as documented in `skills/upgrade-setup/SKILL.md` Pass 2:
 
 - **Markdown** (`CLAUDE.md`, `AGENTS.md`, `.claude/rules/*.md`):
   - Attributed: `<!-- onboarding-agent:start setup=<type> skill=<slug> section=<name> -->` … `<!-- onboarding-agent:end -->`

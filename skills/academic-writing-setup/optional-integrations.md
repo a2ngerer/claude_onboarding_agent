@@ -57,4 +57,4 @@ Add a short note to the completion summary (do not generate a template file):
 
 ## Knowledge-base bridge
 
-If the user mentions they already ran `knowledge-base-builder` (or a `wiki/` or `notes/` folder exists), tell them: "Claude can read your existing Obsidian vault / wiki notes as research input while drafting — point to them in `.claude/rules/writing-style.md` or by prefixing prompts with the relevant note path."
+If the user mentions they already ran `knowledge-base-setup` (or a `wiki/` or `notes/` folder exists), tell them: "Claude can read your existing Obsidian vault / wiki notes as research input while drafting — point to them in `.claude/rules/writing-style.md` or by prefixing prompts with the relevant note path."

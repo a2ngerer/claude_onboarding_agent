@@ -1,3 +1,5 @@
+> Consumed by audit-setup/SKILL.md and checkup/SKILL.md. Do not invoke directly.
+
 # Fetch-Anchor Protocol
 
 This file is read by skills that need a realtime "anchor" document from `docs/anchors/` in the onboarding-agent repo. Anchors are short markdown snapshots that change faster than plugin releases (current model IDs, recommended tooling, MCP servers). Skills fetch them at runtime so users get current content without updating the plugin.

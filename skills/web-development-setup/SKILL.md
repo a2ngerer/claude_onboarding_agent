@@ -26,10 +26,10 @@ If the delimited block already exists from a previous run (either the attributed
 
 Read these on-demand at the step that invokes them. Do not read eagerly.
 
-- `rule-file-templates.md` — bodies of the `.claude/rules/*.md` files (Step 6)
+- `rule-file-templates.md` — bodies of the `.claude/rules/*.md` files (Step 8)
 - `framework-defaults.md` — Q1/Q2-conditional styling and deploy-target matrix (Step 4), plus public env-var prefix table
-- `gitignore-block.md` — the `.gitignore` block and `.env.example` scaffold (Step 6)
-- `document-skeletons.md` — `package.json`, `pyproject.toml`, and per-stack install commands (Step 6)
+- `gitignore-block.md` — the `.gitignore` block and `.env.example` scaffold (Step 8)
+- `document-skeletons.md` — `package.json`, `pyproject.toml`, and per-stack install commands (Step 8)
 - `type-check-hook.template.sh` — bash source for the optional type-check PostToolUse hook, with `<PM_EXEC>` placeholder (Step 8)
 - `skills/_shared/consume-handoff.md` — orchestrator handoff parse + inline fallback (preamble, before Step 1)
 - `skills/_shared/offer-superpowers.md` — canonical Superpowers opt-in (Step 1)
@@ -38,7 +38,7 @@ Read these on-demand at the step that invokes them. Do not read eagerly.
 
 ## Step 1: Install Dependencies
 
-Read `skills/_shared/offer-superpowers.md` and run it with `skill_slug: web-development-setup`, `mandatory: false`, `capability_line: "A free Claude Code skills library (94,000+ users). Useful for planning multi-step features, structured brainstorming on routing / data modeling, and subagent-driven refactors across a web stack."` The helper asks the user, delegates to `skills/_shared/installation-protocol.md` on `yes`, and sets `superpowers_installed`, `superpowers_scope`, `superpowers_method`.
+Read `skills/_shared/offer-superpowers.md` and run it with `skill_slug: web-development-setup`, `mandatory: false`, `capability_line: "A widely used free Claude Code skills library. Useful for planning multi-step features, structured brainstorming on routing / data modeling, and subagent-driven refactors across a web stack."` The helper asks the user, delegates to `skills/_shared/installation-protocol.md` on `yes`, and sets `superpowers_installed`, `superpowers_scope`, `superpowers_method`.
 
 ## Step 2: Detect Package Manager
 
@@ -64,7 +64,7 @@ Ask these questions ONE AT A TIME. Wait for each answer before asking the next.
 
 2. **Framework** — "Which frontend framework? (pick 'none' if this is a backend-only repo)
    A) Next.js
-   B) React (plain, Vite or CRA)
+   B) React (plain, Vite)
    C) Vue (Nuxt or plain)
    D) Svelte / SvelteKit
    E) SolidJS (plain or SolidStart)
@@ -118,7 +118,7 @@ After the questions above, ask ONCE (adapt to detected language):
 
   - Pass `delegated_from: web-development-setup` and the current `detected_language` in the handoff context.
   - `design-setup` will run only its Q1 (design tool) and its Figma MCP offer, and write its own delimited CLAUDE.md block + `.gitignore` block. It will NOT emit framework, workflow, or WCAG rules (those are already covered by this skill) and will NOT write its own `.claude/onboarding-meta.json` or anchor sections.
-  - Before invoking, ask ONCE: "Install the official Anthropic `frontend-design` skill? It avoids AI-generic UI and is strongly recommended for design-to-code work (277k+ installs). (yes / no)". On `yes`: run `/plugin install frontend-design@claude-plugins-official`. On failure: warn once and continue. This offer is made here rather than inside `design-setup` so the combined flow prompts for it exactly once.
+  - Before invoking, ask ONCE: "Install the official Anthropic `frontend-design` skill? It avoids AI-generic UI and is strongly recommended for design-to-code work (popular official plugin). (yes / no)". On `yes`: run `/plugin install frontend-design@claude-plugins-official`. On failure: warn once and continue. This offer is made here rather than inside `design-setup` so the combined flow prompts for it exactly once.
   - When this skill's Step 10 writes `./.claude/onboarding-meta.json`, append `"design-setup"` to `skills_used[]`.
 
 ## Step 4: Derive Implied Defaults (do NOT ask)

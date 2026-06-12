@@ -10,7 +10,7 @@ Emit a minimal scaffold and instruct the user to run the install commands. Do NO
 [project]
 name = "your-project"
 version = "0.1.0"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = []
 
 [tool.uv]

@@ -47,7 +47,7 @@ Read `./.claude/onboarding-meta.json` if it exists. Expected shape:
 }
 ```
 
-If the file parses and `setup_type` is a recognized slug (one of: `coding`, `data-science`, `design`, `knowledge-base`, `devops`, `content-voice`, `office`, `research`, `academic-writing`), set:
+If the file parses and `setup_type` is a recognized slug (one of: `coding`, `data-science`, `design`, `knowledge-base`, `devops`, `content-voice`, `office`, `research`, `academic-writing`, `web-development`), set:
 
 - `detected_setup: <setup_type>`
 - `detected_skills: <skills_used>`
@@ -143,7 +143,7 @@ For each skill in `detected_skills`, read its `SKILL.md` from the plugin install
 - `./AGENTS.md` (if the skill generates one)
 - `./.gitignore`
 - `./.claude/settings.json` (if the skill generates one)
-- `./.claude/rules/*.md` (if the skill generates any — data-science, academic-writing, web-development, knowledge-base-builder)
+- `./.claude/rules/*.md` (if the skill generates any — data-science, academic-writing, web-development, knowledge-base-setup)
 
 Skip any candidate file that the scan report indicates does not exist. Do not create new files here — Pass 2 is diff-only.
 
@@ -212,7 +212,7 @@ If `anchor_marker_count > 0`, Pass 5 will recommend `/anchors` as the follow-up 
 
 ### Step 2.3 — (Removed)
 
-Anchor-driven checks (deprecated model IDs and similar) now live in `/tipps` Pass 5. Anchor section refreshes are handled by `/anchors`, not by this skill — see the "Anchor responsibilities" note at the top of Pass 2. Nothing to do here.
+Anchor-driven checks (deprecated model IDs and similar) now live in `/audit-setup` Pass 5. Anchor section refreshes are handled by `/anchors`, not by this skill — see the "Anchor responsibilities" note at the top of Pass 2. Nothing to do here.
 
 ### Step 2.4 — Project-Local Subagents
 
@@ -224,7 +224,7 @@ The plugin owns these subagent filenames under `.claude/agents/`:
 | `component-auditor` | web-development-setup |
 | `notebook-auditor` | data-science-setup |
 | `writing-style-auditor` | academic-writing-setup |
-| `obsidian-vault-keeper` | knowledge-base-builder |
+| `obsidian-vault-keeper` | knowledge-base-setup |
 
 Detection and preview rules:
 

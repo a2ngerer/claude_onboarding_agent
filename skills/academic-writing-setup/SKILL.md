@@ -45,7 +45,7 @@ Read these on-demand at the step that invokes them. Do not read eagerly.
 
 If cascade mode is active (`source_skill: "research-setup"` AND `superpowers_offered: true` on the handoff context), skip this step entirely — the parent already asked the user and `superpowers_installed` / `superpowers_scope` / `superpowers_method` are already resolved. Do not re-prompt.
 
-Otherwise: read `skills/_shared/offer-superpowers.md` and run it with `skill_slug: academic-writing-setup`, `mandatory: false`, `capability_line: "A free Claude Code skills library (94,000+ users). Brainstorming and planning skills help structure long arguments, chapter outlines, and multi-section revisions."` The helper asks the user, delegates to `skills/_shared/installation-protocol.md` on `yes`, and sets `superpowers_installed`, `superpowers_scope`, `superpowers_method`.
+Otherwise: read `skills/_shared/offer-superpowers.md` and run it with `skill_slug: academic-writing-setup`, `mandatory: false`, `capability_line: "A widely used free Claude Code skills library. Brainstorming and planning skills help structure long arguments, chapter outlines, and multi-section revisions."` The helper asks the user, delegates to `skills/_shared/installation-protocol.md` on `yes`, and sets `superpowers_installed`, `superpowers_scope`, `superpowers_method`.
 
 ## Step 2: Verify Writing Toolchain
 
@@ -146,7 +146,7 @@ Record the emit outcome for use in the completion summary (Step 8). If `emit_sub
 
 ## Step 5: Generate Artifacts
 
-For each file below, if it already exists extend rather than overwrite. Use `<!-- onboarding-agent:start -->` / `<!-- onboarding-agent:end -->` markers for CLAUDE.md; use `# onboarding-agent: academic-writing — start` / `# onboarding-agent: academic-writing — end` markers for `.gitignore`.
+For each file below, if it already exists extend rather than overwrite. Use `<!-- onboarding-agent:start setup=academic-writing skill=academic-writing-setup section=claude-md -->` / `<!-- onboarding-agent:end -->` markers for CLAUDE.md; use `# onboarding-agent: academic-writing — start` / `# onboarding-agent: academic-writing — end` markers for `.gitignore`.
 
 ### CLAUDE.md (≤ 30 lines — pointers only)
 

@@ -1,5 +1,19 @@
 # Release Notes
 
+## v1.1.0 — 2026-06-12
+
+June 2026 state-of-the-art refresh.
+
+- Anchors updated to the current Claude model lineup (Fable 5, Opus 4.8)
+- Concrete MCP install commands in setup skills
+- Consistency fixes across the maintenance chain: `/tipps` phantom references removed, `knowledge-base-builder` rename to `knowledge-base-setup` completed, `web-development` slug recognized by `upgrade-setup`
+- Plugin manifest migrated to the current schema: `skills[]` now lists skill directories (`./skills/<name>`), the legacy `commands[]` field is removed (slash commands derive from skill directory names), `displayName` added; `claude plugin validate` passes
+- Portable dependency hook: repo root derived from `CLAUDE_PROJECT_DIR`/git instead of a hardcoded absolute path; dead `installation.md` case pattern fixed
+- Subagent model tiering: haiku for lightweight read-only agents, sonnet for mid-tier tasks — opus no longer used everywhere
+- Self-hosted plugin marketplace: `marketplace.json` added; `/plugin marketplace add a2ngerer/claude_onboarding_agent` now works
+- Modernized stack defaults in setup skills: Create React App dropped in favor of Vite/Next.js, Python minimum bumped to 3.12, pre-commit revisions unpinned
+- Removed frozen install-count claims from documentation
+
 ## v1.0.1 — 2026-04-24
 
 Documentation and maintenance update.

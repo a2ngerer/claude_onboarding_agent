@@ -2,7 +2,7 @@
 name: audit-collector
 description: Read-only subagent that runs an audit skill (default `/audit-setup`) and returns a compact severity-bucketed finding summary. Wraps the audit skill; never writes files.
 tools: Bash, Glob, Grep, Read
-model: opus
+model: sonnet
 ---
 
 # Audit Collector

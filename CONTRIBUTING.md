@@ -18,7 +18,7 @@ New setup skills are the most valuable contribution. Each skill covers a use cas
    - 3–7 context questions, asked one at a time
    - Artifact generation (at minimum: a tailored CLAUDE.md and .gitignore)
    - Completion summary listing everything created and any skipped items
-4. **Update the plugin manifest:** add the skill path to `skills[]` and the slash command to `commands[]` in `.claude-plugin/plugin.json`
+4. **Update the plugin manifest:** add the skill directory (e.g. `skills/[name]`) to `skills[]` in `.claude-plugin/plugin.json` — the slash command name derives from the directory name, its description from the SKILL.md frontmatter
 5. **Update the orchestrator:** add your skill as a numbered option in `skills/onboarding/SKILL.md` (Step 3 and the dispatch table in Step 5)
 6. **Update README.md:** add a row to the "What's Inside" table
 7. **Open a pull request** with a description of the use case your skill serves and an example of the CLAUDE.md it generates

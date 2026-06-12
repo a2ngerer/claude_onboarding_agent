@@ -25,14 +25,12 @@ If the delimited block already exists from a previous run, replace only the cont
 Read these on-demand at the step that invokes them. Do not read eagerly.
 
 - `skills/_shared/consume-handoff.md` — orchestrator handoff parse + inline fallback (preamble, before Step 1)
+- `skills/_shared/offer-superpowers.md` — canonical Superpowers opt-in (Step 1)
 - `rule-file-templates.md` — bodies of the `.claude/rules/*.md` files this skill generates (Step 4)
 
 ## Step 1: Install Dependencies
 
-Read `skills/_shared/installation-protocol.md` and follow it for each dependency below.
-
-Dependencies:
-- Superpowers (optional) — description: "A free Claude Code skills library (94,000+ users). Planning and subagent skills work well for infrastructure tasks that need careful step-by-step execution." — marketplace-id: `superpowers@claude-plugins-official`, github: `https://github.com/obra/superpowers`, name: `superpowers`
+Read `skills/_shared/offer-superpowers.md` and run it with `skill_slug: devops-setup`, `mandatory: false`, `capability_line: "A widely used free Claude Code skills library. Planning and subagent skills work well for infrastructure tasks that need careful step-by-step execution."` The helper asks the user, delegates to `skills/_shared/installation-protocol.md` on `yes`, and sets `superpowers_installed`, `superpowers_scope`, `superpowers_method`.
 
 ## Step 2: Context Questions
 
