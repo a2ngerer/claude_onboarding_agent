@@ -26,7 +26,7 @@ case "$REL" in
     ;;
   skills/*/SKILL.md)
     skill=$(printf '%s' "$REL" | sed -E 's#skills/([^/]+)/SKILL\.md#\1#')
-    emit "Skill '$skill' was modified. If this is a new skill or its frontmatter name/description changed, verify: (1) .claude-plugin/plugin.json lists its directory in skills[]. (2) skills/onboarding/SKILL.md offers it in Step 3 and Step 5. (3) README.md 'What's Inside' table includes it. (4) If it references the shared install protocol, variables match skills/_shared/installation-protocol.md."
+    emit "Skill '$skill' was modified. If this is a new skill or its frontmatter name/description changed, verify: (1) .claude-plugin/plugin.json lists its directory in skills[]. (2) skills/onboarding/SKILL.md offers it in Step 3 and Step 5. (3) README.md 'What's Inside' table includes it. (4) If it references the shared install protocol, variables match skills/_shared/installation-protocol.md. (5) The trigger-eval fixture evals/$skill.json still reflects the description — run scripts/run-skill-evals.sh --skill $skill after description changes."
     ;;
   .claude-plugin/plugin.json)
     emit "plugin.json was modified. If skills[] changed, verify: (1) every referenced skill directory contains a SKILL.md. (2) skills/onboarding/SKILL.md Step 3 and Step 5 still match. (3) README.md 'What's Inside' table still matches. (4) scripts/install.sh still works for the new skill set."

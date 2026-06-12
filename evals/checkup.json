@@ -1,0 +1,17 @@
+{
+  "skill": "checkup",
+  "should_trigger": [
+    "Is my Claude setup still good or does it need work?",
+    "I set up Claude a few months ago — run the usual maintenance check and tell me what to do",
+    "Check my existing Claude configuration and handle whatever needs fixing",
+    "My onboarding setup feels stale — do a health check and take the right next action",
+    "Verify that my current Claude config still matches current best practices and fix it if not",
+    "Mein Claude-Setup ist schon aelter — mach einen Check und sag mir, ob ich etwas aktualisieren muss"
+  ],
+  "should_not_trigger": [
+    "Give me a prioritized read-only audit of everything wrong with my Claude config",
+    "I already know I need an upgrade — re-apply the latest templates with per-change diffs",
+    "I am brand new to Claude Code and want a personalized setup for my project",
+    "Refresh only the model recommendation anchors in my CLAUDE.md without touching anything else"
+  ]
+}

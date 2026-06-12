@@ -34,6 +34,33 @@ for dir in "${skill_dirs[@]}"; do
   fi
 done
 
+# Check: every skill has a trigger-eval fixture
+# (see docs/superpowers/specs/2026-06-12-skill-eval-harness-design.md)
+EVALS_DIR="$REPO_ROOT/evals"
+for dir in "${skill_dirs[@]}"; do
+  name="$(basename "$dir")"
+  fixture="$EVALS_DIR/$name.json"
+  if [ ! -f "$fixture" ]; then
+    echo "ERROR: missing trigger-eval fixture evals/$name.json"
+    failed=1
+  elif ! jq . "$fixture" >/dev/null 2>&1; then
+    echo "ERROR: evals/$name.json is not valid JSON"
+    failed=1
+  else
+    fixture_skill="$(jq -r '.skill' "$fixture")"
+    n_trigger="$(jq '.should_trigger | length' "$fixture")"
+    n_reject="$(jq '.should_not_trigger | length' "$fixture")"
+    if [ "$fixture_skill" != "$name" ]; then
+      echo "ERROR: evals/$name.json skill field ($fixture_skill) does not match the filename"
+      failed=1
+    fi
+    if [ "$n_trigger" -lt 5 ] || [ "$n_reject" -lt 3 ]; then
+      echo "ERROR: evals/$name.json needs >=5 should_trigger and >=3 should_not_trigger prompts (has $n_trigger/$n_reject)"
+      failed=1
+    fi
+  fi
+done
+
 legacy_commands=(
   "/build-knowledge-base"
   "/content-creator-setup"

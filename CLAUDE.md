@@ -16,8 +16,9 @@ A Claude Code plugin with 16 skills (onboarding, setup skills, and maintenance u
 1. Create `skills/[skill-name]/SKILL.md`
 2. Follow the pattern from existing skills: language detection, handoff context consumption, installation method question, 3–7 context questions (one at a time), artifact generation, completion summary
 3. Add the skill directory (e.g. `skills/[skill-name]`) to `skills[]` in `.claude-plugin/plugin.json` — the slash command name derives from the directory name
-4. Add the new path as an option in `skills/onboarding/SKILL.md` (Step 3 and Step 5)
-5. Update `README.md` (What's Inside table)
+4. Add a trigger-eval fixture at `evals/[skill-name].json` (>=5 should-trigger, >=3 should-not-trigger prompts; see `docs/superpowers/specs/2026-06-12-skill-eval-harness-design.md`)
+5. Add the new path as an option in `skills/onboarding/SKILL.md` (Step 3 and Step 5)
+6. Update `README.md` (What's Inside table)
 
 ## Repository Language Rule
 All public repo artifacts — GitHub issues, PR titles/descriptions, commit messages, code comments, docs — must be written in English, regardless of the conversation language. Conversation with the user may be in German; output that lands in the repo or on GitHub must not.

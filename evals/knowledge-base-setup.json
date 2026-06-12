@@ -1,0 +1,17 @@
+{
+  "skill": "knowledge-base-setup",
+  "should_trigger": [
+    "Set up Claude to build and maintain an interlinked knowledge base from my personal notes and this codebase",
+    "I want Claude wired up to my Obsidian vault so it can read and write notes via the CLI",
+    "Configure Claude to keep a structured wiki over this project using the LLM wiki pattern",
+    "Richte Claude ein, damit es meine Obsidian-Notizen verwalten und neue Einträge strukturiert anlegen kann",
+    "Drop my source material into a raw folder and have Claude grow a wiki of interlinked markdown notes from it",
+    "Set up a local note-taking workflow where Claude helps me capture and interlink knowledge from multiple sources"
+  ],
+  "should_not_trigger": [
+    "Install the Graphify knowledge-graph tool and register its slash command",
+    "Help me configure Claude for literature review and reading research papers",
+    "Can you summarize the contents of my notes folder",
+    "Set up Claude for academic writing with LaTeX and citation management"
+  ]
+}

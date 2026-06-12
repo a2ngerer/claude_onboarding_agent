@@ -11,6 +11,7 @@
 ### New skill
 - [ ] `skills/[name]/SKILL.md` created following existing skill pattern
 - [ ] Skill directory added to `skills[]` in `.claude-plugin/plugin.json` (the slash command name derives from the directory name)
+- [ ] Trigger-eval fixture added at `evals/[name].json` (>=5 should-trigger, >=3 should-not-trigger prompts)
 - [ ] New skill added as option in `skills/onboarding/SKILL.md` (Step 3 and Step 5)
 - [ ] Row added to "What's Inside" table in `README.md`
 

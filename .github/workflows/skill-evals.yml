@@ -1,0 +1,43 @@
+name: Skill trigger evals
+
+# Measures skill routing accuracy against the fixtures in evals/.
+# Not run on every PR (each full run judges ~160 prompts and costs tokens);
+# fixture presence and validity are enforced for free by consistency.yml.
+# Spec: docs/superpowers/specs/2026-06-12-skill-eval-harness-design.md
+
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: "Judge model (alias like haiku/sonnet or a full model ID)"
+        required: false
+        default: "haiku"
+  schedule:
+    - cron: "23 5 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  trigger-evals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run skill trigger evals
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          scripts/run-skill-evals.sh \
+            --model "${{ github.event.inputs.model || 'haiku' }}" \
+            --jobs 4 \
+            --report eval-report.json
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skill-eval-report
+          path: eval-report.json
+          if-no-files-found: ignore

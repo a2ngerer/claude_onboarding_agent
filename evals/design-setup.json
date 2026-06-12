@@ -1,0 +1,17 @@
+{
+  "skill": "design-setup",
+  "should_trigger": [
+    "Configure Claude to read my Figma frames directly so it can assist with UI handoff to developers",
+    "I work in Penpot and want Claude wired up to understand my design tokens and component naming",
+    "Set up Claude for my Sketch-based design workflow including MCP integration for frame inspection",
+    "Richte Claude für unsere Figma-Designbibliothek und den Handoff-Prozess ans Entwicklerteam ein",
+    "I want Claude connected to my design tool so it can describe component specs without me copy-pasting",
+    "Wire up the Figma MCP so Claude can inspect frames and generate accurate implementation notes"
+  ],
+  "should_not_trigger": [
+    "Set up Claude for my React frontend with component structure and accessibility rules",
+    "Can you redesign this button component to match our brand colors",
+    "Configure Claude for a full-stack web app with Next.js and Tailwind",
+    "Help me set up Claude to write consistent blog post copy in our brand voice"
+  ]
+}

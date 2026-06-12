@@ -1,0 +1,17 @@
+{
+  "skill": "academic-writing-setup",
+  "should_trigger": [
+    "Set up Claude for writing my PhD thesis in LaTeX with strict citation rules and no hallucinated references",
+    "I want Claude to help me draft journal submissions and know my citation style, LaTeX preamble, and section conventions",
+    "Configure Claude to work with my Typst dissertation and enforce a no-invented-citations policy",
+    "I am writing a conference paper and need Claude to know my bibliography tool, document structure, and writing conventions",
+    "Set up Claude so it understands my LaTeX project layout, Zotero Better BibTeX setup, and academic voice rules",
+    "Ich schreibe meine Masterarbeit in LaTeX und moechte, dass Claude korrekte Zitierregeln und meinen Schreibstil kennt"
+  ],
+  "should_not_trigger": [
+    "Help me find papers on transformer architectures and organize them in my Zotero library",
+    "Write the related work section of my paper based on these bullet points",
+    "Set me up for literature review and managing sources across my research project",
+    "Configure Claude to help me produce polished business reports for my manager"
+  ]
+}

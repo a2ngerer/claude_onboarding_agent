@@ -1,0 +1,17 @@
+{
+  "skill": "anchors",
+  "should_trigger": [
+    "The model recommendations in my CLAUDE.md are outdated — re-fetch the latest anchors and update those sections",
+    "Refresh the anchor-derived tool recommendation blocks in my project config files",
+    "The anchor sections in my AGENTS.md are stale — update them with a dry-run preview first",
+    "Pull the latest anchor content and diff it against what is currently in my CLAUDE.md before applying",
+    "Only the anchor-based model and tool guidance blocks need updating in my existing setup",
+    "Die anchor-Abschnitte in meiner CLAUDE.md sind veraltet — bitte nur diese Teile aktualisieren"
+  ],
+  "should_not_trigger": [
+    "Update my full Claude config to the latest plugin defaults and show me diffs for each section",
+    "Run a health check on my setup and decide whether I need a full rebuild or minor improvements",
+    "Give me a read-only audit report of all issues in my current Claude configuration",
+    "Set me up from scratch — I am working on a new research project"
+  ]
+}

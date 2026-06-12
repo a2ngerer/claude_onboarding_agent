@@ -1,5 +1,16 @@
 # Release Notes
 
+## v1.2.0 — 2026-06-12
+
+Skill trigger eval harness.
+
+- Trigger-eval fixtures for all 16 skills under `evals/` (should-trigger and should-not-trigger prompts, including non-English samples)
+- `scripts/run-skill-evals.sh`: judges every prompt against the live skill catalog (Anthropic API or local `claude` CLI in safe mode), per-skill pass rates, failure listing, JSON report, threshold gate
+- `.github/workflows/skill-evals.yml`: weekly + on-demand eval runs (requires the `ANTHROPIC_API_KEY` secret)
+- `scripts/check-consistency.sh` now enforces fixture presence, validity, and minimum prompt counts on every PR
+- New-skill checklists (CLAUDE.md, CONTRIBUTING, PR template) require a fixture; the dependents hook reminds about fixtures on SKILL.md edits
+- Design: `docs/superpowers/specs/2026-06-12-skill-eval-harness-design.md`
+
 ## v1.1.0 — 2026-06-12
 
 June 2026 state-of-the-art refresh.

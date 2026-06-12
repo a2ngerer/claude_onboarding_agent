@@ -1,0 +1,17 @@
+{
+  "skill": "office-setup",
+  "should_trigger": [
+    "I want Claude to help me draft professional emails and internal memos in my company's tone",
+    "Configure Claude so it writes formal business reports and executive summaries for my team",
+    "I spend half my day writing proposals and need Claude to match our corporate style guide",
+    "Help Claude learn how to write client-facing documents and status update emails for my role",
+    "Set up writing conventions so Claude produces clean, on-brand business correspondence",
+    "Ich arbeite viel mit Geschaeftsberichten und moechte, dass Claude meinen professionellen Schreibstil kennt"
+  ],
+  "should_not_trigger": [
+    "Write me a proposal for the Q3 budget right now",
+    "I want Claude to match my personal YouTube channel voice and tone",
+    "Help me build slide decks and presentation templates for board meetings",
+    "Set me up, I am new and not sure which skill I need"
+  ]
+}

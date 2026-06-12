@@ -190,6 +190,19 @@ Skills fetch anchors at runtime from a pinned `raw.githubusercontent.com` URL vi
 
 ---
 
+## Skill trigger evals
+
+Skill routing depends entirely on each skill's frontmatter description. To catch silent routing regressions, every skill ships a trigger-eval fixture under [`evals/`](evals/) — realistic should-trigger and should-not-trigger prompts. The runner asks a judge model to route each prompt against the live catalog and reports per-skill pass rates:
+
+```
+scripts/run-skill-evals.sh                      # full suite (claude CLI or ANTHROPIC_API_KEY)
+scripts/run-skill-evals.sh --skill coding-setup # one suite, e.g. after a description change
+```
+
+CI runs the full suite weekly (`skill-evals.yml`); fixture presence and validity are enforced on every PR. Design: [`docs/superpowers/specs/2026-06-12-skill-eval-harness-design.md`](docs/superpowers/specs/2026-06-12-skill-eval-harness-design.md).
+
+---
+
 ## Language support
 
 All skills detect your language automatically from your first message and respond accordingly. Supported: English, German, Spanish, French, and any other language Claude Code supports.

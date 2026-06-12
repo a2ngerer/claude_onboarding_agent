@@ -1,0 +1,17 @@
+{
+  "skill": "upgrade-setup",
+  "should_trigger": [
+    "Re-apply the current plugin defaults to my existing Claude setup and show me a diff before each change",
+    "My coding-setup config is months old — update it to the latest best practices with per-change confirmation",
+    "Bring my CLAUDE.md and settings.json in line with the current plugin templates, keeping my customizations",
+    "I already know I want to update my setup — apply current best practices with backup and confirmation prompts",
+    "Run the upgrade against my existing devops-setup sections and show me what would change before writing",
+    "Aktualisiere meine bestehende Claude-Konfiguration auf die aktuellen Standards und frag mich vor jeder Aenderung"
+  ],
+  "should_not_trigger": [
+    "Show me a read-only report of what is wrong with my current Claude config",
+    "I want to check if my setup needs work and let Claude decide the right next step",
+    "Refresh only the anchor-derived model recommendation sections in my CLAUDE.md",
+    "I am brand new — set me up from scratch for software development"
+  ]
+}
