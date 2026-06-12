@@ -25,7 +25,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The runner has no local `claude` CLI, so the script needs the API
+      # backend. Skip gracefully (green run + warning) until the secret is
+      # configured instead of failing every scheduled run.
+      - name: Check for API key
+        id: key
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -n "$ANTHROPIC_API_KEY" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::ANTHROPIC_API_KEY secret is not configured — skipping the eval run. Set it with: gh secret set ANTHROPIC_API_KEY"
+          fi
+
       - name: Run skill trigger evals
+        if: steps.key.outputs.present == 'true'
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
@@ -35,7 +51,7 @@ jobs:
             --report eval-report.json
 
       - name: Upload report
-        if: always()
+        if: always() && steps.key.outputs.present == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: skill-eval-report
