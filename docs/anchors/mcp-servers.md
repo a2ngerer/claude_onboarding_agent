@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-04-21
+last_updated: 2026-06-12
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 2
+version: 3
 ---
 
 ## Recommended
@@ -20,7 +20,14 @@ version: 2
 - `linear` — issues and projects (official Linear MCP)
 - `gmail` / `calendar` — Google productivity via official MCPs where available
 
-Per-category details follow. Keep the set small: every installed MCP expands the tool-selection surface and the trust boundary.
+Browse reviewed connectors in the Anthropic Directory (`claude.ai/directory`); any remote server there can be added with `claude mcp add`. Per-category details follow. Keep the set small: every installed MCP expands the tool-selection surface and the trust boundary.
+
+## Transport types
+
+- **HTTP** (`--transport http`) — recommended for all remote servers; supports OAuth. The MCP spec calls this `streamable-http`; both names work in `.mcp.json`.
+- **stdio** — local process; ideal for tools that need direct system access. Claude Code injects `CLAUDE_PROJECT_DIR` into the spawned server's environment for project-relative path resolution.
+- **WebSocket** (`"type": "ws"`) — persistent bidirectional connection for servers that push events unprompted. Configure via `.mcp.json` or `claude mcp add-json`.
+- **SSE** — deprecated. Migrate existing SSE servers to HTTP.
 
 ## Coding
 
@@ -40,7 +47,7 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 - **slack** — read channels, post messages. Install: `claude mcp add slack npx -- -y @modelcontextprotocol/server-slack`
 - **linear** — issues and projects. Install via Linear's official MCP integration.
-- **gmail / calendar** — via official Google MCP integrations where available; otherwise the community `gmail-mcp-server`.
+- **gmail / calendar** — via official Google MCP integrations where available.
 
 ## DevOps / cloud
 
@@ -49,6 +56,10 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Selection tips
 
-- Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server. (Convention, not part of the official schema — but this plugin promotes it.)
+- Use `--scope project` to share a server with your team via `.mcp.json`; `--scope user` (formerly `global`) for personal use across all projects; `--scope local` (formerly `project`) for personal use in one project only.
+- Add a `"description"` field in `.claude/settings.json` so Claude knows when to pick the server.
+- Stdio servers: `CLAUDE_PROJECT_DIR` is injected automatically — use it inside the server for project-relative paths.
+- Channels: an MCP server can declare the `claude/channel` capability to push events (CI results, alerts, webhooks) directly into your session. Enable with `--channels` at startup.
+- Add a per-server `"timeout"` field in `.mcp.json` (milliseconds) to cap individual tool-call duration.
 - Keep the installed set small. Every MCP server adds tool-selection overhead and expands the trust surface.
 - For read-only inspection tasks, prefer a dedicated CLI + Bash allowlist over an MCP server.

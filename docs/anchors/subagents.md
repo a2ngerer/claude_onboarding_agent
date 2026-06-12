@@ -1,13 +1,25 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-04-21
+last_updated: 2026-06-12
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 1
+version: 2
 ---
+
+## Built-in subagents
+
+Claude Code ships built-in subagents that Claude delegates to automatically. Manage all subagents via the `/agents` command.
+
+| Agent | Model | Purpose |
+|---|---|---|
+| `Explore` | Haiku | Fast read-only codebase search and exploration |
+| `Plan` | Inherits | Gathers context during plan mode (read-only; does not spawn sub-subagents) |
+| `general-purpose` | Inherits | Complex multi-step tasks requiring both exploration and file writes |
+
+Suppress a specific built-in type by adding it to `permissions.deny`. In non-interactive and SDK mode, set `CLAUDE_AGENT_SDK_DISABLE_BUILTIN_AGENTS=1` to remove all built-in types.
 
 ## When to use a subagent
 
@@ -54,7 +66,9 @@ The main agent waits once, then relays a consolidated summary — it does not na
 - Scope tool access per subagent: read-only agents list only `Read, Grep, Glob, Bash`; write-capable agents require a deliberate carve-out.
 - Route high-volume or low-stakes work to Haiku via the subagent's `model:` field.
 - Preserve important facts by having subagents persist artifacts (files, memory) rather than stuffing them back into the main context.
-- Reuse frequently-spawned workers as named subagents in `.claude/agents/<name>.md` with a clear `description:` so the main agent picks them deterministically.
+- Reuse frequently-spawned workers as named subagents in `.claude/agents/<name>.md`. The directory is scanned recursively so subfolders are allowed; identity comes from the `name` frontmatter field.
+- Sub-agents can spawn their own sub-agents up to 5 levels deep. Guard against unbounded nesting by capping fan-out in the orchestrator prompt.
+- Enable persistent memory for long-lived subagents by setting `autoMemoryEnabled: true` and an `autoMemoryDirectory` in the subagent's settings; it accumulates learnings in `~/.claude/agent-memory/`.
 
 ## Anti-patterns
 
