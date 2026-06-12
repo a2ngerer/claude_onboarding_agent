@@ -1,0 +1,17 @@
+{
+  "skill": "content-voice-setup",
+  "should_trigger": [
+    "Configure Claude to always write in our brand voice for LinkedIn posts and newsletters",
+    "I want per-platform voice rules so Claude stays on-brand whether I'm writing tweets or long-form articles",
+    "Set up Claude with our tone-of-voice guidelines so every piece of copy it drafts sounds like us",
+    "Richte Claude so ein, dass es unsere Markenstimme für Instagram-Captions und Blog-Posts konsistent einhält",
+    "We have a defined audience and brand personality — wire that into Claude so it guides all content drafts",
+    "Generate voice rules for Claude tied to our target audience and the platforms we publish on"
+  ],
+  "should_not_trigger": [
+    "Configure Claude to write professional emails and internal memos in our company style",
+    "Can you draft a Twitter thread about our product launch for me",
+    "Set up Claude to publish posts to our social media accounts on a schedule",
+    "Help me configure Claude for academic writing with correct citation style and passive voice"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "skill": "web-development-setup",
+  "should_trigger": [
+    "Configure Claude for my Next.js app so it respects our API route conventions and Vercel deploy target",
+    "Set up Claude to understand our React frontend with Tailwind and the ESLint rules we enforce",
+    "I want Claude wired up for a full-stack SvelteKit project with a Node backend",
+    "Get Claude ready for my FastAPI + React app — env-var hygiene and linter config are most important",
+    "Richte Claude für unser Django-Backend mit REST-API und Vue-Frontend ein",
+    "Wire up framework permissions and component structure rules for this Astro static site project"
+  ],
+  "should_not_trigger": [
+    "Set up Claude for my Figma-to-code design handoff workflow",
+    "Can you build me a new landing page component in React",
+    "Configure Claude for a Rust CLI library — no HTTP or frontend involved",
+    "Help me set up Claude for my Python machine learning pipeline with notebooks"
+  ]
+}

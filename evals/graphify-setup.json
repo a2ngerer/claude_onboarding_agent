@@ -1,0 +1,17 @@
+{
+  "skill": "graphify-setup",
+  "should_trigger": [
+    "Install the knowledge-graph tool so Claude stops doing expensive file searches on my large codebase",
+    "I want to wire up a local graph index for my project so Claude can look up symbols and files more cheaply",
+    "Set up the graph-backed PreToolUse hook that reduces token cost when Claude searches across my repository",
+    "I want Claude to build a graph over my docs and code so file lookups hit the graph first",
+    "Configure the open-source graph integration that works with tree-sitter and Markdown for my mixed-media corpus",
+    "Ich will das Knowledge-Graph-Tool einrichten, damit Claude bei grossen Codebasen weniger Token verbraucht"
+  ],
+  "should_not_trigger": [
+    "Set me up for managing a personal Obsidian knowledge base with Claude",
+    "I want Claude to read my Obsidian notes and help me maintain them",
+    "Build a graph visualization of my architecture in a diagram file",
+    "Configure Claude for exploring and summarizing academic papers in my research workflow"
+  ]
+}

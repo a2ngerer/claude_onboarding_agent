@@ -34,7 +34,7 @@ Read these on-demand at the step that invokes them. Do not read eagerly.
 
 ## Step 1: Install Dependencies
 
-Read `skills/_shared/offer-superpowers.md` and run it with `skill_slug: data-science-setup`, `mandatory: false`, `capability_line: "A free Claude Code skills library (94,000+ users). Useful for planning multi-step experiments and structuring model-training pipelines."` The helper asks the user, delegates to `skills/_shared/installation-protocol.md` on `yes`, and sets `superpowers_installed`, `superpowers_scope`, `superpowers_method`.
+Read `skills/_shared/offer-superpowers.md` and run it with `skill_slug: data-science-setup`, `mandatory: false`, `capability_line: "A widely used free Claude Code skills library. Useful for planning multi-step experiments and structuring model-training pipelines."` The helper asks the user, delegates to `skills/_shared/installation-protocol.md` on `yes`, and sets `superpowers_installed`, `superpowers_scope`, `superpowers_method`.
 
 ## Step 2: Verify Python Tooling
 

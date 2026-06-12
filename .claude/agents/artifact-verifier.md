@@ -2,7 +2,7 @@
 name: artifact-verifier
 description: Read-only subagent that confirms a list of files exists on disk and passes lightweight structural checks (non-empty, valid JSON, expected delimiter). Returns one structured report; never writes files.
 tools: Bash, Glob, Grep, Read
-model: opus
+model: haiku
 ---
 
 # Artifact Verifier

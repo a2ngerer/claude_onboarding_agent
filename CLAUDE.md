@@ -10,14 +10,15 @@ A Claude Code plugin with 16 skills (onboarding, setup skills, and maintenance u
 - `docs/superpowers/specs/` — design documents
 - `docs/superpowers/plans/` — implementation plans
 
-**Command registry source of truth:** slash commands are defined in `.claude-plugin/plugin.json` under `commands[]`. This repository currently does not use project-local `.claude/commands/` entrypoints.
+**Command registry source of truth:** slash commands derive from skill directory names — `skills/<name>/` exposes `/<name>`, and the command description comes from the skill's SKILL.md frontmatter `description`. The manifest registers skill directories in `skills[]`; the current plugin schema has no `commands[]` field, and this repository does not use project-local `.claude/commands/` entrypoints.
 
 ## Adding a New Skill
 1. Create `skills/[skill-name]/SKILL.md`
 2. Follow the pattern from existing skills: language detection, handoff context consumption, installation method question, 3–7 context questions (one at a time), artifact generation, completion summary
-3. Add the skill path to `skills[]` and the slash command to `commands[]` in `.claude-plugin/plugin.json`
-4. Add the new path as an option in `skills/onboarding/SKILL.md` (Step 3 and Step 5)
-5. Update `README.md` (What's Inside table)
+3. Add the skill directory (e.g. `skills/[skill-name]`) to `skills[]` in `.claude-plugin/plugin.json` — the slash command name derives from the directory name
+4. Add a trigger-eval fixture at `evals/[skill-name].json` (>=5 should-trigger, >=3 should-not-trigger prompts; see `docs/superpowers/specs/2026-06-12-skill-eval-harness-design.md`)
+5. Add the new path as an option in `skills/onboarding/SKILL.md` (Step 3 and Step 5)
+6. Update `README.md` (What's Inside table)
 
 ## Repository Language Rule
 All public repo artifacts — GitHub issues, PR titles/descriptions, commit messages, code comments, docs — must be written in English, regardless of the conversation language. Conversation with the user may be in German; output that lands in the repo or on GitHub must not.
@@ -32,7 +33,7 @@ All public repo artifacts — GitHub issues, PR titles/descriptions, commit mess
 
 ## Subagent Authoring Rules
 
-The plugin ships its own read-only subagents under `.claude/agents/<name>.md`. They are discovered by Claude Code convention — do NOT register them in `.claude-plugin/plugin.json`. Current catalog: `repo-scanner`, `upgrade-planner`. Adding a new subagent requires a spec update.
+The plugin ships its own read-only subagents under `.claude/agents/<name>.md`. They are discovered by Claude Code convention — do NOT register them in `.claude-plugin/plugin.json`. Current catalog: `repo-scanner`, `upgrade-planner`, `audit-collector`, `artifact-verifier`. Adding a new subagent requires a spec update.
 
 ### File format
 
@@ -43,7 +44,7 @@ Each subagent has YAML frontmatter and a Markdown body:
 name: <kebab-case-name, matches filename>
 description: <one sentence, include "read-only" if applicable>
 tools: <comma-separated whitelist — required>
-model: opus
+model: <tier>  # pick lowest capable tier: haiku for read-only scans, sonnet for analysis/planning, opus only for complex reasoning; use aliases, not dated model IDs
 ---
 
 # <Human-readable name>
@@ -96,7 +97,7 @@ When a setup skill generates a project-local subagent (`.claude/agents/<slug>.md
 | `component-auditor` | web-development-setup | Read, Grep, Glob |
 | `notebook-auditor` | data-science-setup | Read, Grep, Glob, Bash |
 | `writing-style-auditor` | academic-writing-setup | Read, Grep, Glob |
-| `obsidian-vault-keeper` | knowledge-base-builder | Bash, Read, Glob, Grep |
+| `obsidian-vault-keeper` | knowledge-base-setup | Bash, Read, Glob, Grep |
 
 **Topic exclusivity:** Each slug has exactly one owning skill. Two skills never write the same filename. Adding a new subagent requires a spec update, not an ad-hoc skill change.
 
@@ -180,13 +181,14 @@ When a setup skill produces rule-like content for the user's project, apply this
 |---|---|---|
 | `writing-style.md` | academic-writing-setup | Voice, tense, section rules |
 | `citation-rules.md` | academic-writing-setup | `.bib` conventions, no-invented-citations |
-| `obsidian-cli.md` | knowledge-base-builder | CLI command reference (read-on-demand) |
+| `obsidian-cli.md` | knowledge-base-setup | CLI command reference (read-on-demand) |
 | `data-schema.md` | data-science-setup | Datasets, columns, lineage |
 | `evaluation-protocol.md` | data-science-setup | Metrics, splits, baselines |
 | `api-conventions.md` | web-development-setup | Route layout, error shape, auth |
 | `component-structure.md` | web-development-setup | Atomic/container split, colocation |
 | `env-vars.md` | web-development-setup | Public-prefix rules, secret stores |
 | `infra-safety.md` | devops-setup | Pre-apply pause rules |
+| `content-voice-<platform>.md` | content-voice-setup | Per-platform voice rules |
 
 **Topic exclusivity:** Each whitelist filename has exactly one owning skill. No two skills ever write the same filename. Adding a new topic or owner requires a spec update, not an ad-hoc skill change.
 

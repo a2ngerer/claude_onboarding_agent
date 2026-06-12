@@ -33,7 +33,7 @@ Otherwise ask ONCE (adapt to the detected language, keep coordinates verbatim):
 ```
 Install Superpowers?
 
-<capability_line OR "A free Claude Code skills library (94,000+ users) that adds structured brainstorming, planning, and subagent-driven-development skills used throughout this setup.">
+<capability_line OR "A widely used free Claude Code skills library that adds structured brainstorming, planning, and subagent-driven-development skills used throughout this setup.">
 
 (yes / no)
 ```

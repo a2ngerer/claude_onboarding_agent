@@ -1,3 +1,5 @@
+> Consumed by academic-writing-setup/SKILL.md, data-science-setup/SKILL.md, devops-setup/SKILL.md, upgrade-setup/SKILL.md, and web-development-setup/SKILL.md. Do not invoke directly.
+
 # Emit Hook Protocol
 
 This file is read by every setup skill that writes end-user Claude Code hooks into `./.claude/settings.json`. It defines the merge-and-emit procedure so each skill stays focused on its own hook catalog and does not reimplement the file-handling logic.

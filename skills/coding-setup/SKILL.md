@@ -168,7 +168,7 @@ Wrap the generated block in `# onboarding-agent: coding — start` / `— end` m
 
 > "Would you like to install additional community skills?
 >
-> A) frontend-design (official Anthropic) — avoids AI-generic UI, bold design decisions (277k installs)
+> A) frontend-design (official Anthropic) — avoids AI-generic UI, bold design decisions (popular official plugin)
 > B) mcp-builder — create MCP servers for external API integrations
 > C) webapp-testing — Playwright-based UI testing
 > D) security-suite — Trail of Bits CodeQL/Semgrep analysis

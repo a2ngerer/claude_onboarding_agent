@@ -45,15 +45,16 @@ Not sure where to start? Run `/onboarding` and we'll figure it out with you. Or 
 
 ## Install
 
-### Option 1 — Plugin marketplace (recommended, soon)
+### Option 1 — Plugin marketplace (recommended)
+
+This repo ships a self-hosted `marketplace.json`, so the standard plugin marketplace flow works directly:
 
 ```
-/plugin install claude-onboarding-agent
+/plugin marketplace add a2ngerer/claude_onboarding_agent
+/plugin install claude-onboarding-agent@claude-onboarding-agent
 ```
 
-> Marketplace listing is in progress. Use Option 2 in the meantime.
-
-### Option 2 — One-liner (works today)
+### Option 2 — One-liner
 
 **macOS / Linux**
 
@@ -124,7 +125,7 @@ Suggest the most likely use case (or ask if the repo is empty)
      ├── 1. Coding Setup
      ├── 2. Web Development
      ├── 3. Data Science / ML
-     ├── 4. Knowledge Base Builder
+     ├── 4. Knowledge Base Setup
      ├── 5. Office & Business
      ├── 6. Research & Writing
      ├── 7. Academic Writing
@@ -163,11 +164,11 @@ Every setup skill creates a tailored `CLAUDE.md` with context and instructions s
 | Content | ✓ + brand voice | — | — | ✓ media files | — | Superpowers (optional) |
 | DevOps | ✓ + infra workflow | ✓ 3 roles | ✓ stack permissions | ✓ IaC state, secrets | ✓ plan-before-apply guard (opt-in) | Superpowers (optional) |
 | Design | ✓ + UI guidelines | ✓ 2 roles | ✓ stack permissions | ✓ design assets | — | Superpowers (optional) + opt-in Figma MCP |
-| Graphify | ✓ + delimited pointer block (`/graphify query / path / explain`) | — | Graphify registers its own PreToolUse hook via `graphify install` | — | (Graphify's own PreToolUse hook) | `graphifyy` (Python package via `uv tool install`, `pipx` fallback) |
+| Graphify | ✓ + delimited pointer block (`/graphify query / path / explain`) | — | Graphify registers its own PreToolUse hook via `graphify install` | — | (Graphify's own PreToolUse hook) | `graphifyy` (Python package via `uv tool install`, `pipx` fallback — note: the PyPI package name is `graphifyy` with a double y; the CLI command and the [GitHub repo](https://github.com/safishamsi/graphify) use `graphify` with a single y) |
 
 ### The coding workflow (powered by Superpowers)
 
-The Coding Setup installs [Superpowers](https://github.com/obra/superpowers) — a battle-tested Claude Code workflow library with 94,000+ users — and wires it into your `CLAUDE.md`. Every future session follows a proven loop:
+The Coding Setup installs [Superpowers](https://github.com/obra/superpowers) — a widely used, battle-tested Claude Code workflow library — and wires it into your `CLAUDE.md`. Every future session follows a proven loop:
 
 ```
 Brainstorm idea → Write plan → Dispatch subagents → Code review → Commit
@@ -175,7 +176,7 @@ Brainstorm idea → Write plan → Dispatch subagents → Code review → Commit
 
 ### The knowledge base (Karpathy pattern)
 
-The Knowledge Base Builder sets up the [Karpathy LLM Wiki pattern](https://github.com/forrestchang/andrej-karpathy-skills): a `raw/` folder for source material and a `wiki/` folder of interlinked markdown notes that Claude builds and maintains. Drop files into `raw/`, ask Claude to ingest them — the wiki grows automatically.
+The Knowledge Base Setup sets up the [Karpathy LLM Wiki pattern](https://github.com/forrestchang/andrej-karpathy-skills): a `raw/` folder for source material and a `wiki/` folder of interlinked markdown notes that Claude builds and maintains. Drop files into `raw/`, ask Claude to ingest them — the wiki grows automatically.
 
 Optional: connect [Obsidian](https://obsidian.md) via the official Obsidian CLI, wired into a dedicated `obsidian-vault-keeper` subagent. Vault reads/writes only load the CLI reference when actually invoked, so chats that don't touch the vault pay zero Obsidian tokens — unlike a persistent MCP whose tool schemas are loaded into every session.
 
@@ -186,6 +187,19 @@ Optional: connect [Obsidian](https://obsidian.md) via the official Obsidian CLI,
 Some best practices change faster than plugin releases — current Claude model IDs, recommended MCP servers, Claude Code tooling conventions, subagent patterns, knowledge-base layouts. To keep skills accurate without requiring users to reinstall the plugin, this repo ships a set of short, auto-updated reference snapshots under [`docs/anchors/`](docs/anchors/).
 
 Skills fetch anchors at runtime from a pinned `raw.githubusercontent.com` URL via the shared [`skills/_shared/fetch-anchor.md`](skills/_shared/fetch-anchor.md) protocol (24h cache, embedded offline fallback). A daily GitHub Action researches the sources listed in each anchor and opens a PR for human review — anchors are never auto-merged. Format details: [`docs/anchors/README.md`](docs/anchors/README.md).
+
+---
+
+## Skill trigger evals
+
+Skill routing depends entirely on each skill's frontmatter description. To catch silent routing regressions, every skill ships a trigger-eval fixture under [`evals/`](evals/) — realistic should-trigger and should-not-trigger prompts. The runner asks a judge model to route each prompt against the live catalog and reports per-skill pass rates:
+
+```
+scripts/run-skill-evals.sh                      # full suite (claude CLI or ANTHROPIC_API_KEY)
+scripts/run-skill-evals.sh --skill coding-setup # one suite, e.g. after a description change
+```
+
+CI runs the full suite weekly (`skill-evals.yml`); fixture presence and validity are enforced on every PR. Design: [`docs/superpowers/specs/2026-06-12-skill-eval-harness-design.md`](docs/superpowers/specs/2026-06-12-skill-eval-harness-design.md).
 
 ---
 

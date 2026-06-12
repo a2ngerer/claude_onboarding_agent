@@ -23,7 +23,7 @@ The one-liner fetches `install.sh` (macOS / Linux) or `install.ps1` (Windows) an
 
 **Why junctions on Windows:** the PowerShell script uses directory junctions instead of symbolic links. Junctions work without admin rights and without Developer Mode, while `SymbolicLink` requires one of the two. For Claude Code's read-only skill discovery, the two are equivalent.
 
-The `plugin.json` manifest at `.claude-plugin/plugin.json` declares which skill folders and which slash-command names belong to the plugin. Claude Code doesn't consume this file yet — today it only matters for the future plugin system.
+The `plugin.json` manifest at `.claude-plugin/plugin.json` declares which skill folders and which slash-command names belong to the plugin. The accompanying `marketplace.json` at `.claude-plugin/marketplace.json` enables the self-hosted plugin marketplace flow (see Option 2 below).
 
 **Update:** re-run the same curl command. The script detects an existing clone and does `git pull` instead of re-cloning.
 
@@ -39,29 +39,28 @@ The `plugin.json` manifest at `.claude-plugin/plugin.json` declares which skill 
 
 ---
 
-## Future Method: Claude Plugin Marketplace
+## Option 2: Self-Hosted Plugin Marketplace
 
-Anthropic is building a first-class plugin system for Claude Code. When it ships, installation will be a single command:
+This repo ships a `.claude-plugin/marketplace.json` that makes it discoverable via the Claude Code plugin marketplace commands. Once the repo is registered as a marketplace source, installation is:
 
 ```
-/plugin install claude-onboarding-agent
+/plugin marketplace add a2ngerer/claude_onboarding_agent
+/plugin install claude-onboarding-agent@claude-onboarding-agent
 ```
 
-Under the hood, Claude Code will:
+Under the hood, Claude Code:
 
-1. Look up the plugin in a central registry (similar to npm or Homebrew)
-2. Download and verify the plugin archive
-3. Register skills, commands, permissions, and MCP integrations declared in `plugin.json`
-4. Make all slash-commands available immediately — no shell script, no symlinks, no `~/.claude/skills/` directory required
+1. Fetches the `marketplace.json` from the repo to discover available plugins
+2. Reads the `plugin.json` manifest to find the `skills[]` directory declarations
+3. Registers each skill; the slash-command name derives from the skill directory name
+4. Makes all slash-commands available immediately
 
-The `plugin.json` file in this repo is already structured to be compatible with that future format. The fields `skills[]`, `commands[]`, `author`, `version`, and `homepage` mirror what the plugin registry will expect. When the marketplace launches, this plugin should require little or no changes to be listable.
-
-**Key difference from today:** the current curl approach requires the user's shell to run a bash script with `git` and filesystem access. The plugin system will handle all of that inside Claude Code itself, with sandboxing and signature verification — closer to how browser extensions or VS Code extensions work today.
+The `plugin.json` fields `skills[]`, `author`, `version`, and `homepage` are what the plugin system consumes. The `marketplace.json` adds the discovery layer (owner, plugin listing) that the `/plugin marketplace add` command expects.
 
 | Aspect | Notes |
 |--------|-------|
-| Transparency | Lower — installation runs inside Claude Code, no readable shell script |
-| Security model | Sandboxed — Claude Code verifies signatures, no shell permissions required |
-| Update control | Via Claude Code's own update mechanism — details still open |
+| Transparency | High — both manifest files are readable JSON in the repo |
+| Security model | Depends on Claude Code's plugin verification — no separate shell script needed |
+| Update control | Via Claude Code's own update mechanism |
 | Dependencies | Only Claude Code itself |
-| Recoverability | `/plugin uninstall` — simple, but less transparent than manual deletion |
+| Recoverability | `/plugin uninstall` |

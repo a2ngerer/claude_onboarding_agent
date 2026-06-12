@@ -1,3 +1,5 @@
+> Consumed by academic-writing-setup/SKILL.md, coding-setup/SKILL.md, content-voice-setup/SKILL.md, data-science-setup/SKILL.md, design-setup/SKILL.md, devops-setup/SKILL.md, knowledge-base-setup/SKILL.md, office-setup/SKILL.md, research-setup/SKILL.md, and web-development-setup/SKILL.md. Do not invoke directly.
+
 # Installation Protocol
 
 This file is read by setup skills during their dependency installation step.

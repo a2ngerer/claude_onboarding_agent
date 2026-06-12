@@ -30,7 +30,7 @@ Read these on-demand at the step that invokes them. Do not read eagerly.
 
 ## Step 1: Install Dependencies
 
-Read `skills/_shared/offer-superpowers.md` and run it with `skill_slug: research-setup`, `mandatory: false`, `capability_line: "A free Claude Code skills library (94,000+ users). Brainstorming and planning skills work well for structuring research arguments and planning complex documents."` The helper asks the user, delegates to `skills/_shared/installation-protocol.md` on `yes`, and sets `superpowers_installed`, `superpowers_scope`, `superpowers_method`.
+Read `skills/_shared/offer-superpowers.md` and run it with `skill_slug: research-setup`, `mandatory: false`, `capability_line: "A widely used free Claude Code skills library. Brainstorming and planning skills work well for structuring research arguments and planning complex documents."` The helper asks the user, delegates to `skills/_shared/installation-protocol.md` on `yes`, and sets `superpowers_installed`, `superpowers_scope`, `superpowers_method`.
 
 ## Step 2: Context Questions
 
@@ -174,7 +174,7 @@ If none match, skip to Step 9. Record `cascade_offered: false`.
 
 If at least one signal matched, ask once (adapt to `detected_language`):
 
-> "Ein Manuskript-Gerüst wurde erkannt ([list matched signals, max 3]). Auch `academic-writing-setup` direkt im Anschluss ausführen? Das konfiguriert die Schreibseite (Stil, Zitationsregeln, LaTeX-Scaffold). (yes / no)"
+> "A manuscript scaffold was detected ([list matched signals, max 3]). Also run academic-writing-setup right after? It configures the writing side (style rules, citation rules, LaTeX scaffold). (yes / no)"
 
 Record the answer as `cascade_accepted`.
 

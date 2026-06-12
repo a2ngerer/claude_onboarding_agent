@@ -2,7 +2,7 @@
 name: repo-scanner
 description: Read-only subagent that scans a user project for language, framework, corpus-size, and use-case signals. Returns one structured report; never writes files.
 tools: Bash, Glob, Grep, Read
-model: opus
+model: haiku
 ---
 
 # Repo Scanner

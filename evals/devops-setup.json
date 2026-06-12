@@ -1,0 +1,17 @@
+{
+  "skill": "devops-setup",
+  "should_trigger": [
+    "Set up Claude for our Terraform + AWS infrastructure repo so it pauses before applying destructive changes",
+    "Configure Claude to understand our GitHub Actions pipelines and help review CI/CD changes safely",
+    "I want Claude wired up for cloud engineering — we use Pulumi on GCP and need infra safety rules",
+    "Richte Claude für unser Kubernetes-Cluster-Management mit Helm und ArgoCD ein",
+    "Get Claude ready to help with IaC planning, security review, and safe apply workflows on Azure",
+    "Wire up Claude for a DevOps context — Ansible playbooks, GitOps workflows, and multi-environment deploys"
+  ],
+  "should_not_trigger": [
+    "Set up Claude for my backend Node service that deploys to Vercel",
+    "Can you write a GitHub Actions workflow file for me",
+    "Check if my current Claude setup is still following best practices",
+    "Configure Claude for a Python web app with Docker — it's a product repo, not infrastructure"
+  ]
+}

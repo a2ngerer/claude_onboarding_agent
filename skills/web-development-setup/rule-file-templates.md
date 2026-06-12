@@ -1,4 +1,4 @@
-> Consumed by web-development-setup/SKILL.md at Step 6. Do not invoke directly.
+> Consumed by web-development-setup/SKILL.md at Step 8. Do not invoke directly.
 
 # Rule File Templates — Web Development Setup
 

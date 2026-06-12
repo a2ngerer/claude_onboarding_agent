@@ -132,7 +132,7 @@ Anchor freshness:
    Anchor <anchor_slug> served from <render_freshness> — upstream was unreachable or malformed; re-run /anchors once connectivity returns.]
 
 Next:
-  - Run /tipps to audit the updated setup.
+  - Run /checkup to audit the updated setup.
   - /anchors is idempotent — safe to re-run any time.
 ```
 
@@ -146,16 +146,31 @@ These fallback snapshots are passed to `render-anchor-section.md` when the netwo
 ---
 name: claude-models
 description: Minimal embedded fallback
-last_updated: 2026-04-21
+last_updated: 2026-06-12
 sources: []
-version: 1
+version: 2
 ---
+
+## Model IDs
+
+| Tier   | Model ID              | Alias   | Input/Output (MTok) |
+|--------|-----------------------|---------|---------------------|
+| Fable  | `claude-fable-5`      | `fable` | $10 / $50           |
+| Opus   | `claude-opus-4-8`     | `opus`  | $5 / $25            |
+| Sonnet | `claude-sonnet-4-6`   | `sonnet`| $3 / $15            |
+| Haiku  | `claude-haiku-4-5-20251001` | `haiku` | $1 / $5      |
+
+## Retiring soon
+
+- `claude-sonnet-4-0` and `claude-opus-4-0` retire 2026-06-15 (imminent)
+- `claude-opus-4-1` retires 2026-08-05
 
 ## Defaults
 
-- Coding default: `claude-sonnet-4-6`
-- Deep reasoning: `claude-opus-4-7`
-- High-throughput subagents: `claude-haiku-4-5-20251001`
+- Everyday coding: `claude-sonnet-4-6`
+- Deep reasoning: `claude-opus-4-8`
+- Maximum capability: `claude-fable-5`
+- Fast subagent scans: `claude-haiku-4-5-20251001`
 ```
 
 ### Fallback for `mcp-servers`

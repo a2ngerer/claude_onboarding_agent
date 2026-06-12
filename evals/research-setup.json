@@ -1,0 +1,17 @@
+{
+  "skill": "research-setup",
+  "should_trigger": [
+    "Configure Claude to help me with literature reviews, paper summaries, and citation management in Zotero",
+    "I am starting a new research project and want Claude to understand my field, citation format, and note-taking workflow",
+    "Set up Claude so it can assist with annotated bibliographies and tracking related work across papers",
+    "I need Claude configured so it can help me screen papers for a systematic review and manage my reference library",
+    "I want Claude to help me navigate academic databases, summarize papers, and keep my reference list organized",
+    "Ich mache gerade eine Literaturrecherche fuer meine Dissertation und brauche eine passende Claude-Konfiguration"
+  ],
+  "should_not_trigger": [
+    "Help me write the introduction chapter of my thesis right now",
+    "Set up a LaTeX scaffold and bibliography rules so Claude can help me draft my paper",
+    "Configure Claude for my data science notebooks and experiment tracking",
+    "I want Claude to know my brand voice for my research blog posts"
+  ]
+}

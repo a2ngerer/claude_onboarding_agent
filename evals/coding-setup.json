@@ -1,0 +1,17 @@
+{
+  "skill": "coding-setup",
+  "should_trigger": [
+    "Configure Claude for my Go microservices repo so it understands our branching and review process",
+    "I want Claude to follow our iterative plan-then-code workflow on this Rust library",
+    "Set up Claude with a disciplined plan-and-review development workflow for my C++ robotics project",
+    "Ich möchte Claude für mein TypeScript-CLI-Projekt mit einem sauberen Subagenten-Workflow einrichten",
+    "Wire up CLAUDE.md and settings.json so Claude knows our commit and PR conventions for this repo",
+    "I need Claude configured to handle brainstorm, planning, and review stages for a Python CLI project"
+  ],
+  "should_not_trigger": [
+    "Help me configure Claude for the Next.js frontend app I'm deploying to Vercel",
+    "Can you write a function that parses this JSON schema for me",
+    "Set up Claude to assist with my Jupyter notebook and experiment tracking",
+    "Is my current Claude setup still following best practices"
+  ]
+}

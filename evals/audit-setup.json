@@ -1,0 +1,17 @@
+{
+  "skill": "audit-setup",
+  "should_trigger": [
+    "Give me a prioritized list of everything wrong with my current Claude configuration without changing anything",
+    "I want a raw findings report on my CLAUDE.md quality, permissions, and MCP setup — no changes applied",
+    "Run a read-only audit of my Claude setup and show me high, medium, and low severity issues",
+    "Show me what is misconfigured or outdated in my Claude settings without touching any files",
+    "Audit my package manager hygiene, git setup, and CLAUDE.md for issues but do not apply any fixes",
+    "Zeig mir alle Probleme in meiner aktuellen Claude-Konfiguration, ohne etwas zu veraendern"
+  ],
+  "should_not_trigger": [
+    "Check whether my existing setup is still good and do whatever is needed to fix it",
+    "Apply the latest best practices to my Claude config and show me diffs before each change",
+    "I am not sure if my setup needs work — just tell me whether to rebuild or improve it",
+    "Refresh the anchor sections in my CLAUDE.md with the latest model recommendations"
+  ]
+}

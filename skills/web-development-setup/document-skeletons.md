@@ -1,4 +1,4 @@
-> Consumed by web-development-setup/SKILL.md at Step 6. Do not invoke directly.
+> Consumed by web-development-setup/SKILL.md at Step 8. Do not invoke directly.
 
 # Document Skeletons — Web Development Setup
 
@@ -82,7 +82,7 @@ Emit a minimal scaffold and print `uv add` commands — never execute them witho
 [project]
 name = "your-backend"
 version = "0.1.0"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = []
 
 [tool.uv]

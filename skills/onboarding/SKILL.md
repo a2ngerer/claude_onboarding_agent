@@ -7,6 +7,19 @@ description: Guided onboarding orchestrator — scans your repo, infers your use
 
 Welcome. This skill scans your project, asks you one question, and then configures Claude exactly the way you need it.
 
+## Common rationalizations
+
+The following shortcuts look reasonable but break the onboarding contract. Do not take them.
+
+| Rationalization | Why it does not apply |
+|---|---|
+| "The repo is simple — skip the interview" | Even small setups benefit from an explicit CLAUDE.md section; the interview is 3–7 questions and takes under a minute. |
+| "The user seems expert — generate everything at once" | One question at a time is the contract; experts answer fast anyway and can always press Enter without reading the detail. |
+| "Skip the scan, I can guess the stack" | The repo scan is cheap and prevents wrong-stack artifacts being generated and then undone. |
+| "An existing CLAUDE.md means setup is done" | Existing files get extended with a new delimited section, never skipped or overwritten — Step 1a handles early-exit logic explicitly. |
+| "I know the use case from the question — skip Step 3" | Step 3 presents the full option list so the user can correct an inference; bypassing it removes the user's only confirmation gate. |
+| "The user picked 'not sure' — just recommend the most common path" | Step 4 runs a short decision tree; it reaches a recommendation in at most 3 questions without defaulting to an arbitrary choice. |
+
 ## Argument parsing
 
 The invocation may contain `--rebuild` anywhere in the argument string (as a flag, not a value).

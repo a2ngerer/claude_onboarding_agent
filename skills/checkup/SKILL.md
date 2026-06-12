@@ -123,7 +123,7 @@ The plugin owns these subagent filenames under `.claude/agents/`:
 | `component-auditor` | web-development-setup |
 | `notebook-auditor` | data-science-setup |
 | `writing-style-auditor` | academic-writing-setup |
-| `obsidian-vault-keeper` | knowledge-base-builder |
+| `obsidian-vault-keeper` | knowledge-base-setup |
 
 Detection: read `.claude/onboarding-meta.json` and list the slugs in `subagents_installed[]`. Cross-check against `.claude/agents/` on disk. Record the present / missing / unknown slugs as `subagent_state` for reporting in Stage 5.
 

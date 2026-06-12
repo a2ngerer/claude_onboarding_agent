@@ -1,0 +1,17 @@
+{
+  "skill": "data-science-setup",
+  "should_trigger": [
+    "Set up Claude for my ML project — I work in notebooks, track experiments with MLflow, and need reproducibility conventions",
+    "Configure Claude to understand my dataset layout and help me go from exploration to a trained model",
+    "I want Claude wired up for a PyTorch training repo with clean experiment tracking and data versioning",
+    "Richte Claude für mein Scikit-learn-Projekt mit Jupyter-Notebooks und DVC ein",
+    "My project is a Kaggle-style competition pipeline — set up Claude to assist with feature engineering and model iteration",
+    "Get Claude configured for notebook hygiene, data schema documentation, and evaluation protocol in my tabular ML repo"
+  ],
+  "should_not_trigger": [
+    "Help me set up Claude for reading and annotating research papers on machine learning",
+    "Can you train a classifier on this CSV dataset for me",
+    "Configure Claude for a FastAPI service that serves ML model predictions",
+    "Set up Claude for a literature review and thesis writing project in AI"
+  ]
+}

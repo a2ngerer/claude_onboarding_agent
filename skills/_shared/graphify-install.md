@@ -1,3 +1,5 @@
+> Consumed by coding-setup/SKILL.md, data-science-setup/SKILL.md, graphify-setup/SKILL.md, knowledge-base-setup/SKILL.md, onboarding/SKILL.md, research-setup/SKILL.md, and web-development-setup/SKILL.md. Do not invoke directly.
+
 # Graphify Install Protocol
 
 This file is read by `graphify-setup` AND by host setup skills (coding-setup, knowledge-base-setup, research-setup, data-science-setup, web-development-setup) when the user opts into the Graphify knowledge-graph integration.

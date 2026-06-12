@@ -12,14 +12,52 @@ if ! command -v jq >/dev/null 2>&1; then
   exit 1
 fi
 
-mapfile -t commands < <(jq -r '.commands[].name' "$MANIFEST")
+mapfile -t skill_dirs < <(jq -r '.skills[]' "$MANIFEST")
 
 failed=0
 
-for cmd in "${commands[@]}"; do
+# Slash commands derive from skill directory names; the legacy commands[] field must stay gone.
+if jq -e 'has("commands")' "$MANIFEST" >/dev/null 2>&1; then
+  echo "ERROR: plugin.json contains the legacy commands[] field (removed from the plugin schema; commands derive from skill directory names)"
+  failed=1
+fi
+
+for dir in "${skill_dirs[@]}"; do
+  if [ ! -f "$REPO_ROOT/$dir/SKILL.md" ]; then
+    echo "ERROR: skills[] entry $dir has no SKILL.md (entries must be directories containing SKILL.md)"
+    failed=1
+  fi
+  cmd="$(basename "$dir")"
   if ! grep -q "\`/$cmd\`" "$README"; then
     echo "ERROR: README is missing command /$cmd"
     failed=1
+  fi
+done
+
+# Check: every skill has a trigger-eval fixture
+# (see docs/superpowers/specs/2026-06-12-skill-eval-harness-design.md)
+EVALS_DIR="$REPO_ROOT/evals"
+for dir in "${skill_dirs[@]}"; do
+  name="$(basename "$dir")"
+  fixture="$EVALS_DIR/$name.json"
+  if [ ! -f "$fixture" ]; then
+    echo "ERROR: missing trigger-eval fixture evals/$name.json"
+    failed=1
+  elif ! jq . "$fixture" >/dev/null 2>&1; then
+    echo "ERROR: evals/$name.json is not valid JSON"
+    failed=1
+  else
+    fixture_skill="$(jq -r '.skill' "$fixture")"
+    n_trigger="$(jq '.should_trigger | length' "$fixture")"
+    n_reject="$(jq '.should_not_trigger | length' "$fixture")"
+    if [ "$fixture_skill" != "$name" ]; then
+      echo "ERROR: evals/$name.json skill field ($fixture_skill) does not match the filename"
+      failed=1
+    fi
+    if [ "$n_trigger" -lt 5 ] || [ "$n_reject" -lt 3 ]; then
+      echo "ERROR: evals/$name.json needs >=5 should_trigger and >=3 should_not_trigger prompts (has $n_trigger/$n_reject)"
+      failed=1
+    fi
   fi
 done
 
@@ -38,6 +76,33 @@ done
 if grep -q '^- `\.claude/commands/`' "$CLAUDE_DOC"; then
   echo "ERROR: CLAUDE.md still lists .claude/commands/ in key paths"
   failed=1
+fi
+
+# Check: plugin.json version must match the newest ## v... entry in RELEASE-NOTES.md
+manifest_version="$(jq -r '.version' "$MANIFEST")"
+newest_release_version="$(grep -m 1 '^## v' "$RELEASE_NOTES" | sed 's/^## v\([^ ]*\).*/\1/')"
+if [ "$manifest_version" != "$newest_release_version" ]; then
+  echo "ERROR: plugin.json version ($manifest_version) does not match newest RELEASE-NOTES.md entry (v$newest_release_version)"
+  failed=1
+fi
+
+# Check: .claude-plugin/marketplace.json must exist, be valid JSON, and plugins[0].name must equal plugin.json .name
+MARKETPLACE="$REPO_ROOT/.claude-plugin/marketplace.json"
+if [ ! -f "$MARKETPLACE" ]; then
+  echo "ERROR: .claude-plugin/marketplace.json does not exist"
+  failed=1
+else
+  if ! jq . "$MARKETPLACE" >/dev/null 2>&1; then
+    echo "ERROR: .claude-plugin/marketplace.json is not valid JSON"
+    failed=1
+  else
+    marketplace_plugin_name="$(jq -r '.plugins[0].name' "$MARKETPLACE")"
+    manifest_name="$(jq -r '.name' "$MANIFEST")"
+    if [ "$marketplace_plugin_name" != "$manifest_name" ]; then
+      echo "ERROR: marketplace.json plugins[0].name ($marketplace_plugin_name) does not match plugin.json name ($manifest_name)"
+      failed=1
+    fi
+  fi
 fi
 
 if [ "$failed" -ne 0 ]; then

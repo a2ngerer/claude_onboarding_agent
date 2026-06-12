@@ -1,6 +1,8 @@
+> Consumed by audit-setup/SKILL.md (Pass 5) and upgrade-setup/SKILL.md (Pass 2). Do not invoke directly.
+
 # Setup → Anchor Mapping
 
-This file is the single source of truth for which anchors each setup type renders. Read by: setup skills (at generation time), `/anchors` (at refresh time), `/tipps` Pass 5, `/upgrade` Pass 2.
+This file is the single source of truth for which anchors each setup type renders. Read by: setup skills (at generation time), `/anchors` (at refresh time), `/audit-setup` Pass 5, `/upgrade-setup` Pass 2.
 
 ## Mapping
 
@@ -25,6 +27,6 @@ This file is the single source of truth for which anchors each setup type render
 
 1. Look up the user's `setup_type` (from `./.claude/onboarding-meta.json` or by asking).
 2. Find the corresponding row in the mapping table.
-3. For each anchor slug in that row, call `skills/_shared/render-anchor-section.md` (setup skills, `/anchors`) or read the anchor for section-based checks (`/tipps`, `/upgrade`).
+3. For each anchor slug in that row, call `skills/_shared/render-anchor-section.md` (setup skills, `/anchors`) or read the anchor for section-based checks (`/audit-setup`, `/upgrade-setup`).
 
 Unknown `setup_type` values: callers must treat this as "no anchors" (degrade gracefully, do not fail).

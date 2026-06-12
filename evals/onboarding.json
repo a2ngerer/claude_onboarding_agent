@@ -1,0 +1,17 @@
+{
+  "skill": "onboarding",
+  "should_trigger": [
+    "I just installed Claude Code and have no idea where to start",
+    "Help me get Claude configured for this project, I'm not sure which setup fits",
+    "New to this tool, can you walk me through getting everything set up?",
+    "I want a personalized Claude setup but I don't know what options exist",
+    "Kannst du mein Projekt scannen und mir sagen, welches Setup am besten passt?",
+    "Set me up properly — I haven't touched any Claude config before"
+  ],
+  "should_not_trigger": [
+    "My existing CLAUDE.md is outdated, can you check if it still matches best practices",
+    "I want to configure Claude specifically for my Python data science notebooks",
+    "Can you review this pull request for me",
+    "What is Claude Code and how does it work"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "claude-onboarding-agent",
+  "description": "Marketplace for the Claude Onboarding Agent plugin — guided setup skills that generate tailored CLAUDE.md, AGENTS.md, and config files for any use case.",
+  "owner": {
+    "name": "Alexander Angerer",
+    "email": "alexander.angerer@outlook.de"
+  },
+  "plugins": [
+    {
+      "name": "claude-onboarding-agent",
+      "source": "./",
+      "description": "Guided setup for Claude Code — generates tailored CLAUDE.md, AGENTS.md, and config files for any use case in minutes."
+    }
+  ]
+}
