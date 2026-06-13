@@ -1,11 +1,11 @@
 ---
 name: claude-models
 description: Current Claude model IDs, aliases, context limits, and recommended defaults
-last_updated: 2026-06-12
+last_updated: 2026-06-13
 sources:
   - https://docs.claude.com/en/docs/about-claude/models
   - https://docs.claude.com/en/docs/about-claude/pricing
-version: 2
+version: 3
 ---
 
 ## Latest family
@@ -47,7 +47,7 @@ Do not use these IDs in new code or configs. Entries marked with a retirement da
 - `claude-3-haiku-20240307`
 - `claude-3-5-sonnet-20240620`
 - `claude-3-5-sonnet-20241022`
-- `claude-3-5-haiku-20241022`
+- `claude-3-5-haiku-20241022` — **retired from Claude API** (still available on Bedrock and Vertex AI)
 - `claude-2.1`
 - `claude-2.0`
 - `claude-instant-1.2`

@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-06-12
+last_updated: 2026-06-13
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 2
+version: 3
 ---
 
 ## Named subagent frontmatter fields
@@ -34,6 +34,8 @@ Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Availa
 Set `model: haiku` on read-only scanner agents; let implementation agents default to `sonnet` via `inherit`. Bump to `opus` or `fable` only when the task demonstrably needs it.
 
 ## When to use a subagent
+
+Subagents run within the current session. For cross-session parallelism, use **background agents** (the agent view, `claude agents`). For sessions that need to communicate with each other, use **agent teams** — a distinct pattern where agents exchange messages rather than returning results to a single orchestrator.
 
 - A side task would flood the main context with file contents, search hits, or logs that are not referenced again.
 - The work needs a different tool-set, a different model (e.g. Haiku for cheap scans), or a separate permission profile.
