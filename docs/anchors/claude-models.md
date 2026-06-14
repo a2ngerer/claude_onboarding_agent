@@ -1,11 +1,11 @@
 ---
 name: claude-models
 description: Current Claude model IDs, aliases, context limits, and recommended defaults
-last_updated: 2026-06-12
+last_updated: 2026-06-14
 sources:
   - https://docs.claude.com/en/docs/about-claude/models
   - https://docs.claude.com/en/docs/about-claude/pricing
-version: 2
+version: 3
 ---
 
 ## Latest family
@@ -21,7 +21,7 @@ Claude 4.x / 5.x is the current family as of `last_updated`. The Fable 5 tier si
 | Sonnet | `claude-sonnet-4-6`   | `sonnet`| 1M      | 64k        | $3 / $15                  | Balanced default — most coding and general tasks |
 | Haiku  | `claude-haiku-4-5-20251001` | `haiku` | 200k | 64k    | $1 / $5                   | Fast, cheap, high-volume tasks and subagents |
 
-`claude-mythos-5` is the same model as Fable 5 but without dual-use safety measures. It is invitation-only and not recommended for general use.
+`claude-mythos-5` is the same model as Fable 5 but without dual-use safety measures. It is invitation-only (Project Glasswing) and not recommended for general use.
 
 ## Aliases
 
@@ -35,8 +35,8 @@ Since the 4.6 generation, undated model IDs (e.g. `claude-opus-4-8`) are pinned 
 
 Do not use these IDs in new code or configs. Entries marked with a retirement date will stop working on that date.
 
-- `claude-sonnet-4-0` — **retires 2026-06-15 (imminent)**
-- `claude-opus-4-0` — **retires 2026-06-15 (imminent)**
+- `claude-sonnet-4-0` — **retires 2026-06-15**
+- `claude-opus-4-0` — **retires 2026-06-15**
 - `claude-opus-4-1` — retires 2026-08-05
 - `claude-opus-4-7` — legacy, still available
 - `claude-opus-4-6` — legacy, still available
@@ -67,3 +67,4 @@ Fable 5, Mythos 5, and Opus 4.7+ use a new tokenizer that produces roughly 30% m
 
 - Use undated IDs (`claude-opus-4-8`) for production stability; they are pinned snapshots since the 4.6 generation. Aliases (`opus`, `sonnet`, etc.) move when defaults are promoted.
 - When migrating between models, re-run your eval suite; prompts tuned for one model family may need light adjustment.
+- Opus 4.8 defaults to `high` effort on all surfaces (Claude API and Claude Code). Set `effort` explicitly to override — e.g. `normal` for most tasks, `low` for exploratory work.

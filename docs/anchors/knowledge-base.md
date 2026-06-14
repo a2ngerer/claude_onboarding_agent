@@ -1,12 +1,12 @@
 ---
 name: knowledge-base
 description: Recommended vault layouts, frontmatter patterns, and KB-agent structures for Obsidian-style knowledge bases
-last_updated: 2026-04-21
+last_updated: 2026-06-14
 sources:
   - https://help.obsidian.md/
   - https://help.obsidian.md/properties
   - https://publish.obsidian.md/hub/01+-+Community+Vaults
-version: 1
+version: 2
 ---
 
 ## Vault layout
@@ -35,7 +35,7 @@ Obsidian properties live in YAML frontmatter delimited by `---`. Reserved keys h
 | `aliases` | list | No | Alternate names that resolve in wikilinks and search |
 | `type` | text | Recommended | Custom discriminator (`concept`, `person`, `project`, `daily`) |
 
-Reserved Obsidian keys: `aliases`, `tags`, `cssclasses`. Dates use `YYYY-MM-DD` or ISO-8601 with time; lists may use YAML block or flow syntax.
+Obsidian property types: Text, List, Number, Checkbox, Date, Date & time, Tags. Reserved keys: `aliases`, `tags`, `cssclasses`. Dates use `YYYY-MM-DD` or ISO-8601 with time; lists may use YAML block or flow syntax. The deprecated singular forms `tag`, `alias`, `cssclass` were removed in Obsidian 1.9 — use the plural forms instead.
 
 ## Naming conventions
 
@@ -64,3 +64,4 @@ Reserved Obsidian keys: `aliases`, `tags`, `cssclasses`. Dates use `YYYY-MM-DD` 
 - Editing vault files with plain `Edit`/`Write` or `mv` — skips Obsidian's link-rewrite logic and silently corrupts backlinks.
 - Using the third-party Obsidian MCP for vault I/O — its tool schemas load into every session. Prefer the official CLI plus the vault-keeper subagent.
 - Dumping raw source material into `wiki/` — `wiki/` is for curated notes only; raw inputs belong in `raw/`.
+- Using deprecated property names (`tag`, `alias`, `cssclass`) — removed in Obsidian 1.9; use `tags`, `aliases`, `cssclasses`.

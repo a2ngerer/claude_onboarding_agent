@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-06-12
+last_updated: 2026-06-14
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 3
+version: 4
 ---
 
 ## Recommended
@@ -61,6 +61,7 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 - **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release.
 - Use `claude mcp add-json` for HTTP servers with complex headers; use `claude mcp add` for stdio servers.
+- Stdio servers launched by Claude Code receive `CLAUDECODE=1`, `CLAUDE_CODE_SESSION_ID`, and `CLAUDE_PROJECT_DIR` as environment variables — useful for server-side session tracking.
 
 ## Selection tips
 
