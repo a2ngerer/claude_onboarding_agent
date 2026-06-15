@@ -1,14 +1,14 @@
 ---
 name: claude-tools
 description: How to configure Claude's core tooling surface — hooks, rules, memory files, settings, slash commands, plugins
-last_updated: 2026-06-12
+last_updated: 2026-06-15
 sources:
   - https://docs.claude.com/en/docs/claude-code/hooks
   - https://docs.claude.com/en/docs/claude-code/settings
   - https://docs.claude.com/en/docs/claude-code/plugins
   - https://docs.claude.com/en/docs/claude-code/slash-commands
   - https://docs.claude.com/en/docs/claude-code/memory
-version: 2
+version: 3
 ---
 
 ## Memory files
@@ -19,10 +19,11 @@ version: 2
 - Size target: keep each `CLAUDE.md` under ~200 lines. Longer files reduce adherence.
 - For modular rules, use `.claude/rules/*.md` with optional `paths:` frontmatter to scope by glob. Rules without `paths:` load unconditionally.
 - Imports: `@path/to/file` inside `CLAUDE.md` pulls another file into context at launch (max depth 5).
+- **Auto memory:** Claude automatically saves notes across sessions to `~/.claude/projects/<project>/memory/MEMORY.md` (first 200 lines or 25 KB loaded each session). Controlled by `autoMemoryEnabled` (default: `true`) and `autoMemoryDirectory` settings.
 
 ## Settings
 
-Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `outputStyle`, `sandbox`, `claudeMdExcludes`, `fallbackModel`, `requiredMinimumVersion`, `enforceAvailableModels`. Permission rules evaluate in order `deny → ask → allow`; first match wins.
+Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `model`, `agent`, `outputStyle`, `claudeMdExcludes`, `fallbackModel`, `requiredMinimumVersion`, `enforceAvailableModels`, `availableModels`, `autoMemoryEnabled`, `autoMemoryDirectory`. Permission rules evaluate in order `deny → ask → allow`; first match wins. **MCP servers are configured in `.mcp.json` (project scope) or `~/.claude.json` (user scope) — not in `settings.json`.**
 
 ```json
 { "permissions": { "allow": ["Bash(npm run test *)"], "deny": ["Read(./.env)"] } }
@@ -43,14 +44,24 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 | `UserPromptSubmit` | Validate or enrich the user prompt | Block secret patterns |
 | `PreToolUse` | Block or gate a tool call | Deny `Bash(rm -rf *)` |
 | `PostToolUse` | Lint or log after a tool runs | Auto-run `eslint --fix` after `Edit` |
+| `PostToolUseFailure` | React when a tool call fails | Log errors for debugging |
 | `PostToolBatch` | React after a full parallel tool batch completes | Summarize a batch of file reads |
+| `PermissionRequest` | React when a permission dialog appears | Audit pending approvals |
+| `PermissionDenied` | React when auto mode classifier denies a tool call | Alert on blocked commands |
 | `MessageDisplay` | Intercept or annotate a message before it is shown | Inject a reminder banner |
+| `SubagentStart` | React when a subagent is spawned | Log delegation to a subagent |
+| `SubagentStop` | React when a subagent finishes | Collect subagent results |
+| `FileChanged` | React when a watched file changes on disk | Trigger a lint run |
+| `CwdChanged` | React when the working directory changes | Update context env vars |
 | `PreCompact` | Save state before context compaction | Checkpoint session notes |
 | `PostCompact` | Re-inject context after compaction | Reload pinned snippets |
 | `WorktreeCreate` | Set up a fresh worktree (install deps, copy env) | `npm ci` in the new branch |
 | `WorktreeRemove` | Clean up after a worktree is deleted | Remove temp build artifacts |
 | `Stop` | Cleanup when Claude finishes a turn | Persist session notes |
+| `StopFailure` | React when a turn ends due to API error | Alert on turn failures |
 | `SessionEnd` | Release resources or save artifacts | Flush metrics |
+
+Additional events: `Setup`, `UserPromptExpansion`, `TaskCreated`, `TaskCompleted`, `TeammateIdle`, `ConfigChange`, `Elicitation`, `ElicitationResult`, `Notification`.
 
 Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries. Plugins ship hooks in `hooks/hooks.json`.
 
@@ -83,11 +94,9 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 ## Plugins
 
 - Manifest: `.claude-plugin/plugin.json` with `name`, `version` (semver), `description`, optional `author`, `homepage`, `repository`, `displayName`, `defaultEnabled`, `dependencies`.
-  - `displayName` — human-readable name shown in the marketplace and `/plugin list`.
-  - `defaultEnabled` — boolean; whether the plugin activates on install without user opt-in.
-  - `dependencies` — list of other plugin names that must be installed for this plugin to function.
-- Components sit at the plugin root, not inside `.claude-plugin/`: `skills/`, `agents/`, `commands/`, `hooks/`, `.mcp.json`, `.lsp.json`, `monitors/`, `settings.json`.
-- Version every release; users update through the marketplace. `/reload-plugins` picks up local edits.
+- Components sit at the plugin root, not inside `.claude-plugin/`: `skills/`, `agents/`, `commands/`, `hooks/`, `.mcp.json`, `.lsp.json`, `monitors/`, `settings.json`, `bin/`.
+- `monitors/monitors.json` — background monitors that watch logs, files, or external status and notify Claude as events arrive.
+- Version every release; users update through the marketplace. `/reload-plugins` picks up local edits. `--plugin-dir ./plugin.zip` loads a packaged archive for testing.
 
 ## Recommendations
 
@@ -95,13 +104,10 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 - Prefer skills (`SKILL.md`) over fat `CLAUDE.md` sections for anything longer than a few bullets or invoked only sometimes.
 - Use a `PostToolUse` hook to run linters or formatters after `Write`/`Edit` instead of instructing Claude to do it.
 - Scope permissions explicitly: allowlist safe commands (`Bash(npm run test *)`), deny reads of secrets (`Read(./.env)`).
-- Pin plugin versions in team repos; run `/reload-plugins` after edits instead of restarting.
 - Namespace plugin skills; never rely on a collision-prone flat name.
 
 ## Deprecated patterns
 
 - Do not stuff templates, multi-step procedures, or tool references into `CLAUDE.md` — move them into `skills/` or `.claude/rules/`.
 - Do not place `commands/`, `agents/`, `skills/`, or `hooks/` inside `.claude-plugin/`; only `plugin.json` belongs there.
-- Do not rely on `AGENTS.md` being read directly by Claude Code — import it from `CLAUDE.md` with `@AGENTS.md`.
 - Do not use legacy `.claude/commands/*.md` for new functionality — prefer `skills/<name>/SKILL.md` so supporting files and frontmatter are available.
-- Do not silently overwrite an existing `CLAUDE.md` — extend with a delimited, attributed section.

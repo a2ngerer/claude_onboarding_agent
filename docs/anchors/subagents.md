@@ -1,13 +1,21 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-06-12
+last_updated: 2026-06-15
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 2
+version: 3
 ---
+
+## Built-in subagents
+
+Claude Code ships three built-in subagents that are automatically used when appropriate:
+
+- **Explore** (`haiku`, read-only tools) — fast codebase search and file discovery; keeps exploration results out of the main context.
+- **Plan** (inherits model, read-only tools) — research for plan mode; runs before Claude presents an implementation plan.
+- **General-purpose** (inherits model, all tools) — complex multi-step tasks requiring both exploration and file writes.
 
 ## Named subagent frontmatter fields
 
@@ -15,14 +23,22 @@ Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Availa
 
 | Field | Purpose |
 |---|---|
-| `model` | Model to run this agent on. Accepts aliases (`fable`, `opus`, `sonnet`, `haiku`) or full IDs. Defaults to `inherit` (uses the invoking context's model). |
-| `disallowedTools` | Comma-separated list of tools the subagent cannot call, even if its `tools:` whitelist includes them. |
+| `name` | Required. Unique identifier (kebab-case). Hooks receive this as `agent_type`. |
+| `description` | Required. When Claude should delegate to this subagent. |
+| `model` | Model to run this agent on. Accepts aliases (`fable`, `opus`, `sonnet`, `haiku`) or full IDs. Defaults to `inherit`. |
+| `tools` | Comma-separated tool allowlist. Inherits all tools if omitted. |
+| `disallowedTools` | Tools to deny even if inherited. Applied before `tools`. |
+| `permissionMode` | Permission mode: `default`, `acceptEdits`, `auto`, `dontAsk`, `bypassPermissions`, or `plan`. |
 | `maxTurns` | Maximum number of agentic turns before the subagent is forced to return. Prevents runaway loops. |
-| `skills` | Comma-separated skill slugs to preload into the subagent's context. |
-| `memory` | `true` / `false` — whether the subagent has access to the user's memory files. Default: `false` for read-only agents. |
-| `effort` | `low` / `normal` / `high` — thinking budget hint passed to the model. |
-| `isolation` | `worktree` — run the subagent in a temporary git worktree; branch and path returned to the caller on exit. |
-| `background` | `true` — spawn the subagent in the background; caller is notified on completion rather than waiting. |
+| `skills` | Comma-separated skill slugs to preload into the subagent's context at startup. |
+| `mcpServers` | MCP servers available to this subagent. Each entry is a server name or an inline definition. |
+| `hooks` | Lifecycle hooks scoped to this subagent (same format as `settings.json` hooks). |
+| `memory` | `user` / `project` / `local` — persistent memory scope enabling cross-session learning. |
+| `effort` | `low` / `medium` / `high` / `xhigh` / `max` — thinking budget hint; available levels depend on the model. |
+| `isolation` | `worktree` — run the subagent in a temporary git worktree; auto-removed if unchanged. |
+| `background` | `true` — spawn the subagent in the background; caller is notified on completion. |
+| `color` | Display color in the task list (`red`, `blue`, `green`, `yellow`, `purple`, `orange`, `pink`, `cyan`). |
+| `initialPrompt` | Auto-submitted as the first user turn when this agent runs as the main session agent. |
 
 ## Model tiering for subagents
 
