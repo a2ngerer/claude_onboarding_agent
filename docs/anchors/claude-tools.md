@@ -1,14 +1,14 @@
 ---
 name: claude-tools
 description: How to configure Claude's core tooling surface — hooks, rules, memory files, settings, slash commands, plugins
-last_updated: 2026-06-12
+last_updated: 2026-06-17
 sources:
   - https://docs.claude.com/en/docs/claude-code/hooks
   - https://docs.claude.com/en/docs/claude-code/settings
   - https://docs.claude.com/en/docs/claude-code/plugins
   - https://docs.claude.com/en/docs/claude-code/slash-commands
   - https://docs.claude.com/en/docs/claude-code/memory
-version: 2
+version: 3
 ---
 
 ## Memory files
@@ -29,7 +29,7 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 ```
 
 - **`fallbackModel`** — model to use when the primary `model` is unavailable or rate-limited.
-- **`requiredMinimumVersion`** — semver string; Claude Code refuses to run if the installed version is older.
+- **`requiredMinimumVersion`** / **`requiredMaximumVersion`** — semver bounds; startup fails if the installed version is outside the allowed range.
 - **`enforceAvailableModels`** — boolean; when `true`, rejects model IDs not available in the current account/tier at startup rather than failing at runtime.
 
 **Safe mode:** Set `CLAUDE_CODE_SAFE_MODE=1` in the environment to disable CLAUDE.md loading, plugins, skills, hooks, and MCP servers. Useful for security-sensitive CI environments or troubleshooting a broken config.
@@ -47,8 +47,8 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 | `MessageDisplay` | Intercept or annotate a message before it is shown | Inject a reminder banner |
 | `PreCompact` | Save state before context compaction | Checkpoint session notes |
 | `PostCompact` | Re-inject context after compaction | Reload pinned snippets |
-| `WorktreeCreate` | Set up a fresh worktree (install deps, copy env) | `npm ci` in the new branch |
-| `WorktreeRemove` | Clean up after a worktree is deleted | Remove temp build artifacts |
+| `WorktreeCreate` / `WorktreeRemove` | Set up or tear down a worktree | `npm ci` in new branch; remove build artifacts |
+| `SubagentStart` / `SubagentStop` | Fires when a subagent begins or ends; matcher targets agent type | Set up or clean up shared state per agent |
 | `Stop` | Cleanup when Claude finishes a turn | Persist session notes |
 | `SessionEnd` | Release resources or save artifacts | Flush metrics |
 
@@ -60,6 +60,7 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 - Plugin-provided skills are namespaced: `/<plugin-name>:<skill-name>` to prevent collisions.
 - Arguments: `$ARGUMENTS` (full string), `$0`/`$1`/… or `$ARGUMENTS[N]` (positional), named args via `arguments:` frontmatter.
 - Name slugs: lowercase letters, digits, hyphens only; max 64 chars.
+- `/goal` — set a completion condition; Claude keeps working across turns until it holds.
 - `/reload-skills` — hot-reload skill/command files without restarting the session.
 - `/cd <path>` — change the working directory for the current session.
 - `/plugin list` — list installed plugins and their status.
@@ -72,6 +73,7 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 |---|---|
 | `argument-hint` | Short placeholder shown in autocomplete (e.g. `[branch]`) |
 | `allowed-tools` | Comma-separated tool whitelist for this skill's invocation |
+| `disallowed-tools` | Remove specific tools from the model while the skill is active |
 | `model` | Override model for this skill (accepts aliases: `fable`, `opus`, `sonnet`, `haiku`, `inherit`) |
 | `effort` | `low` / `normal` / `high` — hint to the model's thinking budget |
 | `context: fork` | Run the skill in a forked context (isolated from main conversation) |

@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-06-12
+last_updated: 2026-06-17
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 2
+version: 3
 ---
 
 ## Named subagent frontmatter fields
@@ -19,8 +19,11 @@ Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Availa
 | `disallowedTools` | Comma-separated list of tools the subagent cannot call, even if its `tools:` whitelist includes them. |
 | `maxTurns` | Maximum number of agentic turns before the subagent is forced to return. Prevents runaway loops. |
 | `skills` | Comma-separated skill slugs to preload into the subagent's context. |
-| `memory` | `true` / `false` — whether the subagent has access to the user's memory files. Default: `false` for read-only agents. |
-| `effort` | `low` / `normal` / `high` — thinking budget hint passed to the model. |
+| `permissionMode` | Override permission handling: `default`, `acceptEdits`, `auto`, `dontAsk`, `bypassPermissions`, `plan`. |
+| `mcpServers` | MCP servers scoped to this subagent — inline definitions or references to already-configured servers. |
+| `hooks` | Lifecycle hooks scoped to this subagent (same format as `settings.json` hooks). |
+| `memory` | `user` / `project` / `local` — persist a memory directory across sessions at user, project, or local scope. |
+| `effort` | `low` / `normal` / `high` / `xhigh` — thinking budget hint passed to the model. |
 | `isolation` | `worktree` — run the subagent in a temporary git worktree; branch and path returned to the caller on exit. |
 | `background` | `true` — spawn the subagent in the background; caller is notified on completion rather than waiting. |
 
