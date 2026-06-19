@@ -1,14 +1,14 @@
 ---
 name: claude-tools
 description: How to configure Claude's core tooling surface — hooks, rules, memory files, settings, slash commands, plugins
-last_updated: 2026-06-12
+last_updated: 2026-06-19
 sources:
   - https://docs.claude.com/en/docs/claude-code/hooks
   - https://docs.claude.com/en/docs/claude-code/settings
   - https://docs.claude.com/en/docs/claude-code/plugins
   - https://docs.claude.com/en/docs/claude-code/slash-commands
   - https://docs.claude.com/en/docs/claude-code/memory
-version: 2
+version: 3
 ---
 
 ## Memory files
@@ -22,13 +22,13 @@ version: 2
 
 ## Settings
 
-Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `outputStyle`, `sandbox`, `claudeMdExcludes`, `fallbackModel`, `requiredMinimumVersion`, `enforceAvailableModels`. Permission rules evaluate in order `deny → ask → allow`; first match wins.
+Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `outputStyle`, `sandbox`, `claudeMdExcludes`, `fallbackModel`, `requiredMinimumVersion`, `requiredMaximumVersion`, `enforceAvailableModels`, `disableBundledSkills`. Permission rules evaluate in order `deny → ask → allow`; first match wins.
 
 ```json
 { "permissions": { "allow": ["Bash(npm run test *)"], "deny": ["Read(./.env)"] } }
 ```
 
-- **`fallbackModel`** — model to use when the primary `model` is unavailable or rate-limited.
+- **`fallbackModel`** — up to 3 fallback models tried in order when the primary `model` is unavailable or rate-limited.
 - **`requiredMinimumVersion`** — semver string; Claude Code refuses to run if the installed version is older.
 - **`enforceAvailableModels`** — boolean; when `true`, rejects model IDs not available in the current account/tier at startup rather than failing at runtime.
 
@@ -50,7 +50,12 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 | `WorktreeCreate` | Set up a fresh worktree (install deps, copy env) | `npm ci` in the new branch |
 | `WorktreeRemove` | Clean up after a worktree is deleted | Remove temp build artifacts |
 | `Stop` | Cleanup when Claude finishes a turn | Persist session notes |
+| `StopFailure` | Turn ends due to an API error | Log or alert on model failures |
 | `SessionEnd` | Release resources or save artifacts | Flush metrics |
+| `SubagentStart` | When a subagent is spawned | Log subagent launches or inject context |
+| `SubagentStop` | When a subagent finishes | Collect metrics or relay output |
+| `PermissionDenied` | Auto-mode classifier blocks a tool call | Log or escalate denied actions |
+| `FileChanged` | A watched file changes on disk (async) | Reload env or trigger re-checks |
 
 Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries. Plugins ship hooks in `hooks/hooks.json`.
 
@@ -95,13 +100,11 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 - Prefer skills (`SKILL.md`) over fat `CLAUDE.md` sections for anything longer than a few bullets or invoked only sometimes.
 - Use a `PostToolUse` hook to run linters or formatters after `Write`/`Edit` instead of instructing Claude to do it.
 - Scope permissions explicitly: allowlist safe commands (`Bash(npm run test *)`), deny reads of secrets (`Read(./.env)`).
-- Pin plugin versions in team repos; run `/reload-plugins` after edits instead of restarting.
 - Namespace plugin skills; never rely on a collision-prone flat name.
 
 ## Deprecated patterns
 
 - Do not stuff templates, multi-step procedures, or tool references into `CLAUDE.md` — move them into `skills/` or `.claude/rules/`.
-- Do not place `commands/`, `agents/`, `skills/`, or `hooks/` inside `.claude-plugin/`; only `plugin.json` belongs there.
 - Do not rely on `AGENTS.md` being read directly by Claude Code — import it from `CLAUDE.md` with `@AGENTS.md`.
 - Do not use legacy `.claude/commands/*.md` for new functionality — prefer `skills/<name>/SKILL.md` so supporting files and frontmatter are available.
 - Do not silently overwrite an existing `CLAUDE.md` — extend with a delimited, attributed section.

@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-06-12
+last_updated: 2026-06-19
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 3
+version: 4
 ---
 
 ## Recommended
@@ -67,3 +67,4 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 - Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server. (Convention, not part of the official schema — but this plugin promotes it.)
 - Keep the installed set small. Every MCP server adds tool-selection overhead and expands the trust surface.
 - For read-only inspection tasks, prefer a dedicated CLI + Bash allowlist over an MCP server.
+- **Enterprise/managed:** Use `allowedMcpServers`/`deniedMcpServers` in managed `settings.json` to control which servers users can connect. Set `allowAllClaudeAiMcps: true` to auto-load all claude.ai cloud connectors for enterprise accounts.

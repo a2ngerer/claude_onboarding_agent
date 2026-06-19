@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-06-12
+last_updated: 2026-06-19
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 2
+version: 3
 ---
 
 ## Named subagent frontmatter fields
@@ -15,6 +15,9 @@ Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Availa
 
 | Field | Purpose |
 |---|---|
+| `name` | Kebab-case identifier matching the filename; used as the invocation key. |
+| `description` | One sentence telling Claude when to delegate to this agent. Used for automatic dispatch. Required for Claude to pick the agent reliably. |
+| `tools` | Comma-separated whitelist of tools this agent may call (e.g. `Read, Grep, Glob, Bash`). |
 | `model` | Model to run this agent on. Accepts aliases (`fable`, `opus`, `sonnet`, `haiku`) or full IDs. Defaults to `inherit` (uses the invoking context's model). |
 | `disallowedTools` | Comma-separated list of tools the subagent cannot call, even if its `tools:` whitelist includes them. |
 | `maxTurns` | Maximum number of agentic turns before the subagent is forced to return. Prevents runaway loops. |
