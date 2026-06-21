@@ -1,11 +1,11 @@
 ---
 name: claude-models
 description: Current Claude model IDs, aliases, context limits, and recommended defaults
-last_updated: 2026-06-12
+last_updated: 2026-06-21
 sources:
   - https://docs.claude.com/en/docs/about-claude/models
   - https://docs.claude.com/en/docs/about-claude/pricing
-version: 2
+version: 3
 ---
 
 ## Latest family
@@ -35,9 +35,9 @@ Since the 4.6 generation, undated model IDs (e.g. `claude-opus-4-8`) are pinned 
 
 Do not use these IDs in new code or configs. Entries marked with a retirement date will stop working on that date.
 
-- `claude-sonnet-4-0` — **retires 2026-06-15 (imminent)**
-- `claude-opus-4-0` — **retires 2026-06-15 (imminent)**
-- `claude-opus-4-1` — retires 2026-08-05
+- `claude-sonnet-4-0` — **retired** (available on Bedrock and Vertex AI only)
+- `claude-opus-4-0` — **retired** (available on Vertex AI only)
+- `claude-opus-4-1` — **deprecated**, retires 2026-08-05
 - `claude-opus-4-7` — legacy, still available
 - `claude-opus-4-6` — legacy, still available
 - `claude-opus-4-5` — legacy, still available
@@ -54,7 +54,7 @@ Do not use these IDs in new code or configs. Entries marked with a retirement da
 
 ## Tokenizer note
 
-Fable 5, Mythos 5, and Opus 4.7+ use a new tokenizer that produces roughly 30% more tokens for the same text. Factor this into cost estimates when migrating from older models.
+Fable 5, Mythos 5, and Opus 4.7+ use a new tokenizer that produces up to 35% more tokens for the same text. Factor this into cost estimates when migrating from older models.
 
 ## Defaults
 

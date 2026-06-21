@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-06-12
+last_updated: 2026-06-21
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 2
+version: 3
 ---
 
 ## Named subagent frontmatter fields
@@ -34,6 +34,8 @@ Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Availa
 Set `model: haiku` on read-only scanner agents; let implementation agents default to `sonnet` via `inherit`. Bump to `opus` or `fable` only when the task demonstrably needs it.
 
 ## When to use a subagent
+
+Named subagents (`.claude/agents/<name>.md`) run within the calling session. For parallel independent sessions monitored from one place, use **background agents** (`claude agents`). For sessions that communicate with each other, use **agent teams**. For large fan-outs (tens to hundreds of agents), ask Claude to create a **dynamic workflow**.
 
 - A side task would flood the main context with file contents, search hits, or logs that are not referenced again.
 - The work needs a different tool-set, a different model (e.g. Haiku for cheap scans), or a separate permission profile.
@@ -82,7 +84,7 @@ The main agent waits once, then relays a consolidated summary — it does not na
 
 ## Anti-patterns
 
-- Subagents dispatching other subagents — nesting is technically supported up to 5 levels (since v2.1.172) but remains strongly discouraged; nested fan-out multiplies context cost and latency unpredictably.
+- Subagents dispatching other subagents — nesting is supported up to 5 levels but remains strongly discouraged; nested fan-out multiplies context cost and latency unpredictably.
 - The main agent narrating subagent work step-by-step instead of relaying the final summary.
 - Dispatching a subagent for a task that is one tool call — the overhead dwarfs the work.
 - Vague prompts like "research X" with no output format — produces redundant searches and unfocused summaries.
