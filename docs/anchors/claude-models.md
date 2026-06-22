@@ -1,11 +1,11 @@
 ---
 name: claude-models
 description: Current Claude model IDs, aliases, context limits, and recommended defaults
-last_updated: 2026-06-12
+last_updated: 2026-06-22
 sources:
   - https://docs.claude.com/en/docs/about-claude/models
   - https://docs.claude.com/en/docs/about-claude/pricing
-version: 2
+version: 3
 ---
 
 ## Latest family
@@ -35,8 +35,8 @@ Since the 4.6 generation, undated model IDs (e.g. `claude-opus-4-8`) are pinned 
 
 Do not use these IDs in new code or configs. Entries marked with a retirement date will stop working on that date.
 
-- `claude-sonnet-4-0` — **retires 2026-06-15 (imminent)**
-- `claude-opus-4-0` — **retires 2026-06-15 (imminent)**
+- `claude-sonnet-4-0` — **retired 2026-06-15**
+- `claude-opus-4-0` — **retired 2026-06-15**
 - `claude-opus-4-1` — retires 2026-08-05
 - `claude-opus-4-7` — legacy, still available
 - `claude-opus-4-6` — legacy, still available
