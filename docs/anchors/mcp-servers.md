@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-06-12
+last_updated: 2026-06-24
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 3
+version: 4
 ---
 
 ## Recommended
@@ -56,6 +56,11 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 - **kubernetes** — cluster read access, kubectl-equivalent queries. Community servers available; pin a version before production use.
 - **aws / gcp** — prefer official CLIs wrapped via allowed Bash permissions; MCP wrappers exist but are less mature.
+
+## Authentication
+
+- **`claude mcp login <name>`** — authenticate a server from the CLI without the interactive menu; add `--no-browser` for SSH sessions.
+- **`claude mcp logout <name>`** — remove stored credentials for a server.
 
 ## Transport note
 
