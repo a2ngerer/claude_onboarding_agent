@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-06-12
+last_updated: 2026-06-25
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 2
+version: 3
 ---
 
 ## Named subagent frontmatter fields
@@ -40,6 +40,8 @@ Set `model: haiku` on read-only scanner agents; let implementation agents defaul
 - The task is breadth-first: three or more independent queries that can run in parallel.
 - Verification after implementation — a fresh context is less biased toward the code it just wrote.
 - A repeated worker with the same instructions — formalize it as a named subagent under `.claude/agents/`.
+
+**Subagents vs. agent teams:** Subagents are context-nested delegates that return results to the calling turn. *Agent teams* are independent background sessions spawned with the `Agent` tool's `name` parameter; they persist across turns and appear in `claude agents` / the agent view. Use subagents for bounded in-turn work; use agent teams for long-running parallel sessions that need monitoring and cross-turn communication.
 
 ## Delegation heuristics
 
