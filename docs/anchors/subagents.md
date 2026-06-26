@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-06-12
+last_updated: 2026-06-26
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 2
+version: 3
 ---
 
 ## Named subagent frontmatter fields
@@ -16,13 +16,18 @@ Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Availa
 | Field | Purpose |
 |---|---|
 | `model` | Model to run this agent on. Accepts aliases (`fable`, `opus`, `sonnet`, `haiku`) or full IDs. Defaults to `inherit` (uses the invoking context's model). |
-| `disallowedTools` | Comma-separated list of tools the subagent cannot call, even if its `tools:` whitelist includes them. |
+| `disallowedTools` | Tools to deny; accepts exact names, MCP patterns (`mcp__<server>`), or `mcp__*` to remove all MCP tools. |
 | `maxTurns` | Maximum number of agentic turns before the subagent is forced to return. Prevents runaway loops. |
-| `skills` | Comma-separated skill slugs to preload into the subagent's context. |
-| `memory` | `true` / `false` — whether the subagent has access to the user's memory files. Default: `false` for read-only agents. |
-| `effort` | `low` / `normal` / `high` — thinking budget hint passed to the model. |
-| `isolation` | `worktree` — run the subagent in a temporary git worktree; branch and path returned to the caller on exit. |
+| `skills` | Comma-separated skill slugs to preload into the subagent's context (full content injected at startup). |
+| `memory` | Persistent memory scope: `user`, `project`, or `local`. Enables cross-session learning in that scope. |
+| `effort` | `low` / `medium` / `high` / `xhigh` / `max` — thinking budget hint; overrides the session effort level. |
+| `isolation` | `worktree` — run the subagent in a temporary git worktree; auto-cleaned up if no changes are made. |
 | `background` | `true` — spawn the subagent in the background; caller is notified on completion rather than waiting. |
+| `permissionMode` | Permission mode for this subagent: `default`, `acceptEdits`, `auto`, `dontAsk`, `bypassPermissions`, or `plan`. |
+| `mcpServers` | MCP servers scoped to this subagent. Each entry is a server name (string) or inline server definition. |
+| `hooks` | Lifecycle hooks scoped to this subagent (same format as session hooks). |
+| `color` | Display color in the task list: `red`, `blue`, `green`, `yellow`, `purple`, `orange`, `pink`, or `cyan`. |
+| `initialPrompt` | Auto-submitted as the first user turn when the agent runs as the main session (via `--agent` or `agent` setting). |
 
 ## Model tiering for subagents
 
