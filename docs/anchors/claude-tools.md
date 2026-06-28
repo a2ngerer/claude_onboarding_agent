@@ -1,14 +1,14 @@
 ---
 name: claude-tools
 description: How to configure Claude's core tooling surface — hooks, rules, memory files, settings, slash commands, plugins
-last_updated: 2026-06-12
+last_updated: 2026-06-28
 sources:
   - https://docs.claude.com/en/docs/claude-code/hooks
   - https://docs.claude.com/en/docs/claude-code/settings
   - https://docs.claude.com/en/docs/claude-code/plugins
   - https://docs.claude.com/en/docs/claude-code/slash-commands
   - https://docs.claude.com/en/docs/claude-code/memory
-version: 2
+version: 3
 ---
 
 ## Memory files
@@ -22,14 +22,14 @@ version: 2
 
 ## Settings
 
-Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `outputStyle`, `sandbox`, `claudeMdExcludes`, `fallbackModel`, `requiredMinimumVersion`, `enforceAvailableModels`. Permission rules evaluate in order `deny → ask → allow`; first match wins.
+Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `outputStyle`, `sandbox`, `claudeMdExcludes`, `fallbackModel`, `requiredMinimumVersion`, `requiredMaximumVersion`, `enforceAvailableModels`, `language`, `disableBundledSkills`, `worktree.bgIsolation`. Permission rules evaluate in order `deny → ask → allow`; first match wins.
 
 ```json
 { "permissions": { "allow": ["Bash(npm run test *)"], "deny": ["Read(./.env)"] } }
 ```
 
 - **`fallbackModel`** — model to use when the primary `model` is unavailable or rate-limited.
-- **`requiredMinimumVersion`** — semver string; Claude Code refuses to run if the installed version is older.
+- **`requiredMinimumVersion`** / **`requiredMaximumVersion`** — semver bounds; Claude Code refuses to run outside this version range (`requiredMaximumVersion` is managed-only).
 - **`enforceAvailableModels`** — boolean; when `true`, rejects model IDs not available in the current account/tier at startup rather than failing at runtime.
 
 **Safe mode:** Set `CLAUDE_CODE_SAFE_MODE=1` in the environment to disable CLAUDE.md loading, plugins, skills, hooks, and MCP servers. Useful for security-sensitive CI environments or troubleshooting a broken config.
@@ -52,7 +52,9 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 | `Stop` | Cleanup when Claude finishes a turn | Persist session notes |
 | `SessionEnd` | Release resources or save artifacts | Flush metrics |
 
-Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries. Plugins ship hooks in `hooks/hooks.json`.
+Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and handler entries. Handler types: `command`, `http`, `mcp_tool`, `prompt` (LLM eval), `agent` (subagent verify); add `async: true` for background execution. Plugins ship hooks in `hooks/hooks.json`.
+
+Additional events (not in table above): `SubagentStop`, `UserPromptExpansion`, `StopFailure`, `CwdChanged`, `ConfigChange`, `FileChanged`, `TaskCreated`, `TaskCompleted`, `Elicitation`, `PermissionRequest`, `SubagentStart`.
 
 ## Slash commands
 
@@ -62,6 +64,8 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 - Name slugs: lowercase letters, digits, hyphens only; max 64 chars.
 - `/reload-skills` — hot-reload skill/command files without restarting the session.
 - `/cd <path>` — change the working directory for the current session.
+- `/config key=value` — set any setting from the prompt (e.g. `/config thinking=false`).
+- `/workflows` — view running dynamic workflow jobs and their status.
 - `/plugin list` — list installed plugins and their status.
 - `claude plugin init` — scaffold a new plugin in the current directory (CLI, not a slash command).
 - `claude agents` — list all available named subagents (CLI).
