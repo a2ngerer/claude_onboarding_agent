@@ -32,7 +32,7 @@ Not sure where to start? Run `/onboarding` and we'll figure it out with you. Or 
 | **A developer** shipping code | `/coding-setup` | Superpowers workflow, subagent roles, stack permissions |
 | **Building a web app** (frontend, backend, or full-stack) | `/web-development-setup` | Frontend, backend, or full-stack web app — framework-aware permissions, env-var hygiene, deploy-target pointers |
 | **A data scientist / ML engineer** | `/data-science-setup` | Notebook hygiene, experiment tracking, `data/raw→processed` layout, reproducibility |
-| **Building a personal wiki / second brain** | `/knowledge-base-setup` | Karpathy-pattern wiki, optional Obsidian CLI subagent |
+| **Building a personal wiki / second brain** | `/knowledge-base-setup` | OKF v0.1 (Karpathy-pattern) wiki, optional Obsidian CLI subagent |
 | **Writing emails, memos, reports, proposals** | `/office-setup` | Business-writing focus: Q1 branches guidelines (email path vs. report path); presentations out of scope |
 | **A researcher or academic** | `/research-setup` | Literature review workflow, Zotero reference management, reading notes |
 | **Writing a thesis, paper, or dissertation** | `/academic-writing-setup` | Thesis / paper / dissertation — LaTeX or Typst, Zotero, citation rules that prevent hallucinations |
@@ -96,7 +96,7 @@ irm https://raw.githubusercontent.com/a2ngerer/claude_onboarding_agent/main/scri
 | `/coding-setup` | Installs [Superpowers](https://github.com/obra/superpowers), wires up brainstorm → plan → subagents → review → commit |
 | `/web-development-setup` | Framework-aware web-app setup — Next.js / React / Vue / Svelte / SolidJS / Astro / Remix + optional backend (Node/Bun/Python/Go). API conventions, component structure, env-var hygiene, deploy-target pointers |
 | `/data-science-setup` | Notebook workflow (Jupyter/marimo), experiment tracking (MLflow/W&B/DVC), reproducible `pyproject.toml`, `data/raw/interim/processed` layout, model-card pointers |
-| `/knowledge-base-setup` | Builds a [Karpathy-pattern](https://github.com/forrestchang/andrej-karpathy-skills) wiki from your notes or codebase (+ optional [Obsidian](https://obsidian.md) CLI integration via dispatched subagent — no always-on MCP token cost) |
+| `/knowledge-base-setup` | Builds a [Karpathy-pattern](https://github.com/forrestchang/andrej-karpathy-skills) wiki from your notes or codebase, conformant to Google's [Open Knowledge Format (OKF v0.1)](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md) so the bundle stays portable across OKF-aware agents (+ optional [Obsidian](https://obsidian.md) CLI integration via dispatched subagent — no always-on MCP token cost) |
 | `/office-setup` | Business writing — emails, memos, reports, proposals. Q1 bifurcates emitted guidelines (email path / report path / both); presentations are out of scope |
 | `/research-setup` | Input side of academic research — literature reviews, paper screening and summaries, Zotero reference management, reading notes. Manuscript drafting lives in `/academic-writing-setup` |
 | `/academic-writing-setup` | Thesis / paper / dissertation setup — LaTeX or Typst stack, Zotero + Better BibTeX, citation style, no-invented-citations rules, `sections/`/`bib/`/`figures/` scaffold |
@@ -157,7 +157,7 @@ Every setup skill creates a tailored `CLAUDE.md` with context and instructions s
 | Coding | ✓ + workflow | ✓ 3 roles (AGENTS.md) + opt-in `code-reviewer` subagent | ✓ stack permissions | ✓ stack | — | Superpowers + opt-in GitHub MCP |
 | Web Development | ✓ + pointers (`.claude/rules/api-conventions.md`, `component-structure.md`, `env-vars.md`) | opt-in `component-auditor` subagent | ✓ framework + package-manager + deploy-CLI permissions | ✓ `node_modules/`, framework build outputs (`.next/`, `dist/`, `.astro/`, …), `.env.local`, test artifacts | ✓ type-check on save (TS only, opt-in) | Superpowers (optional) + opt-in GitHub MCP |
 | Data Science | ✓ + pointers (`.claude/rules/data-schema.md`, `evaluation-protocol.md`) | opt-in `notebook-auditor` subagent | ✓ uv / notebook / tracker permissions | ✓ raw data, notebook checkpoints, experiment artifacts | ✓ nbstripout on save (opt-in) | Superpowers (optional) |
-| Knowledge Base | ✓ + Karpathy pattern | ✓ `.claude/agents/obsidian-vault-keeper.md` (optional) | — | ✓ | — | Superpowers + Karpathy |
+| Knowledge Base | ✓ + Karpathy / OKF v0.1 bundle (`wiki/` + `index.md` / `log.md`) | ✓ `.claude/agents/obsidian-vault-keeper.md` (optional) | — | ✓ | — | Superpowers + Karpathy |
 | Office | ✓ + writing style | — | — | ✓ | — | Superpowers (optional) + opt-in Gmail / Calendar / Drive MCP |
 | Research | ✓ + citation format | — | — | ✓ LaTeX | — | Superpowers (optional) |
 | Academic Writing | ✓ + non-negotiable citation rules (pointers to `.claude/rules/writing-style.md`, `citation-rules.md`) | opt-in `writing-style-auditor` subagent | — | ✓ LaTeX / Typst build artifacts | ✓ SessionStart rules reload (opt-in) | Superpowers (optional) |
@@ -178,7 +178,9 @@ Brainstorm idea → Write plan → Dispatch subagents → Code review → Commit
 
 The Knowledge Base Setup sets up the [Karpathy LLM Wiki pattern](https://github.com/forrestchang/andrej-karpathy-skills): a `raw/` folder for source material and a `wiki/` folder of interlinked markdown notes that Claude builds and maintains. Drop files into `raw/`, ask Claude to ingest them — the wiki grows automatically.
 
-Optional: connect [Obsidian](https://obsidian.md) via the official Obsidian CLI, wired into a dedicated `obsidian-vault-keeper` subagent. Vault reads/writes only load the CLI reference when actually invoked, so chats that don't touch the vault pay zero Obsidian tokens — unlike a persistent MCP whose tool schemas are loaded into every session.
+The generated `wiki/` is an [**OKF v0.1 bundle**](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md) — Google Cloud's Open Knowledge Format, the published, vendor-neutral standard that formalizes the LLM-wiki pattern. Each note is one concept with YAML frontmatter (a required `type` plus recommended `title` / `description` / `tags` / `timestamp`), reserved `index.md` / `log.md` files, and standard Markdown cross-links (not wikilinks). Conformance keeps the knowledge base portable across any OKF-aware agent or tool, not just Claude.
+
+Optional: connect [Obsidian](https://obsidian.md) via the official Obsidian CLI, wired into a dedicated `obsidian-vault-keeper` subagent. Obsidian renders OKF frontmatter as native Properties and Markdown links in its graph view, so the bundle stays both OKF-conformant and fully navigable. Vault reads/writes only load the CLI reference when actually invoked, so chats that don't touch the vault pay zero Obsidian tokens — unlike a persistent MCP whose tool schemas are loaded into every session.
 
 ---
 

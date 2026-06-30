@@ -165,7 +165,7 @@ _Your repo is large — `/graphify-setup` can layer on top of any choice in this
 **Writing & Research**
 5. Academic Writing — thesis / paper / dissertation: LaTeX or Typst, Zotero, strict no-invented-citations rules (manuscript side)
 6. Research & Academic Writing — literature, papers, LaTeX (reading and note-taking side)
-7. Knowledge Base & Documentation — build a structured wiki from code or notes
+7. Knowledge Base & Documentation — build a structured wiki from code or notes (OKF v0.1 bundle)
 8. Content Voice — brand voice + per-platform tone rules (not a full content workflow)
 
 _Tip: if you both read papers and write a manuscript in this repo, pick option 6 (research) first — it detects a manuscript folder and offers to cascade into option 5 (academic-writing) automatically._

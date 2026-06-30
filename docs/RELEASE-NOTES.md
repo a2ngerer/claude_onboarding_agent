@@ -1,5 +1,17 @@
 # Release Notes
 
+## v1.3.0 — 2026-06-30
+
+Knowledge base conforms to Google's Open Knowledge Format (OKF v0.1).
+
+- `knowledge-base-setup` now generates an OKF v0.1 bundle: every `wiki/` concept note carries YAML frontmatter with a required `type` plus recommended `title` / `description` / `resource` / `tags` (list) / `timestamp`, and the bundle seeds reserved `index.md` (directory listing, no frontmatter) and `log.md` (chronological history)
+- Cross-links switched from Obsidian `[[wikilinks]]` to standard Markdown links (bundle-relative or relative) so the bundle is portable to any OKF-aware agent or tool; wikilinks remain an optional Obsidian-only convenience
+- OKF-conformant note / `index.md` / `log.md` skeletons, the linking rule, the `type` vocabulary, the conformance self-check, and the Obsidian reconciliation extracted to `skills/knowledge-base-setup/document-skeletons.md` (SKILL.md was over the 300-line modularization threshold)
+- `obsidian-vault-keeper` subagent and `obsidian-cli.md` reference updated to require frontmatter with a non-empty `type` on every new concept note
+- `knowledge-base` anchor (`docs/anchors/knowledge-base.md`) reframed around OKF frontmatter (added the OKF spec + Google Cloud blog to its sources, version bumped to 2)
+- README "What's Inside", "Pick your path", and "What gets generated" tables plus the knowledge-base section updated to describe OKF conformance
+- Design: `docs/superpowers/specs/2026-06-30-okf-conformance-design.md`
+
 ## v1.2.1 — 2026-06-12
 
 Skill description sharpening, driven by trigger-eval findings.
