@@ -1,11 +1,11 @@
 ---
 name: claude-models
 description: Current Claude model IDs, aliases, context limits, and recommended defaults
-last_updated: 2026-06-12
+last_updated: 2026-06-30
 sources:
   - https://docs.claude.com/en/docs/about-claude/models
   - https://docs.claude.com/en/docs/about-claude/pricing
-version: 2
+version: 3
 ---
 
 ## Latest family
@@ -17,8 +17,8 @@ Claude 4.x / 5.x is the current family as of `last_updated`. The Fable 5 tier si
 | Tier   | Model ID              | Alias   | Context | Max output | Input / Output (per MTok) | Typical use case |
 |--------|-----------------------|---------|---------|------------|---------------------------|------------------|
 | Fable  | `claude-fable-5`      | `fable` | 1M      | 128k       | $10 / $50                 | Maximum capability, Mythos-class reasoning, adaptive thinking |
-| Opus   | `claude-opus-4-8`     | `opus`  | 1M      | 128k       | $5 / $25                  | Hard reasoning, deep code analysis, agentic workflows; defaults to high effort |
-| Sonnet | `claude-sonnet-4-6`   | `sonnet`| 1M      | 64k        | $3 / $15                  | Balanced default — most coding and general tasks |
+| Opus   | `claude-opus-4-8`     | `opus`  | 1M      | 128k       | $5 / $25                  | Hard reasoning, deep code analysis, agentic workflows |
+| Sonnet | `claude-sonnet-4-6`   | `sonnet`| 1M      | 128k       | $3 / $15                  | Balanced default — most coding and general tasks |
 | Haiku  | `claude-haiku-4-5-20251001` | `haiku` | 200k | 64k    | $1 / $5                   | Fast, cheap, high-volume tasks and subagents |
 
 `claude-mythos-5` is the same model as Fable 5 but without dual-use safety measures. It is invitation-only and not recommended for general use.
@@ -31,12 +31,16 @@ The `model:` field accepts short aliases (`fable`, `opus`, `sonnet`, `haiku`) pl
 
 Since the 4.6 generation, undated model IDs (e.g. `claude-opus-4-8`) are pinned snapshots, not moving pointers. Use them when you want stability without memorizing a full dated ID. Aliases still move; if you want reproducibility across alias promotions, use the undated or dated ID directly.
 
+## Effort and output notes
+
+- **Opus 4.8**: `effort` defaults to `high` on all surfaces (API, Claude Code); set it explicitly to use a different level.
+- **Extended thinking**: supported on Sonnet 4.6 and Haiku 4.5; not available on Opus 4.8 or Fable 5 (those use adaptive thinking instead).
+- **Batch API extended output**: Opus 4.8, 4.7, 4.6, and Sonnet 4.6 support up to 300k output tokens via the `output-300k-2026-03-24` beta header.
+
 ## Deprecated / retiring soon
 
 Do not use these IDs in new code or configs. Entries marked with a retirement date will stop working on that date.
 
-- `claude-sonnet-4-0` — **retires 2026-06-15 (imminent)**
-- `claude-opus-4-0` — **retires 2026-06-15 (imminent)**
 - `claude-opus-4-1` — retires 2026-08-05
 - `claude-opus-4-7` — legacy, still available
 - `claude-opus-4-6` — legacy, still available
