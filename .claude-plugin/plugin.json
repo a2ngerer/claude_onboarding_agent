@@ -2,7 +2,7 @@
   "name": "claude-onboarding-agent",
   "displayName": "Claude Onboarding Agent",
   "description": "Guided setup for Claude Code — generates tailored CLAUDE.md, AGENTS.md, and config files for any use case in minutes.",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "author": {
     "name": "Alexander Angerer",
     "email": "alexander.angerer@outlook.de"

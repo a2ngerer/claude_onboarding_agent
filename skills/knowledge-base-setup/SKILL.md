@@ -1,11 +1,11 @@
 ---
 name: knowledge-base-setup
-description: Set up Claude to build and maintain a structured knowledge base using the Karpathy LLM Wiki pattern — works with codebases, personal notes, or both. Integrates with Obsidian via the official Obsidian CLI (token-efficient, dispatched through a dedicated subagent — no always-on MCP overhead).
+description: Set up Claude to build and maintain a structured knowledge base using the Karpathy LLM Wiki pattern, conformant to Google's Open Knowledge Format (OKF v0.1) — works with codebases, personal notes, or both. Integrates with Obsidian via the official Obsidian CLI (token-efficient, dispatched through a dedicated subagent — no always-on MCP overhead).
 ---
 
 # Knowledge Base Setup
 
-This skill configures Claude to build and maintain a structured, interlinked knowledge base using the Karpathy LLM Wiki pattern.
+This skill configures Claude to build and maintain a structured, interlinked knowledge base using the Karpathy LLM Wiki pattern. The generated `wiki/` is an **OKF v0.1 bundle** — Google Cloud's Open Knowledge Format, the published, vendor-neutral standard that formalizes the LLM-wiki pattern (a directory of Markdown concept files with YAML frontmatter, cross-linked with standard Markdown links). Conformance keeps the knowledge base portable across any OKF-aware agent or tool, not just Claude.
 
 **Handoff context:** Read `skills/_shared/consume-handoff.md` and run it with the handoff block (if any). The helper guarantees the following locals: `detected_language`, `existing_claude_md`, `inferred_use_case`, `repo_signals`, `graphify_candidate`. Use `detected_language` for all user-facing prose; generated file content stays in English.
 
@@ -26,6 +26,7 @@ Read these on-demand at the step that invokes them. Do not read eagerly.
 
 - `skills/_shared/consume-handoff.md` — orchestrator handoff parse + inline fallback (preamble, before Step 1)
 - `skills/_shared/offer-superpowers.md` — canonical Superpowers opt-in (Step 1)
+- `document-skeletons.md` — OKF-conformant concept-note / index.md / log.md skeletons, linking rule, type vocabulary, conformance self-check, Obsidian reconciliation (Step 3)
 - `skills/_shared/offer-graphify.md` — canonical Graphify opt-in (Step 4)
 
 ## Step 1: Install Dependencies
@@ -88,33 +89,41 @@ Ask one at a time, waiting for each answer:
 
 ## Step 3: Generate Artifacts
 
+Read `document-skeletons.md` first — it holds the OKF-conformant concept-note, `index.md`, and `log.md` skeletons, the linking rule, the `type` vocabulary, and the conformance self-check. Use those skeletons verbatim as the basis for every artifact below.
+
 ### Folder Structure
 
-Create the following in the target path from question 3:
+The `wiki/` folder is an **OKF v0.1 bundle**. Seed it so it is conformant from the first commit. Create the following in the target path from question 3:
 ```
 [target_path]/
-├── raw/          ← drop source material here (articles, code files, PDFs, notes)
-└── wiki/
-    └── README.md ← overview of the wiki structure
+├── raw/              ← drop source material here (articles, code files, PDFs, notes)
+└── wiki/             ← OKF v0.1 bundle (one concept per .md file)
+    ├── index.md      ← OKF directory listing (reserved filename, no frontmatter)
+    ├── log.md        ← OKF update history (reserved filename, optional)
+    └── README.md     ← how to use the bundle
 ```
 
-`wiki/README.md`:
+Write `wiki/index.md` from the `index.md` skeleton in `document-skeletons.md` (no frontmatter, a `# Knowledge Base — Index` heading, and a placeholder note that concepts appear here after the first ingestion). Write `wiki/log.md` from the `log.md` skeleton, seeded with today's date and a `**Creation**` entry. Then write `wiki/README.md`:
+
 ```markdown
 # Knowledge Base
 
-Built with Claude using the Karpathy LLM Wiki pattern.
+Built with Claude using the Karpathy LLM Wiki pattern. This `wiki/` folder is an
+**OKF v0.1 bundle** (Google's Open Knowledge Format), so it stays portable across
+any OKF-aware agent or tool.
 
 ## How to Use
 
 **Adding sources:** Drop files into `raw/`. Then ask Claude: "Ingest the new files in raw/ and update the wiki."
 
-**Wiki structure:** Each note in `wiki/` covers one concept, person, project, or topic. Notes link to related notes using [[wikilinks]].
+**Bundle structure:** Each note in `wiki/` is one OKF concept — a person, project, module, or topic. `index.md` lists what's available; `log.md` records updates. Notes link to related notes with standard Markdown links.
 
-**Note format:**
-- First line: one-sentence summary
-- Second line: `tags: #topic #subtopic`
-- Body: structured content with headers
-- Last section: `## Related: [[linked-note-1]], [[linked-note-2]]`
+**Concept note format (OKF v0.1):**
+- YAML frontmatter with a required `type` (free-form string) plus recommended `title`, `description`, `tags` (a list), `timestamp` (ISO 8601). Add `resource` when the note describes an external asset.
+- Body: structured content with H2/H3 headers.
+- A `## Related` section linking related notes with Markdown links — `[Title](note.md)` or bundle-relative `[Title](/folder/note.md)`. Not `[[wikilinks]]`: OKF consumers cannot parse them.
+
+**Reserved filenames:** `index.md` (directory listing, no frontmatter) and `log.md` (chronological history). Every other `.md` is a concept document.
 ```
 
 ### Obsidian integration files (ONLY if `obsidian_cli_available: true`)
@@ -138,6 +147,7 @@ Read `.claude/rules/obsidian-cli.md` for the full command reference and output f
 ## Rules
 - Use the `obsidian` CLI via Bash exclusively. Never edit vault files with Edit/Write — wikilinks and backlinks depend on Obsidian's own APIs (e.g. `obsidian move` rewrites links, a plain `mv` does not).
 - Obsidian must be running. If a command errors with "Obsidian is not running", ask the caller to open Obsidian, then retry once.
+- Notes in `wiki/` are OKF concept documents: every new note created with `obsidian create` must carry YAML frontmatter with a non-empty `type`, and link to related notes with Markdown links (not wikilinks). `index.md` and `log.md` are reserved — `index.md` has no frontmatter.
 - Prefer structured output: append `format=json` or `format=paths` when supported. It parses smaller and cleaner than prose.
 - For multi-step operations (e.g. search → move all matches), pipe `format=paths` through a shell loop rather than issuing commands one note at a time.
 - Return a compact summary — operation name, counts, paths affected. Do NOT dump note contents unless explicitly asked.
@@ -170,6 +180,8 @@ Official Obsidian CLI (desktop 1.12.4+). Requires the Obsidian app to be running
 - `obsidian append file="path/to/note" content="..."` — append to an existing note
 - `obsidian prepend file="path/to/note" content="..."` — insert after frontmatter
 
+When creating OKF concept notes, the `content=` value must start with a YAML frontmatter block carrying a non-empty `type`. Reserved `index.md` files carry no frontmatter.
+
 ## Search
 - `obsidian search query="term"` — fulltext search
 - `obsidian search:context query="term" limit=10` — include surrounding lines
@@ -180,7 +192,7 @@ Official Obsidian CLI (desktop 1.12.4+). Requires the Obsidian app to be running
 - `obsidian tags` — list every tag in the vault
 
 ## Move / Delete
-- `obsidian move file="note" to="folder/"` — moves and rewrites wikilinks automatically
+- `obsidian move file="note" to="folder/"` — moves and rewrites links automatically (wikilinks and Markdown links)
 - `obsidian delete file="note"` — move to system trash
 - `obsidian delete file="note" permanent` — delete permanently
 
@@ -190,7 +202,7 @@ Supported values for `format=`: `json`, `csv`, `tsv`, `md`, `paths`, `text`, `tr
 ## Troubleshooting
 - "Obsidian is not running" → open Obsidian, retry.
 - "Unknown command" → run `obsidian help` to list commands for the installed version.
-- Wikilinks broke after moving a file → always use `obsidian move`, never Finder/`mv`.
+- Links broke after moving a file → always use `obsidian move`, never Finder/`mv`.
 ```
 
 ### CLAUDE.md
@@ -203,41 +215,49 @@ Target path: [answer from Q3]
 Source material: [answer from Q1]
 Source language: [answer from Q4]
 
-## Workflow — Karpathy LLM Wiki Pattern
+## Workflow — Karpathy LLM Wiki Pattern (OKF v0.1)
 [Include ONLY if superpowers_installed is true]
 At the start of every new conversation, invoke the `using-superpowers` skill.
 
+The `wiki/` folder is an OKF v0.1 bundle (Google's Open Knowledge Format). Keep it
+conformant so it stays portable across OKF-aware agents and tools.
+Spec: https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md
+
 ### Structure
 - `raw/` — source material (never modify files here)
-- `wiki/` — organized, interlinked knowledge notes
+- `wiki/` — OKF bundle: organized, interlinked concept notes
+  - `wiki/index.md` — directory listing (reserved; no frontmatter)
+  - `wiki/log.md` — chronological update history (reserved; optional)
 
-### Note Format
-Every wiki note must have:
-1. First line: one-sentence summary of the topic
-2. Second line: `tags: #tag1 #tag2`
-3. Body: structured content with H2/H3 headers
-4. Last section: `## Related: [[note1]], [[note2]]`
+### Concept Note Format (OKF v0.1)
+Every wiki note (except reserved `index.md` / `log.md`) must have:
+1. YAML frontmatter with a required `type` (free-form string, e.g. `concept`, `module`, `person`, `reference`), plus recommended `title`, `description`, `tags` (a YAML list, no leading `#`), and `timestamp` (ISO 8601). Add `resource` (a URI) when the note describes an external asset.
+2. Body: structured content with H2/H3 headers.
+3. A `## Related` section linking related notes with **Markdown links** — `[Title](note.md)` or bundle-relative `[Title](/folder/note.md)`. Never `[[wikilinks]]` — OKF consumers cannot parse them.
 
 ### Ingestion Process
 When asked to ingest new material from raw/:
 1. Read the source file
 2. Extract key concepts, facts, and insights
-3. Create or update wiki notes — one note per concept
-4. Link new notes to related existing notes using [[wikilinks]]
-5. Update existing notes if new material adds to them
+3. Create or update wiki notes — one OKF concept document per concept, each with valid frontmatter (non-empty `type`)
+4. Link new notes to related existing notes using Markdown links
+5. Update existing notes if new material adds to them, and refresh their `timestamp`
 6. Do NOT delete or overwrite existing wiki content — only extend it
+7. Update `wiki/index.md` so new concepts are listed, and append a dated entry to `wiki/log.md`
+8. Run the OKF conformance self-check (see the skill's `document-skeletons.md`): every non-reserved `.md` has parseable frontmatter with a non-empty `type`; links are Markdown links, not wikilinks
 
 ### For Codebases
 When documenting code:
-1. Create one wiki note per module/package/component
+1. Create one OKF concept note per module/package/component, `type:` set to `module` / `component` / `service` / `api` as appropriate
 2. Note: purpose, public API, key dependencies, important design decisions
-3. Link to notes about dependencies
-4. Maintain a `wiki/architecture.md` overview that links to all component notes
+3. Link to notes about dependencies with Markdown links
+4. Maintain a `wiki/architecture.md` overview (`type: reference`) that links to all component notes
 
 ## Obsidian
 [Include if obsidian_cli_available is true]
 Obsidian vault ops run through the `obsidian-vault-keeper` subagent (see `.claude/agents/obsidian-vault-keeper.md`). **Always dispatch that agent via the Agent tool** for reads, writes, searches, moves, or deletes on the vault — do not shell out to `obsidian` directly from this thread and do not edit vault files with Edit/Write.
 Command reference: `.claude/rules/obsidian-cli.md` (read-on-demand; the subagent handles this automatically).
+Obsidian renders OKF YAML frontmatter as native Properties and Markdown links in the graph view, so the bundle stays both OKF-conformant and fully navigable in Obsidian. Wikilinks remain an optional Obsidian-only convenience — Markdown links are canonical.
 Why a subagent: keeps CLI schema out of the main context window, so chats that don't touch the vault cost zero Obsidian tokens.
 
 [Include if obsidian_cli_available is false]
@@ -303,9 +323,11 @@ For every call, also capture `render_freshness`. When it is anything other than 
 ✓ Knowledge Base setup complete!
 
 Files created:
-  CLAUDE.md                              — Karpathy-pattern workflow instructions
+  CLAUDE.md                              — Karpathy-pattern / OKF v0.1 workflow instructions
   [target]/raw/                          — drop source material here
-  [target]/wiki/                         — your knowledge base will be built here
+  [target]/wiki/                         — your OKF v0.1 knowledge bundle will be built here
+  [target]/wiki/index.md                 — OKF directory listing (seeded)
+  [target]/wiki/log.md                   — OKF update history (seeded)
   [target]/wiki/README.md                — how to use your knowledge base
   [if obsidian_cli_available]
     .claude/agents/obsidian-vault-keeper.md — subagent that owns vault I/O
@@ -330,6 +352,7 @@ Anchor freshness:
 Next steps:
   Drop files into [target]/raw/
   Start a new Claude session and say: "Ingest the files in raw/ and build the wiki"
+  Your wiki/ is an OKF v0.1 bundle — portable to any OKF-aware agent or tool.
   [if obsidian_cli_available] For vault ops, just ask — Claude will dispatch the obsidian-vault-keeper agent automatically.
   [if graphify_installed] Try: /graphify query "which notes mention <topic>?"
   - Run `/anchors` any time to refresh the anchor-derived sections. If any section was rendered as a placeholder due to offline mode, re-run `/anchors` once you are back online.
