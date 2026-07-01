@@ -1,24 +1,30 @@
 ---
 name: claude-tools
 description: How to configure Claude's core tooling surface — hooks, rules, memory files, settings, slash commands, plugins
-last_updated: 2026-06-12
+last_updated: 2026-07-01
 sources:
   - https://docs.claude.com/en/docs/claude-code/hooks
   - https://docs.claude.com/en/docs/claude-code/settings
   - https://docs.claude.com/en/docs/claude-code/plugins
   - https://docs.claude.com/en/docs/claude-code/slash-commands
   - https://docs.claude.com/en/docs/claude-code/memory
-version: 2
+version: 3
 ---
 
 ## Memory files
 
 - `CLAUDE.md` — project instructions at `./CLAUDE.md` or `./.claude/CLAUDE.md`; user-level at `~/.claude/CLAUDE.md`. Loaded into every session.
 - `CLAUDE.local.md` — personal project notes; gitignored, appended after `CLAUDE.md`.
-- `AGENTS.md` — not read natively by Claude Code. If the repo needs both, `CLAUDE.md` imports it with `@AGENTS.md`.
+- `AGENTS.md` — not read natively by Claude Code. If the repo needs both, `CLAUDE.md` imports it with `@AGENTS.md` (or symlink `ln -s AGENTS.md CLAUDE.md` outside Windows).
 - Size target: keep each `CLAUDE.md` under ~200 lines. Longer files reduce adherence.
-- For modular rules, use `.claude/rules/*.md` with optional `paths:` frontmatter to scope by glob. Rules without `paths:` load unconditionally.
-- Imports: `@path/to/file` inside `CLAUDE.md` pulls another file into context at launch (max depth 5).
+- For modular rules, use `.claude/rules/*.md` with optional `paths:` frontmatter to scope by glob. Rules without `paths:` load unconditionally; the directory supports symlinks to share rules across projects.
+- Imports: `@path/to/file` inside `CLAUDE.md` pulls another file into context at launch (max depth 4).
+
+## Auto memory
+
+- Separate from `CLAUDE.md`: Claude writes its own notes based on your corrections and discoveries, without being asked. On by default; toggle with `/memory` or `autoMemoryEnabled` in settings.
+- Storage: `~/.claude/projects/<project>/memory/`, shared across worktrees of the same repo. `MEMORY.md` is the index (first 200 lines / 25KB loaded every session); topic files load on demand.
+- Edit or delete anything in it at any time — it's plain markdown, browsable via `/memory`.
 
 ## Settings
 
@@ -52,18 +58,17 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 | `Stop` | Cleanup when Claude finishes a turn | Persist session notes |
 | `SessionEnd` | Release resources or save artifacts | Flush metrics |
 
-Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries. Plugins ship hooks in `hooks/hooks.json`.
+Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries. Plugins ship hooks in `hooks/hooks.json`. Newer events not in the table above: `SubagentStart`/`SubagentStop` (agent lifecycle), `PermissionRequest`/`PermissionDenied` (auto-mode classifier), `ConfigChange`, `TaskCreated`/`TaskCompleted`, `Notification`, `Elicitation` — see the official hooks reference for the full current list.
 
 ## Slash commands
 
-- Skills and custom commands are merged. Project skills live at `.claude/skills/<name>/SKILL.md`; user skills at `~/.claude/skills/<name>/SKILL.md`. Legacy `.claude/commands/*.md` files still work.
+- Custom commands have merged into skills: `.claude/commands/deploy.md` and `.claude/skills/deploy/SKILL.md` both create `/deploy` and behave the same; legacy `.claude/commands/*.md` files still work. Project skills live at `.claude/skills/<name>/SKILL.md`; user skills at `~/.claude/skills/<name>/SKILL.md`.
 - Plugin-provided skills are namespaced: `/<plugin-name>:<skill-name>` to prevent collisions.
 - Arguments: `$ARGUMENTS` (full string), `$0`/`$1`/… or `$ARGUMENTS[N]` (positional), named args via `arguments:` frontmatter.
 - Name slugs: lowercase letters, digits, hyphens only; max 64 chars.
 - `/reload-skills` — hot-reload skill/command files without restarting the session.
 - `/cd <path>` — change the working directory for the current session.
 - `/plugin list` — list installed plugins and their status.
-- `claude plugin init` — scaffold a new plugin in the current directory (CLI, not a slash command).
 - `claude agents` — list all available named subagents (CLI).
 
 ## SKILL.md frontmatter fields
@@ -86,8 +91,9 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
   - `displayName` — human-readable name shown in the marketplace and `/plugin list`.
   - `defaultEnabled` — boolean; whether the plugin activates on install without user opt-in.
   - `dependencies` — list of other plugin names that must be installed for this plugin to function.
-- Components sit at the plugin root, not inside `.claude-plugin/`: `skills/`, `agents/`, `commands/`, `hooks/`, `.mcp.json`, `.lsp.json`, `monitors/`, `settings.json`.
+- Components sit at the plugin root, not inside `.claude-plugin/`: `skills/`, `agents/`, `commands/`, `hooks/`, `.mcp.json`, `.lsp.json`, `monitors/`, `settings.json`, `bin/` (executables added to the Bash tool's `PATH`).
 - Version every release; users update through the marketplace. `/reload-plugins` picks up local edits.
+- `claude plugin init <name>` scaffolds a plugin under `~/.claude/skills/<name>/` so it auto-loads without a marketplace or install step (not just "the current directory").
 
 ## Recommendations
 
@@ -95,8 +101,7 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 - Prefer skills (`SKILL.md`) over fat `CLAUDE.md` sections for anything longer than a few bullets or invoked only sometimes.
 - Use a `PostToolUse` hook to run linters or formatters after `Write`/`Edit` instead of instructing Claude to do it.
 - Scope permissions explicitly: allowlist safe commands (`Bash(npm run test *)`), deny reads of secrets (`Read(./.env)`).
-- Pin plugin versions in team repos; run `/reload-plugins` after edits instead of restarting.
-- Namespace plugin skills; never rely on a collision-prone flat name.
+- Pin plugin versions in team repos; run `/reload-plugins` after edits instead of restarting; namespace plugin skills rather than relying on a collision-prone flat name.
 
 ## Deprecated patterns
 

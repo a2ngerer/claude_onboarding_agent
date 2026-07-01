@@ -1,28 +1,34 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-06-12
+last_updated: 2026-07-01
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 2
+version: 3
 ---
 
 ## Named subagent frontmatter fields
 
-Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Available fields:
+Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Only `name` and `description` are required. Available fields:
 
 | Field | Purpose |
 |---|---|
 | `model` | Model to run this agent on. Accepts aliases (`fable`, `opus`, `sonnet`, `haiku`) or full IDs. Defaults to `inherit` (uses the invoking context's model). |
 | `disallowedTools` | Comma-separated list of tools the subagent cannot call, even if its `tools:` whitelist includes them. |
+| `permissionMode` | `default` / `acceptEdits` / `auto` / `dontAsk` / `bypassPermissions` / `plan`. Ignored for plugin subagents. |
+| `mcpServers` | MCP servers scoped to just this subagent (by name reference or inline definition) — keeps their tool schemas out of the main conversation's context. Ignored for plugin subagents. |
+| `hooks` | Lifecycle hooks (e.g. `PreToolUse`) scoped to this subagent only; cleaned up when it finishes. Ignored for plugin subagents. |
 | `maxTurns` | Maximum number of agentic turns before the subagent is forced to return. Prevents runaway loops. |
 | `skills` | Comma-separated skill slugs to preload into the subagent's context. |
-| `memory` | `true` / `false` — whether the subagent has access to the user's memory files. Default: `false` for read-only agents. |
-| `effort` | `low` / `normal` / `high` — thinking budget hint passed to the model. |
+| `memory` | `user` / `project` / `local` — persistent memory scope enabling cross-session learning. Omit to disable. |
+| `effort` | `low` / `medium` / `high` / `xhigh` / `max` — thinking budget hint passed to the model. |
 | `isolation` | `worktree` — run the subagent in a temporary git worktree; branch and path returned to the caller on exit. |
 | `background` | `true` — spawn the subagent in the background; caller is notified on completion rather than waiting. |
+| `color` | Display color in the task list and transcript (`red`, `blue`, `green`, etc.). |
+
+Model resolution order: `CLAUDE_CODE_SUBAGENT_MODEL` env var → per-invocation `model` param → this frontmatter field → the main conversation's model.
 
 ## Model tiering for subagents
 
@@ -47,7 +53,7 @@ Set `model: haiku` on read-only scanner agents; let implementation agents defaul
 - Dispatch via the `Agent` tool when the investigation needs many reads, unbounded exploration, or its own filesystem/network permissions.
 - Parallel vs. serial: run in parallel when subtasks are independent; serialize when a later task depends on the earlier result.
 - Split research from implementation — one subagent explores and summarizes, the main agent (or another subagent) implements against that summary.
-- Use `context: fork` on a skill when the skill itself is the task and it benefits from isolation.
+- Use `context: fork` (skill) or `/fork <directive>` (direct) when a side task needs the full existing conversation instead of being re-briefed from scratch — a fork inherits history and shares the parent's prompt cache, cheaper than a fresh subagent; only its own tool calls stay out of the main context.
 
 ## Prompting a subagent
 
