@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-06-12
+last_updated: 2026-07-03
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 3
+version: 4
 ---
 
 ## Recommended
@@ -42,7 +42,7 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Productivity
 
-- **slack** — read channels, post messages. Install: `claude mcp add slack npx -- -y @modelcontextprotocol/server-slack`
+- **slack** — read channels, post messages. The reference `@modelcontextprotocol/server-slack` package is archived; the maintained community server now lives under Zencoder. Verify the current package name before installing, e.g. `claude mcp add slack npx -- -y <current-slack-mcp-package>`.
 - **linear** — issues and projects. Install via Linear's official MCP integration.
 - **gmail / calendar / drive** — Google hosts official remote MCP endpoints for these services. Authentication requires OAuth2 via a Google Cloud project and is configured through the Claude.ai/Claude Desktop GUI (Settings > Connectors), not via a single CLI command. For Claude Code headless use, the Google Workspace CLI is the practical alternative:
   ```
@@ -59,8 +59,13 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Transport note
 
-- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release.
-- Use `claude mcp add-json` for HTTP servers with complex headers; use `claude mcp add` for stdio servers.
+- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated — use HTTP instead where available.
+- WebSocket (`type: "ws"` in `.mcp.json` / `claude mcp add-json`) suits remote servers that push events unprompted; it doesn't support OAuth, so use HTTP when the server only responds to requests.
+- Basic syntax for remote servers: `claude mcp add --transport http <name> <url>`. Use `claude mcp add-json` for HTTP/WebSocket servers with complex headers; use `claude mcp add -- <command>` for stdio servers.
+
+## Authentication
+
+- `claude mcp login <name>` / `claude mcp logout <name>` — authenticate or sign out of a configured MCP server without opening the `/mcp` menu; add `--no-browser` over SSH.
 
 ## Selection tips
 
