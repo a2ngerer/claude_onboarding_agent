@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-06-12
+last_updated: 2026-07-06
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 2
+version: 3
 ---
 
 ## Named subagent frontmatter fields
@@ -22,7 +22,9 @@ Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Availa
 | `memory` | `true` / `false` — whether the subagent has access to the user's memory files. Default: `false` for read-only agents. |
 | `effort` | `low` / `normal` / `high` — thinking budget hint passed to the model. |
 | `isolation` | `worktree` — run the subagent in a temporary git worktree; branch and path returned to the caller on exit. |
-| `background` | `true` — spawn the subagent in the background; caller is notified on completion rather than waiting. |
+| `background` | `true` — always run this subagent in the background. As of v2.1.198, Claude backgrounds subagents by default and surfaces their permission prompts in the main session. |
+| `permissionMode` | `default`, `acceptEdits`, `auto`, `dontAsk`, `bypassPermissions`, or `plan` — how the subagent handles permission prompts. |
+| `mcpServers` | MCP servers scoped to this subagent only, so their tool schemas never load into the main conversation's context. |
 
 ## Model tiering for subagents
 
@@ -31,7 +33,7 @@ Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Availa
 - **Opus** (`opus`) — complex multi-step reasoning, architectural decisions, tasks that must get it right the first time.
 - **Fable** (`fable`) — maximum capability; reserve for the hardest reasoning tasks where cost is secondary to quality.
 
-Set `model: haiku` on read-only scanner agents; let implementation agents default to `sonnet` via `inherit`. Bump to `opus` or `fable` only when the task demonstrably needs it.
+Set `model: haiku` on read-only scanner agents; let implementation agents default to `sonnet` via `inherit`. Bump to `opus` or `fable` only when the task demonstrably needs it. As of v2.1.198, subagents inherit the main conversation's extended-thinking setting — there is no separate per-subagent thinking toggle.
 
 ## When to use a subagent
 
@@ -70,6 +72,10 @@ Agent(task="audit db/ for missing indexes", ...)
 ```
 
 The main agent waits once, then relays a consolidated summary — it does not narrate each subagent's progress.
+
+## Large-scale orchestration: dynamic workflows
+
+For work that needs tens to hundreds of agents with deterministic control flow (fan-out/fan-in, pipelines, adversarial verification passes), reach for a dynamic workflow (`/workflows`, the `Workflow` tool) instead of hand-chaining `Agent` calls. Workflows run as background scripts with their own concurrency cap and token budget, and are the right tool when the orchestration itself — not just the individual tasks — needs to be reliable and repeatable. Plain `Agent`/parallel dispatch remains the default for a handful of independent subtasks in a single turn.
 
 ## Recommendations
 

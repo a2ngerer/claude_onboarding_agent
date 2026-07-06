@@ -1,14 +1,14 @@
 ---
 name: knowledge-base
 description: Recommended vault layouts, OKF v0.1 frontmatter patterns, and KB-agent structures for Obsidian-style knowledge bases
-last_updated: 2026-06-30
+last_updated: 2026-07-06
 sources:
   - https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md
   - https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing
   - https://help.obsidian.md/
   - https://help.obsidian.md/properties
   - https://publish.obsidian.md/hub/01+-+Community+Vaults
-version: 2
+version: 3
 ---
 
 ## Vault layout
@@ -49,7 +49,7 @@ Notes carry OKF frontmatter in YAML delimited by `---`. Obsidian renders these a
 | `tags` | Recommended | list | Categorization strings (`[graphs, retrieval]`); enables dataview queries |
 | `timestamp` | Recommended | date | ISO 8601 datetime of the last meaningful change |
 
-Real bundles emit keys in the order `type, resource, title, description, tags, timestamp`. Producers may add custom keys (e.g. `aliases`, `created`, `updated`); OKF consumers preserve unknown keys. If a vault already uses Obsidian's `created`/`updated`, keep OKF's single `timestamp` as canonical and let the others coexist as extensions. Reserved Obsidian keys (`aliases`, `tags`, `cssclasses`) keep their typed UI behavior. Dates use ISO 8601; lists may use YAML block or flow syntax.
+Real bundles emit keys in the order `type, resource, title, description, tags, timestamp`. Producers may add custom keys (e.g. `aliases`, `created`, `updated`); OKF consumers preserve unknown keys. If a vault already uses Obsidian's `created`/`updated`, keep OKF's single `timestamp` as canonical and let the others coexist as extensions. Reserved Obsidian keys (`aliases`, `tags`, `cssclasses`) keep their typed UI behavior. Dates use ISO 8601; lists may use YAML block or flow syntax. Obsidian Properties support six types — text, list, number, checkbox, date, and date & time — so pick the narrowest type a field actually needs (e.g. `checkbox` over a free-text `"true"`/`"false"`).
 
 ## Naming conventions
 
@@ -62,7 +62,7 @@ Real bundles emit keys in the order `type, resource, title, description, tags, t
 
 ## Agent patterns
 
-- **Vault keeper** — dispatched subagent owning all vault I/O via the Obsidian CLI. Forbids direct `Edit`/`Write` so links and backlinks stay consistent. Reference: `.claude/agents/obsidian-vault-keeper.md`.
+- **Vault keeper** — dispatched subagent owning all vault I/O via the Obsidian CLI. Forbids direct `Edit`/`Write` so links and backlinks stay consistent. The CLI's `rename`, `daily:path`, `search`, and multi-vault commands cover the renames and lookups a vault-keeper needs without touching files directly. Reference: `.claude/agents/obsidian-vault-keeper.md`.
 - **Frontmatter validator** — reads notes, enforces OKF conformance (non-empty `type` on every non-reserved note; recommended keys present), reports missing/malformed entries. Read-only, Haiku-class model.
 - **Tag normalizer** — scans `tags:` across the vault, flags near-duplicates (`ai`, `AI`, `artificial-intelligence`), proposes a canonical form. Read-only.
 - **Ingester** — watches `raw/` for new files, summarizes into `wiki/` concept notes with frontmatter and Markdown backlinks, refreshes `index.md` and `log.md`. Write-capable; dispatched only on explicit user request.
