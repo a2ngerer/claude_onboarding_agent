@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-06-12
+last_updated: 2026-07-07
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 3
+version: 4
 ---
 
 ## Recommended
@@ -27,7 +27,7 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 - **filesystem** — scoped filesystem access beyond the working directory. Install: `claude mcp add filesystem npx -- -y @modelcontextprotocol/server-filesystem <path>`
 - **git** — read git history, blame, diffs without shelling out. Install: `claude mcp add git uvx -- mcp-server-git`
 - **github** — issues, PRs, reviews via the official GitHub MCP server. `@modelcontextprotocol/server-github` has been archived; use the official `github/github-mcp-server` instead.
-  - Remote (recommended): `claude mcp add-json github '{"type":"http","url":"https://api.githubcopilot.com/mcp","headers":{"Authorization":"Bearer YOUR_GITHUB_PAT"}}'`
+  - Remote (recommended, per current Claude Code docs): `claude mcp add --transport http github https://api.githubcopilot.com/mcp/ --header "Authorization: Bearer YOUR_GITHUB_PAT"`
   - Local via Docker: `claude mcp add github -e GITHUB_PERSONAL_ACCESS_TOKEN=YOUR_PAT -- docker run -i --rm -e GITHUB_PERSONAL_ACCESS_TOKEN ghcr.io/github/github-mcp-server`
 
 ## Knowledge base
@@ -42,15 +42,15 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Productivity
 
-- **slack** — read channels, post messages. Install: `claude mcp add slack npx -- -y @modelcontextprotocol/server-slack`
+- **slack** — read channels, post messages. `@modelcontextprotocol/server-slack` has been archived; the actively maintained fork is Zencoder's `@zencoderai/slack-mcp-server` (github.com/zencoderai/slack-mcp-server). Install: `claude mcp add slack npx -- -y @zencoderai/slack-mcp-server`
 - **linear** — issues and projects. Install via Linear's official MCP integration.
-- **gmail / calendar / drive** — Google hosts official remote MCP endpoints for these services. Authentication requires OAuth2 via a Google Cloud project and is configured through the Claude.ai/Claude Desktop GUI (Settings > Connectors), not via a single CLI command. For Claude Code headless use, the Google Workspace CLI is the practical alternative:
+- **gmail / calendar / drive** — Google hosts official remote MCP endpoints for these services. Authentication requires OAuth2 via a Google Cloud project; complete sign-in via `/mcp` in-session or run `claude mcp login <name>` from the shell (Claude Code v2.1.186+, add `--no-browser` over SSH) — GUI-only sign-in (Settings > Connectors) is no longer the sole option for CLI use. For Claude Code headless use, the Google Workspace CLI remains a practical alternative:
   ```
   npm install -g @googleworkspace/cli
   gws auth setup
   claude mcp add gws -- gws mcp -s drive,gmail,calendar
   ```
-  The remote endpoints (`gmailmcp.googleapis.com`, `calendarmcp.googleapis.com`, `drivemcp.googleapis.com`) require a paid Claude plan and OAuth2 bearer tokens that cannot be injected as a static header — use the GUI connector flow for those.
+  The remote endpoints (`gmailmcp.googleapis.com`, `calendarmcp.googleapis.com`, `drivemcp.googleapis.com`) require a paid Claude plan and OAuth2 bearer tokens that cannot be injected as a static header — use `claude mcp login` (or `/mcp`) to complete that OAuth flow.
 
 ## DevOps / cloud
 
@@ -59,8 +59,8 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Transport note
 
-- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release.
-- Use `claude mcp add-json` for HTTP servers with complex headers; use `claude mcp add` for stdio servers.
+- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated; use HTTP where available.
+- Use `claude mcp add --transport http <name> <url> --header "..."` for HTTP servers, including with auth headers — this covers most cases without needing raw JSON. Reserve `claude mcp add-json` / `--transport ws` for WebSocket or advanced configs (`headersHelper`, pre-registered OAuth client IDs). Use `claude mcp add --transport stdio <name> -- <command>` for local servers.
 
 ## Selection tips
 
