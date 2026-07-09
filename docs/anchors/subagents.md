@@ -1,28 +1,34 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-06-12
+last_updated: 2026-07-09
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 2
+version: 3
 ---
 
 ## Named subagent frontmatter fields
 
-Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Available fields:
+Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Only `name` and `description` are required. Fields:
 
 | Field | Purpose |
 |---|---|
+| `tools` | Allowlist of tools the subagent can use. Inherits everything if omitted. |
 | `model` | Model to run this agent on. Accepts aliases (`fable`, `opus`, `sonnet`, `haiku`) or full IDs. Defaults to `inherit` (uses the invoking context's model). |
-| `disallowedTools` | Comma-separated list of tools the subagent cannot call, even if its `tools:` whitelist includes them. |
+| `disallowedTools` | Tools to deny, removed from the inherited or `tools:` list even if listed there. Applied before `tools`. |
+| `permissionMode` | `default` / `acceptEdits` / `auto` / `dontAsk` / `bypassPermissions` / `plan`. Ignored for plugin subagents; a parent in `bypassPermissions`/`acceptEdits`/`auto` overrides it. |
 | `maxTurns` | Maximum number of agentic turns before the subagent is forced to return. Prevents runaway loops. |
-| `skills` | Comma-separated skill slugs to preload into the subagent's context. |
-| `memory` | `true` / `false` — whether the subagent has access to the user's memory files. Default: `false` for read-only agents. |
-| `effort` | `low` / `normal` / `high` — thinking budget hint passed to the model. |
+| `skills` | Skill slugs to preload (full content, not just description) into the subagent's context at startup. |
+| `mcpServers` | MCP servers (by name, or inline definitions) available only to this subagent. |
+| `hooks` | Lifecycle hooks (`PreToolUse`, `PostToolUse`, `Stop`, …) scoped to this subagent only. |
+| `memory` | `user` / `project` / `local` — persistent memory scope that survives across conversations. Omit for no persistent memory. |
+| `effort` | `low` / `medium` / `high` / `xhigh` / `max` — thinking budget hint passed to the model. |
 | `isolation` | `worktree` — run the subagent in a temporary git worktree; branch and path returned to the caller on exit. |
-| `background` | `true` — spawn the subagent in the background; caller is notified on completion rather than waiting. |
+| `background` | `true` — force background execution. As of v2.1.198, subagents run in the background by default; Claude foregrounds one only when it needs the result immediately. |
+| `color` | Display color in the task list/transcript (`red`, `blue`, `green`, `yellow`, `purple`, `orange`, `pink`, `cyan`). |
+| `initialPrompt` | Auto-submitted first user turn when this agent runs as the main session agent (via `--agent`). |
 
 ## Model tiering for subagents
 
@@ -31,7 +37,7 @@ Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Availa
 - **Opus** (`opus`) — complex multi-step reasoning, architectural decisions, tasks that must get it right the first time.
 - **Fable** (`fable`) — maximum capability; reserve for the hardest reasoning tasks where cost is secondary to quality.
 
-Set `model: haiku` on read-only scanner agents; let implementation agents default to `sonnet` via `inherit`. Bump to `opus` or `fable` only when the task demonstrably needs it.
+Set `model: haiku` on read-only scanner agents; let implementation agents default to `sonnet` via `inherit`. Bump to `opus` or `fable` only when the task demonstrably needs it. The built-in `Explore` agent no longer always runs on Haiku: it now inherits the main conversation's model (capped at Opus on the Claude API). Define a project/user subagent literally named `Explore` with `model: haiku` to restore the old cheap-scan behavior.
 
 ## When to use a subagent
 
