@@ -1,14 +1,14 @@
 ---
 name: claude-tools
 description: How to configure Claude's core tooling surface — hooks, rules, memory files, settings, slash commands, plugins
-last_updated: 2026-06-12
+last_updated: 2026-07-10
 sources:
   - https://docs.claude.com/en/docs/claude-code/hooks
   - https://docs.claude.com/en/docs/claude-code/settings
   - https://docs.claude.com/en/docs/claude-code/plugins
   - https://docs.claude.com/en/docs/claude-code/slash-commands
   - https://docs.claude.com/en/docs/claude-code/memory
-version: 2
+version: 3
 ---
 
 ## Memory files
@@ -18,41 +18,45 @@ version: 2
 - `AGENTS.md` — not read natively by Claude Code. If the repo needs both, `CLAUDE.md` imports it with `@AGENTS.md`.
 - Size target: keep each `CLAUDE.md` under ~200 lines. Longer files reduce adherence.
 - For modular rules, use `.claude/rules/*.md` with optional `paths:` frontmatter to scope by glob. Rules without `paths:` load unconditionally.
-- Imports: `@path/to/file` inside `CLAUDE.md` pulls another file into context at launch (max depth 5).
+- Imports: `@path/to/file` inside `CLAUDE.md` pulls another file into context at launch (max depth 4 hops).
+- **Auto memory** — separate from CLAUDE.md: Claude writes its own notes at `~/.claude/projects/<project>/memory/`, entrypoint `MEMORY.md` (first 200 lines / 25KB loaded every session; topic files load on demand). CLAUDE.md is instructions you write; auto memory is learnings Claude accumulates. Toggle with `autoMemoryEnabled` or via `/memory`.
 
 ## Settings
 
-Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `outputStyle`, `sandbox`, `claudeMdExcludes`, `fallbackModel`, `requiredMinimumVersion`, `enforceAvailableModels`. Permission rules evaluate in order `deny → ask → allow`; first match wins.
+`.claude/settings.json` has grown a large key surface; the ones most relevant to this plugin's configs are `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `outputStyle`, `sandbox`, `claudeMdExcludes`, `fallbackModel`, `requiredMinimumVersion`, `requiredMaximumVersion`, `enforceAvailableModels`, `availableModels`, `disabledMcpjsonServers`/`enabledMcpjsonServers`, `autoMemoryEnabled`/`autoMemoryDirectory`, `effortLevel`. Permission rules evaluate in order `deny → ask → allow`; first match wins.
 
 ```json
 { "permissions": { "allow": ["Bash(npm run test *)"], "deny": ["Read(./.env)"] } }
 ```
 
-- **`fallbackModel`** — model to use when the primary `model` is unavailable or rate-limited.
-- **`requiredMinimumVersion`** — semver string; Claude Code refuses to run if the installed version is older.
-- **`enforceAvailableModels`** — boolean; when `true`, rejects model IDs not available in the current account/tier at startup rather than failing at runtime.
+- **`fallbackModel`** — model to use when the primary `model` is unavailable or rate-limited (accepts a chain of up to 3).
+- **`requiredMinimumVersion`** / **`requiredMaximumVersion`** — semver strings; Claude Code refuses to run outside this range.
+- **`enforceAvailableModels`** / **`availableModels`** — restrict which model IDs users/subagents can select; rejects excluded IDs at startup rather than failing at runtime.
+- **`disabledMcpjsonServers`** / **`enabledMcpjsonServers`** — approve or reject individual servers from a project's `.mcp.json` without touching the file.
+- **`autoMemoryEnabled`** / **`autoMemoryDirectory`** — toggle or relocate Claude's auto memory (see Memory files above).
 
 **Safe mode:** Set `CLAUDE_CODE_SAFE_MODE=1` in the environment to disable CLAUDE.md loading, plugins, skills, hooks, and MCP servers. Useful for security-sensitive CI environments or troubleshooting a broken config.
 
 ## Hooks
 
+Claude Code ships ~31 hook events (plus `TeammateIdle` for agent teams); the table below groups the ones worth wiring up.
+
 | Event | Typical use | Example |
 |---|---|---|
-| `SessionStart` | Load context or env vars on session open | Inject current git branch |
-| `InstructionsLoaded` | React to what triggered loading (new session, `/reload-skills`, plugin install); inspect `load_reason` | Log which skills were loaded |
-| `UserPromptSubmit` | Validate or enrich the user prompt | Block secret patterns |
-| `PreToolUse` | Block or gate a tool call | Deny `Bash(rm -rf *)` |
-| `PostToolUse` | Lint or log after a tool runs | Auto-run `eslint --fix` after `Edit` |
-| `PostToolBatch` | React after a full parallel tool batch completes | Summarize a batch of file reads |
-| `MessageDisplay` | Intercept or annotate a message before it is shown | Inject a reminder banner |
-| `PreCompact` | Save state before context compaction | Checkpoint session notes |
-| `PostCompact` | Re-inject context after compaction | Reload pinned snippets |
-| `WorktreeCreate` | Set up a fresh worktree (install deps, copy env) | `npm ci` in the new branch |
-| `WorktreeRemove` | Clean up after a worktree is deleted | Remove temp build artifacts |
-| `Stop` | Cleanup when Claude finishes a turn | Persist session notes |
-| `SessionEnd` | Release resources or save artifacts | Flush metrics |
+| `SessionStart` / `Setup` / `SessionEnd` | Load context on open, react to `--init`/`--maintenance`, release resources on close | Inject current git branch |
+| `InstructionsLoaded` | React to what triggered loading; inspect `load_reason` | Log which skills were loaded |
+| `UserPromptSubmit` / `UserPromptExpansion` | Validate/enrich a prompt, or react when a typed command expands into one | Block secret patterns |
+| `PreToolUse` / `PermissionRequest` / `PermissionDenied` | Block or gate a tool call before it runs | Deny `Bash(rm -rf *)` |
+| `PostToolUse` / `PostToolUseFailure` / `PostToolBatch` | Lint or log after a tool call succeeds, fails, or a parallel batch resolves | Auto-run `eslint --fix` after `Edit` |
+| `SubagentStart` / `SubagentStop` / `TaskCreated` / `TaskCompleted` | React to subagent or Task lifecycle | Log subagent spawns |
+| `ConfigChange` / `CwdChanged` / `FileChanged` | React to config, directory, or watched-file changes | Reload derived config |
+| `PreCompact` / `PostCompact` | Save/restore state around context compaction | Checkpoint session notes |
+| `WorktreeCreate` / `WorktreeRemove` | Set up or clean up a worktree | `npm ci` in the new branch |
+| `Elicitation` / `ElicitationResult` | Handle or auto-respond to an MCP server's input request | Auto-approve a known prompt |
+| `Notification` / `MessageDisplay` | React to or annotate a notification/message before it's shown | Inject a reminder banner |
+| `Stop` / `StopFailure` | Cleanup when a turn ends normally or on API error | Persist session notes |
 
-Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries. Plugins ship hooks in `hooks/hooks.json`.
+Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of handler entries; plugins ship hooks in `hooks/hooks.json`; skills and agents can also scope hooks in their own frontmatter. Handler `type` is one of `command` (shell, JSON via stdin), `http`, `mcp_tool`, `prompt` (ask Claude yes/no), or `agent` (spawn a subagent to verify).
 
 ## Slash commands
 
@@ -60,8 +64,10 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 - Plugin-provided skills are namespaced: `/<plugin-name>:<skill-name>` to prevent collisions.
 - Arguments: `$ARGUMENTS` (full string), `$0`/`$1`/… or `$ARGUMENTS[N]` (positional), named args via `arguments:` frontmatter.
 - Name slugs: lowercase letters, digits, hyphens only; max 64 chars.
-- `/reload-skills` — hot-reload skill/command files without restarting the session.
-- `/cd <path>` — change the working directory for the current session.
+- `/reload-skills` — re-scan skill/command directories for on-disk changes, no restart needed.
+- `/reload-plugins [--force]` — reload active plugins (skills, agents, hooks, MCP/LSP servers) after local edits.
+- `/doctor` (alias `/checkup`) — bundled-skill setup checkup: diagnoses install/config issues, finds unused skills/MCP servers, can pre-approve safe read-only commands.
+- `/cd <path>` — change the working directory for the current session, preserving prompt cache.
 - `/plugin list` — list installed plugins and their status.
 - `claude plugin init` — scaffold a new plugin in the current directory (CLI, not a slash command).
 - `claude agents` — list all available named subagents (CLI).
@@ -86,7 +92,7 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
   - `displayName` — human-readable name shown in the marketplace and `/plugin list`.
   - `defaultEnabled` — boolean; whether the plugin activates on install without user opt-in.
   - `dependencies` — list of other plugin names that must be installed for this plugin to function.
-- Components sit at the plugin root, not inside `.claude-plugin/`: `skills/`, `agents/`, `commands/`, `hooks/`, `.mcp.json`, `.lsp.json`, `monitors/`, `settings.json`.
+- Components sit at the plugin root, not inside `.claude-plugin/`: `skills/`, `agents/`, `commands/`, `hooks/`, `.mcp.json`, `.lsp.json`, `monitors/`, `settings.json`, `bin/` (executables added to the Bash tool's `PATH` while the plugin is enabled).
 - Version every release; users update through the marketplace. `/reload-plugins` picks up local edits.
 
 ## Recommendations
@@ -95,8 +101,7 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 - Prefer skills (`SKILL.md`) over fat `CLAUDE.md` sections for anything longer than a few bullets or invoked only sometimes.
 - Use a `PostToolUse` hook to run linters or formatters after `Write`/`Edit` instead of instructing Claude to do it.
 - Scope permissions explicitly: allowlist safe commands (`Bash(npm run test *)`), deny reads of secrets (`Read(./.env)`).
-- Pin plugin versions in team repos; run `/reload-plugins` after edits instead of restarting.
-- Namespace plugin skills; never rely on a collision-prone flat name.
+- Pin plugin versions in team repos; run `/reload-plugins` after edits instead of restarting. Namespace plugin skills; never rely on a collision-prone flat name.
 
 ## Deprecated patterns
 
