@@ -1,14 +1,14 @@
 ---
 name: claude-tools
 description: How to configure Claude's core tooling surface — hooks, rules, memory files, settings, slash commands, plugins
-last_updated: 2026-06-12
+last_updated: 2026-07-11
 sources:
   - https://docs.claude.com/en/docs/claude-code/hooks
   - https://docs.claude.com/en/docs/claude-code/settings
   - https://docs.claude.com/en/docs/claude-code/plugins
   - https://docs.claude.com/en/docs/claude-code/slash-commands
   - https://docs.claude.com/en/docs/claude-code/memory
-version: 2
+version: 3
 ---
 
 ## Memory files
@@ -51,6 +51,7 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 | `WorktreeRemove` | Clean up after a worktree is deleted | Remove temp build artifacts |
 | `Stop` | Cleanup when Claude finishes a turn | Persist session notes |
 | `SessionEnd` | Release resources or save artifacts | Flush metrics |
+| `SubagentStart` / `SubagentStop` / `Notification` | React to subagent lifecycle or system notifications (e.g. `agent_needs_input`) | Log subagent runs; route notifications to Slack |
 
 Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries. Plugins ship hooks in `hooks/hooks.json`.
 
@@ -61,6 +62,7 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 - Arguments: `$ARGUMENTS` (full string), `$0`/`$1`/… or `$ARGUMENTS[N]` (positional), named args via `arguments:` frontmatter.
 - Name slugs: lowercase letters, digits, hyphens only; max 64 chars.
 - `/reload-skills` — hot-reload skill/command files without restarting the session.
+- Skills can be stacked in one message (e.g. `/code-review /fix-issue 123`, up to 6 total); trailing text is passed as `$ARGUMENTS` to each.
 - `/cd <path>` — change the working directory for the current session.
 - `/plugin list` — list installed plugins and their status.
 - `claude plugin init` — scaffold a new plugin in the current directory (CLI, not a slash command).
@@ -79,6 +81,7 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 | `paths` | Glob list — load this skill only when CWD matches |
 | `disable-model-invocation` | `true` — skill runs its command without calling the model (pure automation) |
 | `user-invocable` | `false` — hides the skill from `/` autocomplete; only callable programmatically |
+| `arguments` / `disallowed-tools` | `arguments` names positional args for `$name` substitution; `disallowed-tools` removes tools from Claude's pool while the skill is active |
 
 ## Plugins
 
@@ -86,7 +89,7 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
   - `displayName` — human-readable name shown in the marketplace and `/plugin list`.
   - `defaultEnabled` — boolean; whether the plugin activates on install without user opt-in.
   - `dependencies` — list of other plugin names that must be installed for this plugin to function.
-- Components sit at the plugin root, not inside `.claude-plugin/`: `skills/`, `agents/`, `commands/`, `hooks/`, `.mcp.json`, `.lsp.json`, `monitors/`, `settings.json`.
+- Components sit at the plugin root, not inside `.claude-plugin/`: `skills/`, `agents/`, `commands/`, `hooks/`, `.mcp.json`, `.lsp.json`, `monitors/`, `bin/`, `settings.json`.
 - Version every release; users update through the marketplace. `/reload-plugins` picks up local edits.
 
 ## Recommendations

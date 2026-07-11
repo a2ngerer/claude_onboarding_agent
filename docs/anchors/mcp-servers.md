@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-06-12
+last_updated: 2026-07-11
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 3
+version: 4
 ---
 
 ## Recommended
@@ -16,7 +16,7 @@ version: 3
 - `github` — issues, PRs, reviews via the GitHub API
 - `obsidian` (official CLI + `obsidian-vault-keeper` subagent) — vault I/O without always-on tool schemas
 - `figma-context` — read Figma frames into context for UI work
-- `slack` — read channels, post messages
+- `slack` — read channels, post messages (community-maintained; the original `@modelcontextprotocol/server-slack` is archived)
 - `linear` — issues and projects (official Linear MCP)
 - `gmail` / `calendar` — Google productivity via official MCPs where available
 
@@ -42,7 +42,7 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Productivity
 
-- **slack** — read channels, post messages. Install: `claude mcp add slack npx -- -y @modelcontextprotocol/server-slack`
+- **slack** — read channels, post messages. `@modelcontextprotocol/server-slack` was archived; the fork is now maintained by Zencoder at `github.com/zencoderai/slack-mcp-server` — follow that repo's install instructions rather than the archived npm package.
 - **linear** — issues and projects. Install via Linear's official MCP integration.
 - **gmail / calendar / drive** — Google hosts official remote MCP endpoints for these services. Authentication requires OAuth2 via a Google Cloud project and is configured through the Claude.ai/Claude Desktop GUI (Settings > Connectors), not via a single CLI command. For Claude Code headless use, the Google Workspace CLI is the practical alternative:
   ```

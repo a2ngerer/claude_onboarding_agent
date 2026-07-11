@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-06-12
+last_updated: 2026-07-11
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 2
+version: 3
 ---
 
 ## Named subagent frontmatter fields
@@ -22,7 +22,8 @@ Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Availa
 | `memory` | `true` / `false` — whether the subagent has access to the user's memory files. Default: `false` for read-only agents. |
 | `effort` | `low` / `normal` / `high` — thinking budget hint passed to the model. |
 | `isolation` | `worktree` — run the subagent in a temporary git worktree; branch and path returned to the caller on exit. |
-| `background` | `true` — spawn the subagent in the background; caller is notified on completion rather than waiting. |
+| `background` | `true` — always run this subagent in the background. Since v2.1.198, subagents run in the background by default when unset; caller is notified on completion rather than waiting. |
+| `permissionMode` / `mcpServers` | `permissionMode` overrides the subagent's permission mode (`default`, `acceptEdits`, `plan`, etc.); `mcpServers` scopes which configured MCP servers it can reach. |
 
 ## Model tiering for subagents
 
@@ -32,6 +33,8 @@ Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Availa
 - **Fable** (`fable`) — maximum capability; reserve for the hardest reasoning tasks where cost is secondary to quality.
 
 Set `model: haiku` on read-only scanner agents; let implementation agents default to `sonnet` via `inherit`. Bump to `opus` or `fable` only when the task demonstrably needs it.
+
+Since v2.1.198, the built-in `Explore` subagent inherits the main conversation's model (capped at Opus on the Claude API) instead of always running on Haiku. Define a project/user subagent named `Explore` with `model: haiku` to force cheap exploration.
 
 ## When to use a subagent
 
