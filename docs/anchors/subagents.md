@@ -1,17 +1,17 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-06-12
+last_updated: 2026-07-13
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 2
+version: 3
 ---
 
 ## Named subagent frontmatter fields
 
-Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Available fields:
+Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Only `name` and `description` are required. Notable fields:
 
 | Field | Purpose |
 |---|---|
@@ -19,10 +19,14 @@ Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Availa
 | `disallowedTools` | Comma-separated list of tools the subagent cannot call, even if its `tools:` whitelist includes them. |
 | `maxTurns` | Maximum number of agentic turns before the subagent is forced to return. Prevents runaway loops. |
 | `skills` | Comma-separated skill slugs to preload into the subagent's context. |
-| `memory` | `true` / `false` — whether the subagent has access to the user's memory files. Default: `false` for read-only agents. |
-| `effort` | `low` / `normal` / `high` — thinking budget hint passed to the model. |
+| `memory` | `user` / `project` / `local` — persistent memory scope enabling cross-session learning. Omit to disable. |
+| `effort` | `low` / `medium` / `high` / `xhigh` / `max` — thinking budget hint passed to the model; available levels depend on the model. |
 | `isolation` | `worktree` — run the subagent in a temporary git worktree; branch and path returned to the caller on exit. |
-| `background` | `true` — spawn the subagent in the background; caller is notified on completion rather than waiting. |
+| `background` | `true` — always run this subagent in the background. As of v2.1.198, Claude runs subagents in the background by default when left unset; set `false` to force foreground. |
+| `permissionMode` | `default` / `acceptEdits` / `auto` / `dontAsk` / `bypassPermissions` / `plan` — permission mode for this subagent. |
+| `mcpServers` | MCP servers scoped to this subagent — a name referencing an already-configured server, or an inline config. |
+| `hooks` | Lifecycle hooks scoped to this subagent, using the same event names as `settings.json` hooks. |
+| `color` | Display color in the task list and transcript (`red`, `blue`, `green`, etc.). |
 
 ## Model tiering for subagents
 
@@ -31,7 +35,7 @@ Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Availa
 - **Opus** (`opus`) — complex multi-step reasoning, architectural decisions, tasks that must get it right the first time.
 - **Fable** (`fable`) — maximum capability; reserve for the hardest reasoning tasks where cost is secondary to quality.
 
-Set `model: haiku` on read-only scanner agents; let implementation agents default to `sonnet` via `inherit`. Bump to `opus` or `fable` only when the task demonstrably needs it.
+Set `model: haiku` on read-only scanner agents; let implementation agents default to `sonnet` via `inherit`. Bump to `opus` or `fable` only when the task demonstrably needs it. Community practice (not yet formalized in official docs): route mechanical, narrow subtasks to a lower-power model subagent, and keep judgment and final review on the lead model.
 
 ## When to use a subagent
 
@@ -69,7 +73,7 @@ Agent(task="audit api/ for rate-limit headers", ...)
 Agent(task="audit db/ for missing indexes", ...)
 ```
 
-The main agent waits once, then relays a consolidated summary — it does not narrate each subagent's progress.
+The main agent waits once, then relays a consolidated summary — it does not narrate each subagent's progress. Scale fan-out to task complexity: a simple query needs one subagent with a handful of tool calls, while complex breadth-first research may warrant 10+ subagents with clearly divided responsibilities. To block a subagent from spawning its own subagents, omit `Agent` from its `tools:` list or add it to `disallowedTools`.
 
 ## Recommendations
 
