@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-06-12
+last_updated: 2026-07-14
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 2
+version: 3
 ---
 
 ## Named subagent frontmatter fields
@@ -16,13 +16,18 @@ Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Availa
 | Field | Purpose |
 |---|---|
 | `model` | Model to run this agent on. Accepts aliases (`fable`, `opus`, `sonnet`, `haiku`) or full IDs. Defaults to `inherit` (uses the invoking context's model). |
-| `disallowedTools` | Comma-separated list of tools the subagent cannot call, even if its `tools:` whitelist includes them. |
+| `disallowedTools` | Comma-separated list of tools the subagent cannot call, even if its `tools:` whitelist includes them. Applied before `tools:` is resolved. |
+| `permissionMode` | `default`, `acceptEdits`, `auto`, `dontAsk`, `bypassPermissions`, or `plan`. Ignored for plugin subagents. |
+| `mcpServers` | MCP servers available to this subagent — a configured server name or an inline server config. Ignored for plugin subagents. |
+| `hooks` | Lifecycle hooks scoped to this subagent only. Ignored for plugin subagents. |
 | `maxTurns` | Maximum number of agentic turns before the subagent is forced to return. Prevents runaway loops. |
-| `skills` | Comma-separated skill slugs to preload into the subagent's context. |
-| `memory` | `true` / `false` — whether the subagent has access to the user's memory files. Default: `false` for read-only agents. |
-| `effort` | `low` / `normal` / `high` — thinking budget hint passed to the model. |
-| `isolation` | `worktree` — run the subagent in a temporary git worktree; branch and path returned to the caller on exit. |
-| `background` | `true` — spawn the subagent in the background; caller is notified on completion rather than waiting. |
+| `skills` | Comma-separated skill slugs to preload (full content, not just description) into the subagent's context. |
+| `memory` | Persistent memory scope: `user`, `project`, or `local`. Enables cross-session learning at `~/.claude/agent-memory/<name>/`, `.claude/agent-memory/<name>/`, or `.claude/agent-memory-local/<name>/` respectively. Omit for no persistent memory. |
+| `effort` | `low` / `medium` / `high` / `xhigh` / `max` — thinking budget hint; overrides the session effort level. |
+| `isolation` | `worktree` — run the subagent in a temporary git worktree branched from the default branch; branch and path returned to the caller, auto-cleaned if unchanged. |
+| `background` | `true` — always run the subagent in the background, even when Claude needs the result right away. As of v2.1.198, subagents run in the background by default when unset; Claude runs one in the foreground only when it needs the result before continuing. |
+| `color` | Display color in the task list/transcript: `red`, `blue`, `green`, `yellow`, `purple`, `orange`, `pink`, `cyan`. |
+| `initialPrompt` | Auto-submitted as the first user turn when this agent runs as the main session agent (via `--agent` or the `agent` setting). |
 
 ## Model tiering for subagents
 
