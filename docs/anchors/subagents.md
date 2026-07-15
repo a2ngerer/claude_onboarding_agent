@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-06-12
+last_updated: 2026-07-15
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 2
+version: 3
 ---
 
 ## Named subagent frontmatter fields
@@ -19,10 +19,12 @@ Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Availa
 | `disallowedTools` | Comma-separated list of tools the subagent cannot call, even if its `tools:` whitelist includes them. |
 | `maxTurns` | Maximum number of agentic turns before the subagent is forced to return. Prevents runaway loops. |
 | `skills` | Comma-separated skill slugs to preload into the subagent's context. |
-| `memory` | `true` / `false` — whether the subagent has access to the user's memory files. Default: `false` for read-only agents. |
-| `effort` | `low` / `normal` / `high` — thinking budget hint passed to the model. |
+| `memory` | Persistent memory scope: `user`, `project`, or `local`. Enables cross-session learning; omit for no persistent memory. |
+| `effort` | `low` / `medium` / `high` / `xhigh` / `max` — thinking budget hint passed to the model. |
 | `isolation` | `worktree` — run the subagent in a temporary git worktree; branch and path returned to the caller on exit. |
-| `background` | `true` — spawn the subagent in the background; caller is notified on completion rather than waiting. |
+| `background` | `true` — always run this subagent in the background. As of v2.1.198, Claude Code runs subagents in the background by default (parent keeps working, is notified on completion); leave unset to let Claude choose. |
+| `permissionMode` | `default` / `acceptEdits` / `auto` / `dontAsk` / `bypassPermissions` / `plan` — permission mode for this subagent. |
+| `mcpServers` | MCP servers available to this subagent, by name or inline config. |
 
 ## Model tiering for subagents
 
@@ -48,6 +50,7 @@ Set `model: haiku` on read-only scanner agents; let implementation agents defaul
 - Parallel vs. serial: run in parallel when subtasks are independent; serialize when a later task depends on the earlier result.
 - Split research from implementation — one subagent explores and summarizes, the main agent (or another subagent) implements against that summary.
 - Use `context: fork` on a skill when the skill itself is the task and it benefits from isolation.
+- For persistent teammates that message back and forth, spawn directly with the Agent tool's `name` parameter (implicit teams, since v2.1.178) rather than a manual create/delete lifecycle.
 
 ## Prompting a subagent
 
@@ -69,7 +72,7 @@ Agent(task="audit api/ for rate-limit headers", ...)
 Agent(task="audit db/ for missing indexes", ...)
 ```
 
-The main agent waits once, then relays a consolidated summary — it does not narrate each subagent's progress.
+Since subagents run in the background by default (v2.1.198+), the main agent continues other work and is notified as each completes, then relays a consolidated summary — it does not narrate each subagent's progress.
 
 ## Recommendations
 
