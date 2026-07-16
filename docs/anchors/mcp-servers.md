@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-06-12
+last_updated: 2026-07-16
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 3
+version: 4
 ---
 
 ## Recommended
@@ -42,7 +42,7 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Productivity
 
-- **slack** — read channels, post messages. Install: `claude mcp add slack npx -- -y @modelcontextprotocol/server-slack`
+- **slack** — read channels, post messages. Archived out of the official `modelcontextprotocol/servers` repo and now externally maintained; verify the package before installing. Install: `claude mcp add --transport stdio slack -- npx -y @modelcontextprotocol/server-slack`
 - **linear** — issues and projects. Install via Linear's official MCP integration.
 - **gmail / calendar / drive** — Google hosts official remote MCP endpoints for these services. Authentication requires OAuth2 via a Google Cloud project and is configured through the Claude.ai/Claude Desktop GUI (Settings > Connectors), not via a single CLI command. For Claude Code headless use, the Google Workspace CLI is the practical alternative:
   ```
@@ -59,8 +59,9 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Transport note
 
-- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release.
-- Use `claude mcp add-json` for HTTP servers with complex headers; use `claude mcp add` for stdio servers.
+- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated — use HTTP where available. A WebSocket (`ws`) transport also exists for servers that need to push events unprompted, but lacks OAuth support and isn't reachable via the `--transport` flag (JSON config only).
+- Explicit transport syntax: `claude mcp add --transport http|sse|stdio <name> <url-or-command>`. A `--` separates Claude's own flags from the server command for stdio servers, e.g. `claude mcp add --transport stdio myserver -- npx server`.
+- Use `claude mcp add-json` for servers with complex headers or inline JSON config; use `claude mcp add --transport ...` for the common case.
 
 ## Selection tips
 

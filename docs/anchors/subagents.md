@@ -1,28 +1,37 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-06-12
+last_updated: 2026-07-16
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 2
+version: 3
 ---
+
+## Built-in subagents
+
+Claude Code ships `Explore`, `Plan`, and `general-purpose` by default; Claude delegates to them automatically when appropriate. Explore and Plan skip CLAUDE.md and the parent session's git status to stay fast and cheap — every other built-in and custom subagent loads both. A project/user subagent named `Explore` or `Plan` overrides the built-in one, letting you pin it to `model: haiku`.
 
 ## Named subagent frontmatter fields
 
-Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Available fields:
+Named subagents live at `.claude/agents/<name>.md` (or `~/.claude/agents/` for user-level) with YAML frontmatter. `name` and `description` are required. Other available fields:
 
 | Field | Purpose |
 |---|---|
-| `model` | Model to run this agent on. Accepts aliases (`fable`, `opus`, `sonnet`, `haiku`) or full IDs. Defaults to `inherit` (uses the invoking context's model). |
+| `model` | Model to run this agent on. Accepts aliases (`fable`, `opus`, `sonnet`, `haiku`) or full IDs. Defaults to `inherit` (uses the invoking context's model). Resolution order: `CLAUDE_CODE_SUBAGENT_MODEL` env var > per-invocation `model` param > this frontmatter field. |
+| `tools` | Tools the subagent can use; inherits all tools if omitted. |
 | `disallowedTools` | Comma-separated list of tools the subagent cannot call, even if its `tools:` whitelist includes them. |
+| `permissionMode` | `default`, `acceptEdits`, `auto`, `dontAsk`, `bypassPermissions`, or `plan`. Ignored for plugin subagents. |
+| `mcpServers` | MCP servers available to this subagent, by name or inline config. Ignored for plugin subagents. |
+| `hooks` | Lifecycle hooks scoped to this subagent. Ignored for plugin subagents. |
 | `maxTurns` | Maximum number of agentic turns before the subagent is forced to return. Prevents runaway loops. |
-| `skills` | Comma-separated skill slugs to preload into the subagent's context. |
+| `skills` | Comma-separated skill slugs to preload (full content, not just description) into the subagent's context. |
 | `memory` | `true` / `false` — whether the subagent has access to the user's memory files. Default: `false` for read-only agents. |
-| `effort` | `low` / `normal` / `high` — thinking budget hint passed to the model. |
-| `isolation` | `worktree` — run the subagent in a temporary git worktree; branch and path returned to the caller on exit. |
-| `background` | `true` — spawn the subagent in the background; caller is notified on completion rather than waiting. |
+| `effort` | `low` / `medium` / `high` / `xhigh` / `max` — thinking budget hint passed to the model; available levels depend on the model. |
+| `isolation` | `worktree` — run the subagent in a temporary git worktree branched from the default branch (not the parent session's HEAD); auto-cleaned up if unchanged. |
+| `background` | `true` — always run this subagent as a background task. When unset, Claude chooses; subagents run in the background by default. |
+| `color` | Display color in the task list/transcript: `red`, `blue`, `green`, `yellow`, `purple`, `orange`, `pink`, `cyan`. |
 
 ## Model tiering for subagents
 
@@ -31,7 +40,7 @@ Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Availa
 - **Opus** (`opus`) — complex multi-step reasoning, architectural decisions, tasks that must get it right the first time.
 - **Fable** (`fable`) — maximum capability; reserve for the hardest reasoning tasks where cost is secondary to quality.
 
-Set `model: haiku` on read-only scanner agents; let implementation agents default to `sonnet` via `inherit`. Bump to `opus` or `fable` only when the task demonstrably needs it.
+Set `model: haiku` on read-only scanner agents; let implementation agents default to `sonnet` via `inherit`. Bump to `opus` or `fable` only when the task demonstrably needs it. In practice, external write-ups (e.g. Simon Willison's "Judgment") reinforce this per-task split further: when a dispatched agent's job is primarily writing/editing code, give it an explicit model override — `sonnet` for substantive implementation, `haiku` for trivial/mechanical edits — rather than letting every subagent inherit the parent's model by default.
 
 ## When to use a subagent
 
@@ -82,7 +91,7 @@ The main agent waits once, then relays a consolidated summary — it does not na
 
 ## Anti-patterns
 
-- Subagents dispatching other subagents — nesting is technically supported up to 5 levels (since v2.1.172) but remains strongly discouraged; nested fan-out multiplies context cost and latency unpredictably.
+- Subagents dispatching other subagents — nesting is technically supported up to 5 levels (since v2.1.178) but remains strongly discouraged; nested fan-out multiplies context cost and latency unpredictably.
 - The main agent narrating subagent work step-by-step instead of relaying the final summary.
 - Dispatching a subagent for a task that is one tool call — the overhead dwarfs the work.
 - Vague prompts like "research X" with no output format — produces redundant searches and unfocused summaries.
