@@ -1,14 +1,14 @@
 ---
 name: claude-tools
 description: How to configure Claude's core tooling surface — hooks, rules, memory files, settings, slash commands, plugins
-last_updated: 2026-06-12
+last_updated: 2026-07-22
 sources:
   - https://docs.claude.com/en/docs/claude-code/hooks
   - https://docs.claude.com/en/docs/claude-code/settings
   - https://docs.claude.com/en/docs/claude-code/plugins
   - https://docs.claude.com/en/docs/claude-code/slash-commands
   - https://docs.claude.com/en/docs/claude-code/memory
-version: 2
+version: 3
 ---
 
 ## Memory files
@@ -39,7 +39,7 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 | Event | Typical use | Example |
 |---|---|---|
 | `SessionStart` | Load context or env vars on session open | Inject current git branch |
-| `InstructionsLoaded` | React to what triggered loading (new session, `/reload-skills`, plugin install); inspect `load_reason` | Log which skills were loaded |
+| `InstructionsLoaded` | React to what triggered loading (new session, live skill-file change, plugin install); inspect `load_reason` | Log which skills were loaded |
 | `UserPromptSubmit` | Validate or enrich the user prompt | Block secret patterns |
 | `PreToolUse` | Block or gate a tool call | Deny `Bash(rm -rf *)` |
 | `PostToolUse` | Lint or log after a tool runs | Auto-run `eslint --fix` after `Edit` |
@@ -56,11 +56,11 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 
 ## Slash commands
 
-- Skills and custom commands are merged. Project skills live at `.claude/skills/<name>/SKILL.md`; user skills at `~/.claude/skills/<name>/SKILL.md`. Legacy `.claude/commands/*.md` files still work.
+- Skills and custom commands are merged. Project skills live at `.claude/skills/<name>/SKILL.md`; user skills at `~/.claude/skills/<name>/SKILL.md`. A flat `.claude/commands/<name>.md` file creates the same `/<name>` command and still works.
 - Plugin-provided skills are namespaced: `/<plugin-name>:<skill-name>` to prevent collisions.
 - Arguments: `$ARGUMENTS` (full string), `$0`/`$1`/… or `$ARGUMENTS[N]` (positional), named args via `arguments:` frontmatter.
 - Name slugs: lowercase letters, digits, hyphens only; max 64 chars.
-- `/reload-skills` — hot-reload skill/command files without restarting the session.
+- Skills hot-reload automatically (live change detection watches skill directories) — there is no `/reload-skills` command. Run `/reload-plugins` after editing a plugin's `hooks/`, `.mcp.json`, `agents/`, or `output-styles/`, since those aren't covered by live change detection.
 - `/cd <path>` — change the working directory for the current session.
 - `/plugin list` — list installed plugins and their status.
 - `claude plugin init` — scaffold a new plugin in the current directory (CLI, not a slash command).
@@ -71,13 +71,14 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 | Field | Purpose |
 |---|---|
 | `argument-hint` | Short placeholder shown in autocomplete (e.g. `[branch]`) |
-| `allowed-tools` | Comma-separated tool whitelist for this skill's invocation |
+| `allowed-tools` | Tools Claude can use without asking during the turn that invokes this skill; grant clears on your next message |
+| `disallowed-tools` | Tools removed from Claude's available pool while this skill is active; clears on your next message |
 | `model` | Override model for this skill (accepts aliases: `fable`, `opus`, `sonnet`, `haiku`, `inherit`) |
 | `effort` | `low` / `normal` / `high` — hint to the model's thinking budget |
 | `context: fork` | Run the skill in a forked context (isolated from main conversation) |
-| `context: agent` | Run the skill as a full subagent turn |
+| `agent` | Which subagent type to run the skill as, when `context: fork` is set |
 | `paths` | Glob list — load this skill only when CWD matches |
-| `disable-model-invocation` | `true` — skill runs its command without calling the model (pure automation) |
+| `disable-model-invocation` | `true` — only manual `/name` invocation triggers the skill; Claude never auto-loads it |
 | `user-invocable` | `false` — hides the skill from `/` autocomplete; only callable programmatically |
 
 ## Plugins

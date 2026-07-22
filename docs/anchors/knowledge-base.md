@@ -1,14 +1,14 @@
 ---
 name: knowledge-base
 description: Recommended vault layouts, OKF v0.1 frontmatter patterns, and KB-agent structures for Obsidian-style knowledge bases
-last_updated: 2026-06-30
+last_updated: 2026-07-22
 sources:
   - https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md
   - https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing
   - https://help.obsidian.md/
   - https://help.obsidian.md/properties
   - https://publish.obsidian.md/hub/01+-+Community+Vaults
-version: 2
+version: 3
 ---
 
 ## Vault layout
@@ -80,3 +80,4 @@ Real bundles emit keys in the order `type, resource, title, description, tags, t
 - Editing vault files with plain `Edit`/`Write` or `mv` — skips Obsidian's link-rewrite logic and silently corrupts backlinks.
 - Using the third-party Obsidian MCP for vault I/O — its tool schemas load into every session. Prefer the official CLI plus the vault-keeper subagent.
 - Dumping raw source material into `wiki/` — `wiki/` is for curated OKF concept notes only; raw inputs belong in `raw/`.
+- Using the deprecated singular property keys (`tag`, `alias`, `cssclass`) — deprecated in Obsidian 1.4 and dropped entirely in 1.9; always emit the plural forms (`tags`, `aliases`, `cssclasses`).
