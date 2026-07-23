@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-06-12
+last_updated: 2026-07-23
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 3
+version: 4
 ---
 
 ## Recommended
@@ -20,13 +20,13 @@ version: 3
 - `linear` — issues and projects (official Linear MCP)
 - `gmail` / `calendar` — Google productivity via official MCPs where available
 
-Per-category details follow. Keep the set small: every installed MCP expands the tool-selection surface and the trust boundary.
+Per-category details follow. Keep the installed set small: every server is code granted access to your environment, and that trust-boundary cost doesn't shrink even though the context-cost of extra servers now does — see [Scale with MCP tool search](#scale-with-mcp-tool-search) below.
 
 ## Coding
 
 - **filesystem** — scoped filesystem access beyond the working directory. Install: `claude mcp add filesystem npx -- -y @modelcontextprotocol/server-filesystem <path>`
 - **git** — read git history, blame, diffs without shelling out. Install: `claude mcp add git uvx -- mcp-server-git`
-- **github** — issues, PRs, reviews via the official GitHub MCP server. `@modelcontextprotocol/server-github` has been archived; use the official `github/github-mcp-server` instead.
+- **github** — issues, PRs, reviews via the official GitHub MCP server. `@modelcontextprotocol/server-github` has been archived (moved to the `servers-archived` repo); use the official `github/github-mcp-server` instead.
   - Remote (recommended): `claude mcp add-json github '{"type":"http","url":"https://api.githubcopilot.com/mcp","headers":{"Authorization":"Bearer YOUR_GITHUB_PAT"}}'`
   - Local via Docker: `claude mcp add github -e GITHUB_PERSONAL_ACCESS_TOKEN=YOUR_PAT -- docker run -i --rm -e GITHUB_PERSONAL_ACCESS_TOKEN ghcr.io/github/github-mcp-server`
 
@@ -42,7 +42,7 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Productivity
 
-- **slack** — read channels, post messages. Install: `claude mcp add slack npx -- -y @modelcontextprotocol/server-slack`
+- **slack** — read channels, post messages. The reference `@modelcontextprotocol/server-slack` package has been archived upstream and is now maintained by a third party (currently Zencoder); confirm the current maintainer and package name before installing in a new project.
 - **linear** — issues and projects. Install via Linear's official MCP integration.
 - **gmail / calendar / drive** — Google hosts official remote MCP endpoints for these services. Authentication requires OAuth2 via a Google Cloud project and is configured through the Claude.ai/Claude Desktop GUI (Settings > Connectors), not via a single CLI command. For Claude Code headless use, the Google Workspace CLI is the practical alternative:
   ```
@@ -59,11 +59,14 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Transport note
 
-- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release.
+- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated — use HTTP where available.
 - Use `claude mcp add-json` for HTTP servers with complex headers; use `claude mcp add` for stdio servers.
+
+## Scale with MCP tool search
+
+Claude Code now defers MCP tool schemas by default: only tool names and server instructions load at session start, and full tool definitions load on demand via a search tool when a task needs them (`ENABLE_TOOL_SEARCH` controls this). Adding more MCP servers therefore has much less impact on context usage than it used to — the practical limit is your context budget, not a fixed per-server cap. This does not reduce the trust-surface concern: still audit what each server can do before installing it.
 
 ## Selection tips
 
 - Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server. (Convention, not part of the official schema — but this plugin promotes it.)
-- Keep the installed set small. Every MCP server adds tool-selection overhead and expands the trust surface.
 - For read-only inspection tasks, prefer a dedicated CLI + Bash allowlist over an MCP server.
