@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-06-12
+last_updated: 2026-07-24
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 3
+version: 4
 ---
 
 ## Recommended
@@ -60,10 +60,18 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 ## Transport note
 
 - **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release.
-- Use `claude mcp add-json` for HTTP servers with complex headers; use `claude mcp add` for stdio servers.
+- WebSocket (`ws`) is available for servers that need to push events unprompted (e.g. CI results, chat messages via [channels](https://code.claude.com/docs/en/channels)); it supports neither OAuth nor `claude mcp add --transport`, so configure it with `claude mcp add-json`.
+- Use `claude mcp add-json` for HTTP/ws servers with complex headers or pre-configured OAuth credentials; use `claude mcp add` for stdio servers.
+
+## Scopes
+
+- `-s local` (default) — private to you, current project only, stored in `~/.claude.json`.
+- `-s project` — shared with the team via `.mcp.json` checked into the repo; teammates must approve it on first use.
+- `-s user` — private to you, available across all your projects.
 
 ## Selection tips
 
 - Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server. (Convention, not part of the official schema — but this plugin promotes it.)
 - Keep the installed set small. Every MCP server adds tool-selection overhead and expands the trust surface.
 - For read-only inspection tasks, prefer a dedicated CLI + Bash allowlist over an MCP server.
+- Large tool outputs are capped at 25,000 tokens by default (warning shown above 10,000); raise the cap per-session with `MAX_MCP_OUTPUT_TOKENS` if a server legitimately needs to return more.
