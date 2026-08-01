@@ -1,24 +1,24 @@
 ---
 name: knowledge-base
-description: Recommended vault layouts, OKF v0.1 frontmatter patterns, and KB-agent structures for Obsidian-style knowledge bases
-last_updated: 2026-06-30
+description: Recommended vault layouts, OKF frontmatter patterns, and KB-agent structures for Obsidian-style knowledge bases
+last_updated: 2026-08-01
 sources:
   - https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md
   - https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing
   - https://help.obsidian.md/
   - https://help.obsidian.md/properties
   - https://publish.obsidian.md/hub/01+-+Community+Vaults
-version: 2
+version: 3
 ---
 
 ## Vault layout
 
-The plugin's recommended layout separates raw material from curated notes. `raw/` holds ingested source files (articles, PDFs, code, notes); `wiki/` holds the interlinked note graph produced from that raw material. The `wiki/` folder is an **OKF v0.1 bundle** (Google's Open Knowledge Format), so it stays portable across any OKF-aware agent or tool. Extra top-level folders only when justified by scale.
+The plugin's recommended layout separates raw material from curated notes. `raw/` holds ingested source files (articles, PDFs, code, notes); `wiki/` holds the interlinked note graph produced from that raw material. The `wiki/` folder is an **OKF v0.2 bundle** (Google's Open Knowledge Format), so it stays portable across any OKF-aware agent or tool. Extra top-level folders only when justified by scale.
 
 ```
 vault/
 ├── raw/           ← drop source material here (ingestion input)
-├── wiki/          ← OKF v0.1 bundle (curated, interlinked concept notes)
+├── wiki/          ← OKF v0.2 bundle (curated, interlinked concept notes)
 │   ├── index.md   ← OKF directory listing (reserved; no frontmatter)
 │   ├── log.md     ← OKF update history (reserved; optional)
 │   └── README.md
@@ -26,9 +26,9 @@ vault/
 └── .obsidian/     ← vault config, plugins, workspace state
 ```
 
-## OKF v0.1 conformance
+## OKF v0.2 conformance
 
-OKF (Open Knowledge Format) is Google Cloud's published standard for the Karpathy LLM-wiki pattern: a directory of Markdown concept files, one concept per file, cross-linked with standard Markdown links. A bundle conforms when:
+OKF (Open Knowledge Format) is Google Cloud's published standard for the Karpathy LLM-wiki pattern: a directory of Markdown concept files, one concept per file, cross-linked with standard Markdown links. v0.2 supersedes v0.1 with two breaking changes (see Frontmatter conventions) but existing v0.1 bundles keep working — consumers fall back to the legacy fields when the new ones are absent. A bundle conforms when:
 
 1. Every non-reserved `.md` file carries a parseable YAML frontmatter block.
 2. Every such block has a non-empty `type` (the single required key).
@@ -38,7 +38,7 @@ Everything else is soft: missing optional fields, unknown `type` values, custom 
 
 ## Frontmatter conventions
 
-Notes carry OKF frontmatter in YAML delimited by `---`. Obsidian renders these as native *Properties*, so OKF and Obsidian agree on the same block. OKF requires exactly one key (`type`) and recommends five more.
+Notes carry OKF frontmatter in YAML delimited by `---`. Obsidian renders these as native *Properties*, so OKF and Obsidian agree on the same block. OKF requires exactly one key (`type`) and recommends a handful more.
 
 | Property | OKF status | Type | Purpose |
 |---|---|---|---|
@@ -47,14 +47,15 @@ Notes carry OKF frontmatter in YAML delimited by `---`. Obsidian renders these a
 | `description` | Recommended | text | Single-sentence summary (used for index generation and search previews) |
 | `resource` | Recommended | text | URI uniquely identifying the underlying asset (omit for prose notes) |
 | `tags` | Recommended | list | Categorization strings (`[graphs, retrieval]`); enables dataview queries |
-| `timestamp` | Recommended | date | ISO 8601 datetime of the last meaningful change |
+| `generated` | New in v0.2 | `{by, at}` | Provenance: who/what produced the note and when (ISO 8601). **Supersedes `timestamp`** |
+| `sources`, `verified`, `status`, `stale_after` | New in v0.2, optional | list / list / enum / date | Trust & provenance family — citations, verification events, `draft`\|`stable`\|`deprecated`, staleness cutoff |
 
-Real bundles emit keys in the order `type, resource, title, description, tags, timestamp`. Producers may add custom keys (e.g. `aliases`, `created`, `updated`); OKF consumers preserve unknown keys. If a vault already uses Obsidian's `created`/`updated`, keep OKF's single `timestamp` as canonical and let the others coexist as extensions. Reserved Obsidian keys (`aliases`, `tags`, `cssclasses`) keep their typed UI behavior. Dates use ISO 8601; lists may use YAML block or flow syntax.
+`timestamp` and a body `# Citations` section are the two v0.1 patterns v0.2 supersedes (with `generated.at` and `sources` respectively); consumers still read the legacy forms when the new fields are absent, so upgrading existing vaults is optional. The spec does not prescribe field order — keep `type` first for readability. Producers may add custom keys (e.g. `aliases`, `created`, `updated`); OKF consumers preserve unknown keys. Reserved Obsidian keys (`aliases`, `tags`, `cssclasses`) keep their typed UI behavior. Obsidian property types are text, list, number, checkbox, date, and date & time; a property's type is fixed vault-wide once first assigned. Dates use ISO 8601.
 
 ## Naming conventions
 
 - Kebab-case filenames (`knowledge-graphs.md`), not snake_case or PascalCase. Link- and wikilink-friendly.
-- No date prefixes on topical notes — dates go in `timestamp:` frontmatter, not the filename.
+- No date prefixes on topical notes — dates go in `generated.at`/`timestamp` frontmatter, not the filename.
 - Daily notes: `YYYY-MM-DD.md` under a dedicated `daily/` folder only.
 - Avoid reserved characters: `:`, `/`, `\`, `?`, `*`, `"`, `<`, `>`, `|`. Obsidian rejects them on write.
 - One concept per note — resist multi-topic dumps. Break out subtopics into linked notes.
@@ -62,14 +63,14 @@ Real bundles emit keys in the order `type, resource, title, description, tags, t
 
 ## Agent patterns
 
-- **Vault keeper** — dispatched subagent owning all vault I/O via the Obsidian CLI. Forbids direct `Edit`/`Write` so links and backlinks stay consistent. Reference: `.claude/agents/obsidian-vault-keeper.md`.
+- **Vault keeper** — dispatched subagent owning all vault I/O via the Obsidian CLI. Forbids direct `Edit`/`Write` so links and backlinks stay consistent. Reference: `.claude/agents/obsidian-vault-keeper.md`. The official CLI now ships as a dedicated binary (not an Electron shell-out), so vault-keeper invocations are noticeably faster.
 - **Frontmatter validator** — reads notes, enforces OKF conformance (non-empty `type` on every non-reserved note; recommended keys present), reports missing/malformed entries. Read-only, Haiku-class model.
 - **Tag normalizer** — scans `tags:` across the vault, flags near-duplicates (`ai`, `AI`, `artificial-intelligence`), proposes a canonical form. Read-only.
 - **Ingester** — watches `raw/` for new files, summarizes into `wiki/` concept notes with frontmatter and Markdown backlinks, refreshes `index.md` and `log.md`. Write-capable; dispatched only on explicit user request.
 
 ## Recommended layout
 
-**`raw/` + `wiki/` (Karpathy LLM-Wiki pattern, OKF v0.1).** Exactly two top-level folders: `raw/` for ingested material, `wiki/` for the OKF concept-note bundle. Templates and daily notes go into dedicated subfolders (`templates/`, `daily/`) only when they are actually used. Vault ops are routed through the `obsidian-vault-keeper` subagent so the Obsidian CLI owns every write.
+**`raw/` + `wiki/` (Karpathy LLM-Wiki pattern, OKF v0.2).** Exactly two top-level folders: `raw/` for ingested material, `wiki/` for the OKF concept-note bundle. Templates and daily notes go into dedicated subfolders (`templates/`, `daily/`) only when they are actually used. Vault ops are routed through the `obsidian-vault-keeper` subagent so the Obsidian CLI owns every write.
 
 ## Anti-patterns
 
