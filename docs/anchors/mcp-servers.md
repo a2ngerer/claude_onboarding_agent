@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-06-12
+last_updated: 2026-08-02
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 3
+version: 4
 ---
 
 ## Recommended
@@ -42,7 +42,8 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Productivity
 
-- **slack** — read channels, post messages. Install: `claude mcp add slack npx -- -y @modelcontextprotocol/server-slack`
+- **slack** — read channels, post messages. The community `@modelcontextprotocol/server-slack` package is archived (maintenance transferred to Zencoder); prefer the official remote HTTP endpoint instead:
+  `claude mcp add --transport http slack https://mcp.slack.com/mcp` (OAuth; restrict scopes with `oauth.scopes`, e.g. `"channels:read chat:write search:read"`, if the default grant is broader than needed).
 - **linear** — issues and projects. Install via Linear's official MCP integration.
 - **gmail / calendar / drive** — Google hosts official remote MCP endpoints for these services. Authentication requires OAuth2 via a Google Cloud project and is configured through the Claude.ai/Claude Desktop GUI (Settings > Connectors), not via a single CLI command. For Claude Code headless use, the Google Workspace CLI is the practical alternative:
   ```
@@ -59,8 +60,10 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Transport note
 
-- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release.
+- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated — use HTTP where available.
 - Use `claude mcp add-json` for HTTP servers with complex headers; use `claude mcp add` for stdio servers.
+- Scopes: `local` (default, private to you and this project), `project` (`.mcp.json`, shared via version control, requires per-teammate approval), `user` (`~/.claude.json`, private, all projects). Pass `--scope`/`-s`.
+- For OAuth-based remote servers (e.g. Slack, GitHub, Sentry), run the sign-in flow from the shell with `claude mcp login <name>` (no need to open the `/mcp` panel), and `claude mcp logout <name>` to revoke.
 
 ## Selection tips
 

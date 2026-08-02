@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-06-12
+last_updated: 2026-08-02
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 2
+version: 3
 ---
 
 ## Named subagent frontmatter fields
@@ -20,9 +20,9 @@ Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Availa
 | `maxTurns` | Maximum number of agentic turns before the subagent is forced to return. Prevents runaway loops. |
 | `skills` | Comma-separated skill slugs to preload into the subagent's context. |
 | `memory` | `true` / `false` — whether the subagent has access to the user's memory files. Default: `false` for read-only agents. |
-| `effort` | `low` / `normal` / `high` — thinking budget hint passed to the model. |
+| `effort` | `low` / `medium` / `high` / `xhigh` / `max` — thinking budget hint passed to the model; available levels depend on the model. |
 | `isolation` | `worktree` — run the subagent in a temporary git worktree; branch and path returned to the caller on exit. |
-| `background` | `true` — spawn the subagent in the background; caller is notified on completion rather than waiting. |
+| `background` | As of v2.1.198, subagents run in the background **by default** — Claude keeps working and is notified on completion. Set `background: true` to force it always; Claude otherwise chooses based on whether it needs the result immediately. Background subagents get a narrower built-in tool set (no `Agent`, `AskUserQuestion`, etc. — MCP tools are unaffected) and surface permission prompts in the main session. |
 
 ## Model tiering for subagents
 
@@ -38,8 +38,9 @@ Set `model: haiku` on read-only scanner agents; let implementation agents defaul
 - A side task would flood the main context with file contents, search hits, or logs that are not referenced again.
 - The work needs a different tool-set, a different model (e.g. Haiku for cheap scans), or a separate permission profile.
 - The task is breadth-first: three or more independent queries that can run in parallel.
-- Verification after implementation — a fresh context is less biased toward the code it just wrote.
+- Verification after implementation — a fresh context is less biased toward the code it just wrote; a reviewer that only sees the diff and the criteria, not the reasoning that produced it, judges the result on its own terms.
 - A repeated worker with the same instructions — formalize it as a named subagent under `.claude/agents/`.
+- Weigh the cost: multi-agent orchestration runs roughly 15x the tokens of a single-agent chat (Anthropic's internal research-system benchmark), so reserve heavy fan-out for tasks valuable enough to justify it — most coding tasks have fewer truly parallelizable subtasks than research does.
 
 ## Delegation heuristics
 
@@ -69,7 +70,7 @@ Agent(task="audit api/ for rate-limit headers", ...)
 Agent(task="audit db/ for missing indexes", ...)
 ```
 
-The main agent waits once, then relays a consolidated summary — it does not narrate each subagent's progress.
+Since subagents run in the background by default, the main agent doesn't necessarily block on them — it can keep working and picks up each result as a completion notification in a later turn, then relays a consolidated summary. It does not narrate each subagent's progress step-by-step.
 
 ## Recommendations
 
@@ -82,11 +83,11 @@ The main agent waits once, then relays a consolidated summary — it does not na
 
 ## Anti-patterns
 
-- Subagents dispatching other subagents — nesting is technically supported up to 5 levels (since v2.1.172) but remains strongly discouraged; nested fan-out multiplies context cost and latency unpredictably.
+- Subagents dispatching other subagents — nesting is supported by default up to 3 layers below the main conversation (tune with `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH`, `1` disables it) but remains strongly discouraged; nested fan-out multiplies context cost and latency unpredictably. At the depth limit Claude Code withholds the `Agent` tool so the deepest subagent must finish the work itself.
 - The main agent narrating subagent work step-by-step instead of relaying the final summary.
 - Dispatching a subagent for a task that is one tool call — the overhead dwarfs the work.
 - Vague prompts like "research X" with no output format — produces redundant searches and unfocused summaries.
-- Unbounded spawning — e.g. 50 subagents for a simple query; cap the fan-out in the orchestrator prompt.
+- Unbounded spawning — e.g. 50 subagents for a simple query; cap the fan-out in the orchestrator prompt. Claude Code also enforces session-level total and concurrent subagent limits as a backstop, but don't rely on the platform ceiling instead of a scoped prompt.
 - "Endless search" loops where the subagent scours for sources that do not exist; include a stop condition.
 - Duplicate work from overlapping task boundaries — partition the problem space explicitly.
 - Write-capable subagents invoked without parsing a contracted output — "run it and hope" corrupts state silently.
