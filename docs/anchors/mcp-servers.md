@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-06-12
+last_updated: 2026-08-03
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 3
+version: 4
 ---
 
 ## Recommended
@@ -21,6 +21,8 @@ version: 3
 - `gmail` / `calendar` — Google productivity via official MCPs where available
 
 Per-category details follow. Keep the set small: every installed MCP expands the tool-selection surface and the trust boundary.
+
+The official `modelcontextprotocol/servers` repo now keeps only seven reference implementations (Everything, Fetch, Filesystem, Git, Memory, Sequential Thinking, Time) and has archived the rest (GitHub, GitLab, Postgres, Redis, SQLite, Google Drive, Slack, Puppeteer, etc.) to a separate archive repo — these are demonstrations, not maintained production servers. Prefer the vendor's own official server (as with `github/github-mcp-server` below) over an archived reference implementation.
 
 ## Coding
 
@@ -42,7 +44,7 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Productivity
 
-- **slack** — read channels, post messages. Install: `claude mcp add slack npx -- -y @modelcontextprotocol/server-slack`
+- **slack** — read channels, post messages. The reference `@modelcontextprotocol/server-slack` package has been archived from the official servers repo; Slack MCP support is now community-maintained (Zencoder). Verify the current package name before installing rather than assuming the old one still works.
 - **linear** — issues and projects. Install via Linear's official MCP integration.
 - **gmail / calendar / drive** — Google hosts official remote MCP endpoints for these services. Authentication requires OAuth2 via a Google Cloud project and is configured through the Claude.ai/Claude Desktop GUI (Settings > Connectors), not via a single CLI command. For Claude Code headless use, the Google Workspace CLI is the practical alternative:
   ```
@@ -59,11 +61,16 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Transport note
 
-- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release.
-- Use `claude mcp add-json` for HTTP servers with complex headers; use `claude mcp add` for stdio servers.
+- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated — use HTTP where available.
+- WebSocket (`type: "ws"`) is available for remote servers that push events unprompted (bidirectional); prefer HTTP when the server only responds to requests, since WebSocket doesn't support OAuth or the `--transport` flag.
+- Use `claude mcp add-json` for HTTP/WebSocket servers with complex headers or OAuth config; use `claude mcp add` for stdio servers.
+- Reserved server names Claude Code won't let you reuse: `workspace`, `claude-in-chrome`, `computer-use`, `Claude Preview`, `Claude Browser`.
+- Building your own server: the official `mcp-server-dev` plugin (`/plugin install mcp-server-dev@claude-plugins-official`) scaffolds a remote HTTP or local stdio server interactively.
 
 ## Selection tips
 
 - Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server. (Convention, not part of the official schema — but this plugin promotes it.)
 - Keep the installed set small. Every MCP server adds tool-selection overhead and expands the trust surface.
 - For read-only inspection tasks, prefer a dedicated CLI + Bash allowlist over an MCP server.
+- Claude Code automatically retries transient connection failures (HTTP/SSE, exponential backoff up to 5 attempts) and refreshes expired OAuth tokens once before flagging a server as needing re-authentication — don't build custom retry logic around flaky MCP connections.
+- Pairing an MCP server with the code execution tool avoids paying token cost for large intermediate outputs (code execution is free when used alongside web search or web fetch); see Anthropic's "Code execution with MCP" engineering post.
