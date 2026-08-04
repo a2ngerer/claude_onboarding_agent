@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-06-12
+last_updated: 2026-08-04
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 3
+version: 4
 ---
 
 ## Recommended
@@ -16,7 +16,7 @@ version: 3
 - `github` — issues, PRs, reviews via the GitHub API
 - `obsidian` (official CLI + `obsidian-vault-keeper` subagent) — vault I/O without always-on tool schemas
 - `figma-context` — read Figma frames into context for UI work
-- `slack` — read channels, post messages
+- `slack` — read channels, post messages (community-maintained; the original reference server is archived)
 - `linear` — issues and projects (official Linear MCP)
 - `gmail` / `calendar` — Google productivity via official MCPs where available
 
@@ -24,11 +24,12 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Coding
 
-- **filesystem** — scoped filesystem access beyond the working directory. Install: `claude mcp add filesystem npx -- -y @modelcontextprotocol/server-filesystem <path>`
-- **git** — read git history, blame, diffs without shelling out. Install: `claude mcp add git uvx -- mcp-server-git`
-- **github** — issues, PRs, reviews via the official GitHub MCP server. `@modelcontextprotocol/server-github` has been archived; use the official `github/github-mcp-server` instead.
-  - Remote (recommended): `claude mcp add-json github '{"type":"http","url":"https://api.githubcopilot.com/mcp","headers":{"Authorization":"Bearer YOUR_GITHUB_PAT"}}'`
+- **filesystem** — scoped filesystem access beyond the working directory. Install: `claude mcp add filesystem -- npx -y @modelcontextprotocol/server-filesystem <path>`
+- **git** — read git history, blame, diffs without shelling out. Install: `claude mcp add git -- uvx mcp-server-git`
+- **github** — issues, PRs, reviews via the official GitHub MCP server. `@modelcontextprotocol/server-github` is archived (moved to `modelcontextprotocol/servers-archived`); use the official remote server instead.
+  - Remote (recommended): `claude mcp add --transport http github https://api.githubcopilot.com/mcp/ --header "Authorization: Bearer YOUR_GITHUB_PAT"`
   - Local via Docker: `claude mcp add github -e GITHUB_PERSONAL_ACCESS_TOKEN=YOUR_PAT -- docker run -i --rm -e GITHUB_PERSONAL_ACCESS_TOKEN ghcr.io/github/github-mcp-server`
+  - Auth: `claude mcp login <name>` / `claude mcp logout <name>` manage OAuth sessions for a configured server.
 
 ## Knowledge base
 
@@ -36,13 +37,13 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Design
 
-- **figma-context** — read Figma frames into context for UI work. Uses the `figma-developer-mcp` npm package (GLips/Figma-Context-MCP).
+- **figma-context** — read Figma frames into context for UI work. Uses the `figma-developer-mcp` npm package (GLips/Figma-Context-MCP). No official first-party Figma MCP exists yet.
   Install: `claude mcp add -s user figma-mcp -- npx -y figma-developer-mcp --figma-api-key=YOUR_FIGMA_API_KEY --stdio`
   Alternatively set `FIGMA_API_KEY` in the environment and omit the flag. API key from: https://www.figma.com/developers/api#access-tokens
 
 ## Productivity
 
-- **slack** — read channels, post messages. Install: `claude mcp add slack npx -- -y @modelcontextprotocol/server-slack`
+- **slack** — read channels, post messages. The original `@modelcontextprotocol/server-slack` reference implementation is archived; a community fork is maintained by Zencoder. Install: `claude mcp add slack -- npx -y @modelcontextprotocol/server-slack` (verify the package is still the maintained fork before relying on it).
 - **linear** — issues and projects. Install via Linear's official MCP integration.
 - **gmail / calendar / drive** — Google hosts official remote MCP endpoints for these services. Authentication requires OAuth2 via a Google Cloud project and is configured through the Claude.ai/Claude Desktop GUI (Settings > Connectors), not via a single CLI command. For Claude Code headless use, the Google Workspace CLI is the practical alternative:
   ```
@@ -50,17 +51,18 @@ Per-category details follow. Keep the set small: every installed MCP expands the
   gws auth setup
   claude mcp add gws -- gws mcp -s drive,gmail,calendar
   ```
-  The remote endpoints (`gmailmcp.googleapis.com`, `calendarmcp.googleapis.com`, `drivemcp.googleapis.com`) require a paid Claude plan and OAuth2 bearer tokens that cannot be injected as a static header — use the GUI connector flow for those.
+  The remote endpoints (`gmailmcp.googleapis.com`, `calendarmcp.googleapis.com`, `drivemcp.googleapis.com`) require a paid Claude plan and OAuth2 bearer tokens that cannot be injected as a static header — use the GUI connector flow for those. Note: the official reference Google Drive server (`modelcontextprotocol/servers`) is archived; the remote endpoint above is the supported path.
 
 ## DevOps / cloud
 
-- **kubernetes** — cluster read access, kubectl-equivalent queries. Community servers available; pin a version before production use.
-- **aws / gcp** — prefer official CLIs wrapped via allowed Bash permissions; MCP wrappers exist but are less mature.
+- **kubernetes** — cluster read access, kubectl-equivalent queries. No official server exists; community servers are available — pin a version before production use.
+- **aws / gcp** — prefer official CLIs wrapped via allowed Bash permissions; no official first-party MCP servers exist for either as of `last_updated`.
 
 ## Transport note
 
-- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release.
-- Use `claude mcp add-json` for HTTP servers with complex headers; use `claude mcp add` for stdio servers.
+- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated — use HTTP where available. WebSocket (`ws`) suits servers that push unprompted events but has no OAuth support.
+- CLI syntax: `claude mcp add --transport http <name> <url>` for remote servers; `claude mcp add [options] <name> -- <command> [args...]` for local stdio servers (the `--` separates Claude's own flags from the server command).
+- Use `claude mcp add-json` for servers needing complex JSON config (OAuth client IDs, WebSocket); use `claude mcp add` for the common cases above.
 
 ## Selection tips
 
