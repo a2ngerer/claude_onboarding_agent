@@ -1,17 +1,17 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-06-12
+last_updated: 2026-08-11
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 2
+version: 3
 ---
 
 ## Named subagent frontmatter fields
 
-Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Available fields:
+Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Key fields (the `--agents` CLI flag accepts the same set, plus `prompt` in place of the markdown body):
 
 | Field | Purpose |
 |---|---|
@@ -19,10 +19,11 @@ Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Availa
 | `disallowedTools` | Comma-separated list of tools the subagent cannot call, even if its `tools:` whitelist includes them. |
 | `maxTurns` | Maximum number of agentic turns before the subagent is forced to return. Prevents runaway loops. |
 | `skills` | Comma-separated skill slugs to preload into the subagent's context. |
-| `memory` | `true` / `false` — whether the subagent has access to the user's memory files. Default: `false` for read-only agents. |
-| `effort` | `low` / `normal` / `high` — thinking budget hint passed to the model. |
+| `memory` | `user` / `project` — gives the subagent its own persistent memory directory (`~/.claude/agent-memory/<name>/` or `.claude/agent-memory/<name>/`) that survives across conversations. Unset = no persistent memory; this is separate from the main session's auto memory, which subagents don't inherit. |
+| `effort` | `low` / `medium` / `high` / `xhigh` / `max` — thinking budget hint passed to the model; available levels depend on the model. |
 | `isolation` | `worktree` — run the subagent in a temporary git worktree; branch and path returned to the caller on exit. |
-| `background` | `true` — spawn the subagent in the background; caller is notified on completion rather than waiting. |
+| `background` | `true` — force background execution. As of v2.1.198, subagents run in the background by default already; Claude runs one in the foreground only when it needs the result immediately. |
+| `permissionMode`, `mcpServers`, `hooks`, `initialPrompt` | Per-subagent permission mode, MCP server set, scoped hooks, and a seed user message — see the sub-agents doc for the full field list. |
 
 ## Model tiering for subagents
 
