@@ -1,14 +1,14 @@
 ---
 name: claude-tools
 description: How to configure Claude's core tooling surface — hooks, rules, memory files, settings, slash commands, plugins
-last_updated: 2026-06-12
+last_updated: 2026-08-13
 sources:
   - https://docs.claude.com/en/docs/claude-code/hooks
   - https://docs.claude.com/en/docs/claude-code/settings
   - https://docs.claude.com/en/docs/claude-code/plugins
   - https://docs.claude.com/en/docs/claude-code/slash-commands
   - https://docs.claude.com/en/docs/claude-code/memory
-version: 2
+version: 3
 ---
 
 ## Memory files
@@ -18,7 +18,7 @@ version: 2
 - `AGENTS.md` — not read natively by Claude Code. If the repo needs both, `CLAUDE.md` imports it with `@AGENTS.md`.
 - Size target: keep each `CLAUDE.md` under ~200 lines. Longer files reduce adherence.
 - For modular rules, use `.claude/rules/*.md` with optional `paths:` frontmatter to scope by glob. Rules without `paths:` load unconditionally.
-- Imports: `@path/to/file` inside `CLAUDE.md` pulls another file into context at launch (max depth 5).
+- Imports: `@path/to/file` inside `CLAUDE.md` pulls another file into context at launch (max depth 4).
 
 ## Settings
 
@@ -51,6 +51,11 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 | `WorktreeRemove` | Clean up after a worktree is deleted | Remove temp build artifacts |
 | `Stop` | Cleanup when Claude finishes a turn | Persist session notes |
 | `SessionEnd` | Release resources or save artifacts | Flush metrics |
+| `Notification` | React to a Claude Code notification | `agent_needs_input`, `agent_completed` |
+| `SubagentStart` / `SubagentStop` | React when a subagent spawns or finishes | Log subagent dispatch |
+| `PermissionRequest` / `PermissionDenied` | React to a permission decision, or when auto mode denies a call | Audit denied commands |
+
+The catalog is larger than this table — also see `DirectoryAdded`, `Setup`, `UserPromptExpansion`, `PostToolUseFailure`, `StopFailure`, `TaskCreated`/`TaskCompleted`, `ConfigChange`, `CwdChanged`, `FileChanged`, `Elicitation`/`ElicitationResult`, `TeammateIdle` in the official hooks reference.
 
 Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries. Plugins ship hooks in `hooks/hooks.json`.
 
