@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-06-12
+last_updated: 2026-08-15
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 3
+version: 4
 ---
 
 ## Recommended
@@ -42,7 +42,7 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Productivity
 
-- **slack** — read channels, post messages. Install: `claude mcp add slack npx -- -y @modelcontextprotocol/server-slack`
+- **slack** — read channels, post messages. The original `@modelcontextprotocol/server-slack` reference server is archived; it is now maintained as a third-party package by Zencoder. Verify the current package name before installing, or prefer an official Slack-hosted remote MCP endpoint if available.
 - **linear** — issues and projects. Install via Linear's official MCP integration.
 - **gmail / calendar / drive** — Google hosts official remote MCP endpoints for these services. Authentication requires OAuth2 via a Google Cloud project and is configured through the Claude.ai/Claude Desktop GUI (Settings > Connectors), not via a single CLI command. For Claude Code headless use, the Google Workspace CLI is the practical alternative:
   ```
@@ -59,8 +59,14 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Transport note
 
-- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release.
+- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated — use it only when a service exposes no HTTP endpoint.
+- WebSocket (`type: "ws"`) is also supported for servers that need to push events unprompted, but only via `.mcp.json` / `claude mcp add-json` — the `claude mcp add --transport` flag does not accept `ws`.
 - Use `claude mcp add-json` for HTTP servers with complex headers; use `claude mcp add` for stdio servers.
+- `claude mcp add --transport http|sse|stdio <name> <url|command>` is the current CLI form; JSON configs accept `streamable-http` as an alias for `http`.
+
+## Emerging pattern: code execution with MCP
+
+For agents calling many MCP tools, consider exposing tool calls through a code-execution sandbox (the agent writes code that calls tools programmatically) instead of one tool-call-per-turn — it cuts token overhead on large tool sets. Evaluate case by case; it adds sandboxing complexity that isn't worth it for a handful of servers.
 
 ## Selection tips
 

@@ -1,17 +1,17 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-06-12
+last_updated: 2026-08-15
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 2
+version: 3
 ---
 
 ## Named subagent frontmatter fields
 
-Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Available fields:
+Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter (`name` and `description` are required). Other available fields:
 
 | Field | Purpose |
 |---|---|
@@ -19,10 +19,15 @@ Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Availa
 | `disallowedTools` | Comma-separated list of tools the subagent cannot call, even if its `tools:` whitelist includes them. |
 | `maxTurns` | Maximum number of agentic turns before the subagent is forced to return. Prevents runaway loops. |
 | `skills` | Comma-separated skill slugs to preload into the subagent's context. |
-| `memory` | `true` / `false` — whether the subagent has access to the user's memory files. Default: `false` for read-only agents. |
-| `effort` | `low` / `normal` / `high` — thinking budget hint passed to the model. |
+| `memory` | `user` / `project` / `local` — persistent auto-memory scope for the subagent. Omit for no persistent memory. |
+| `effort` | `low` / `medium` / `high` / `xhigh` / `max` — overrides the session's reasoning-effort level. |
 | `isolation` | `worktree` — run the subagent in a temporary git worktree; branch and path returned to the caller on exit. |
 | `background` | `true` — spawn the subagent in the background; caller is notified on completion rather than waiting. |
+| `permissionMode` | `default` / `acceptEdits` / `auto` / `dontAsk` / `bypassPermissions` / `plan` — permission mode the subagent runs under. |
+| `mcpServers` | MCP servers available to this subagent, beyond the parent's set. |
+| `color` | Display color in the subagent panel. |
+
+Storage resolves in priority order: managed settings → `--agents` CLI flag → project `.claude/agents/` → user `~/.claude/agents/` → a plugin's `agents/` directory.
 
 ## Model tiering for subagents
 
@@ -80,9 +85,15 @@ The main agent waits once, then relays a consolidated summary — it does not na
 - Preserve important facts by having subagents persist artifacts (files, memory) rather than stuffing them back into the main context.
 - Reuse frequently-spawned workers as named subagents in `.claude/agents/<name>.md` with a clear `description:` so the main agent picks them deterministically.
 
+## Limits
+
+- **Nesting depth:** subagents may spawn their own subagents up to 3 levels below the main conversation by default (raised from 1); configure with `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH` (set to `1` to disable nesting entirely). At the depth limit, Claude Code withholds the `Agent` tool.
+- **Concurrency:** up to 20 subagents may run simultaneously by default; override with `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`. Sessions with the `ultracode` workflow tool active are exempt.
+- There is no fixed per-session subagent spawn cap; only the depth and concurrency limits above apply.
+
 ## Anti-patterns
 
-- Subagents dispatching other subagents — nesting is technically supported up to 5 levels (since v2.1.172) but remains strongly discouraged; nested fan-out multiplies context cost and latency unpredictably.
+- Subagents dispatching other subagents — nesting is supported up to the configured depth limit (3 by default) but remains discouraged for routine use; nested fan-out multiplies context cost and latency unpredictably.
 - The main agent narrating subagent work step-by-step instead of relaying the final summary.
 - Dispatching a subagent for a task that is one tool call — the overhead dwarfs the work.
 - Vague prompts like "research X" with no output format — produces redundant searches and unfocused summaries.
