@@ -1,14 +1,14 @@
 ---
 name: claude-tools
 description: How to configure Claude's core tooling surface — hooks, rules, memory files, settings, slash commands, plugins
-last_updated: 2026-06-12
+last_updated: 2026-08-20
 sources:
   - https://docs.claude.com/en/docs/claude-code/hooks
   - https://docs.claude.com/en/docs/claude-code/settings
   - https://docs.claude.com/en/docs/claude-code/plugins
   - https://docs.claude.com/en/docs/claude-code/slash-commands
   - https://docs.claude.com/en/docs/claude-code/memory
-version: 2
+version: 3
 ---
 
 ## Memory files
@@ -18,17 +18,20 @@ version: 2
 - `AGENTS.md` — not read natively by Claude Code. If the repo needs both, `CLAUDE.md` imports it with `@AGENTS.md`.
 - Size target: keep each `CLAUDE.md` under ~200 lines. Longer files reduce adherence.
 - For modular rules, use `.claude/rules/*.md` with optional `paths:` frontmatter to scope by glob. Rules without `paths:` load unconditionally.
-- Imports: `@path/to/file` inside `CLAUDE.md` pulls another file into context at launch (max depth 5).
+- Imports: `@path/to/file` inside `CLAUDE.md` pulls another file into context at launch (max depth 4).
+- Auto memory (separate from CLAUDE.md): Claude's own notes at `~/.claude/projects/<project>/memory/`, entry point `MEMORY.md` (first 200 lines / 25KB loaded every session), topic files loaded on demand.
 
 ## Settings
 
-Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `outputStyle`, `sandbox`, `claudeMdExcludes`, `fallbackModel`, `requiredMinimumVersion`, `enforceAvailableModels`. Permission rules evaluate in order `deny → ask → allow`; first match wins.
+Key top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `outputStyle`, `sandbox`, `claudeMdExcludes`, `fallbackModel`, `requiredMinimumVersion`, `enforceAvailableModels`, `autoMemoryEnabled`, `autoMemoryDirectory`.
 
 ```json
 { "permissions": { "allow": ["Bash(npm run test *)"], "deny": ["Read(./.env)"] } }
 ```
 
+- **Scope precedence:** managed policy > CLI flags > `.claude/settings.local.json` > `.claude/settings.json` > `~/.claude/settings.json`. `permissions.allow` / `.deny` / `.ask` arrays merge (union) across scopes rather than one scope replacing another; a `deny` match in any scope wins regardless of `allow` rules elsewhere.
 - **`fallbackModel`** — model to use when the primary `model` is unavailable or rate-limited.
+- **`ANTHROPIC_DEFAULT_MODEL`** (env var) — sets the model for new sessions; an explicit `/model` pick overrides it.
 - **`requiredMinimumVersion`** — semver string; Claude Code refuses to run if the installed version is older.
 - **`enforceAvailableModels`** — boolean; when `true`, rejects model IDs not available in the current account/tier at startup rather than failing at runtime.
 
@@ -36,29 +39,28 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 
 ## Hooks
 
-| Event | Typical use | Example |
-|---|---|---|
-| `SessionStart` | Load context or env vars on session open | Inject current git branch |
-| `InstructionsLoaded` | React to what triggered loading (new session, `/reload-skills`, plugin install); inspect `load_reason` | Log which skills were loaded |
-| `UserPromptSubmit` | Validate or enrich the user prompt | Block secret patterns |
-| `PreToolUse` | Block or gate a tool call | Deny `Bash(rm -rf *)` |
-| `PostToolUse` | Lint or log after a tool runs | Auto-run `eslint --fix` after `Edit` |
-| `PostToolBatch` | React after a full parallel tool batch completes | Summarize a batch of file reads |
-| `MessageDisplay` | Intercept or annotate a message before it is shown | Inject a reminder banner |
-| `PreCompact` | Save state before context compaction | Checkpoint session notes |
-| `PostCompact` | Re-inject context after compaction | Reload pinned snippets |
-| `WorktreeCreate` | Set up a fresh worktree (install deps, copy env) | `npm ci` in the new branch |
-| `WorktreeRemove` | Clean up after a worktree is deleted | Remove temp build artifacts |
-| `Stop` | Cleanup when Claude finishes a turn | Persist session notes |
-| `SessionEnd` | Release resources or save artifacts | Flush metrics |
+Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` (`matcher` + `{ type, command }` entries), in a plugin's `hooks/hooks.json`, or scoped to one skill/subagent via its own frontmatter `hooks:` field.
 
-Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries. Plugins ship hooks in `hooks/hooks.json`.
+| Event | Typical use |
+|---|---|
+| `SessionStart` / `SessionEnd` | Load or release context/env vars at session boundaries |
+| `InstructionsLoaded` | React to what triggered CLAUDE.md/rules loading (`load_reason`) |
+| `UserPromptSubmit` | Validate or enrich the user prompt |
+| `PreToolUse` / `PostToolUse` | Block or gate a tool call; lint/log after it succeeds |
+| `PostToolBatch` | React after a full parallel tool batch resolves |
+| `SubagentStart` / `SubagentStop` | React to a subagent spawning or finishing |
+| `PermissionRequest` / `PermissionDenied` | React to a permission decision |
+| `PreCompact` / `PostCompact` | Save state before, reload it after context compaction |
+| `WorktreeCreate` / `WorktreeRemove` | Set up or clean up a git worktree |
+| `Stop` | Cleanup when Claude finishes a turn |
+
+Claude Code ships roughly 30 hook events in total (session, turn, tool, subagent, file/directory, config, and MCP-elicitation categories) — check the official hooks reference before assuming a niche event doesn't exist.
 
 ## Slash commands
 
-- Skills and custom commands are merged. Project skills live at `.claude/skills/<name>/SKILL.md`; user skills at `~/.claude/skills/<name>/SKILL.md`. Legacy `.claude/commands/*.md` files still work.
+- Skills and custom commands are merged. Project skills live at `.claude/skills/<name>/SKILL.md`; user skills at `~/.claude/skills/<name>/SKILL.md`. Legacy `.claude/commands/*.md` files still work identically.
 - Plugin-provided skills are namespaced: `/<plugin-name>:<skill-name>` to prevent collisions.
-- Arguments: `$ARGUMENTS` (full string), `$0`/`$1`/… or `$ARGUMENTS[N]` (positional), named args via `arguments:` frontmatter.
+- Arguments: `$ARGUMENTS` (full string), `$0`/`$1`/… or `$ARGUMENTS[N]` (positional), `$name` (named, via `arguments:` frontmatter).
 - Name slugs: lowercase letters, digits, hyphens only; max 64 chars.
 - `/reload-skills` — hot-reload skill/command files without restarting the session.
 - `/cd <path>` — change the working directory for the current session.
@@ -71,14 +73,19 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 | Field | Purpose |
 |---|---|
 | `argument-hint` | Short placeholder shown in autocomplete (e.g. `[branch]`) |
-| `allowed-tools` | Comma-separated tool whitelist for this skill's invocation |
-| `model` | Override model for this skill (accepts aliases: `fable`, `opus`, `sonnet`, `haiku`, `inherit`) |
-| `effort` | `low` / `normal` / `high` — hint to the model's thinking budget |
-| `context: fork` | Run the skill in a forked context (isolated from main conversation) |
-| `context: agent` | Run the skill as a full subagent turn |
-| `paths` | Glob list — load this skill only when CWD matches |
-| `disable-model-invocation` | `true` — skill runs its command without calling the model (pure automation) |
-| `user-invocable` | `false` — hides the skill from `/` autocomplete; only callable programmatically |
+| `arguments` | Named positional args for `$name` substitution (space-separated string or YAML list) |
+| `allowed-tools` | Tool whitelist granted for the invoking turn only; clears on the next message |
+| `disallowed-tools` | Tools removed from Claude's pool while this skill is active |
+| `model` | Override model for this skill's turn (accepts aliases: `fable`, `opus`, `sonnet`, `haiku`, `inherit`) |
+| `effort` | `low` / `medium` / `high` / `xhigh` / `max` — hint to the model's thinking budget |
+| `context: fork` | Run the skill in a forked subagent context (isolated from main conversation) |
+| `agent` | Which subagent type to use when `context: fork` is set |
+| `background` | With `context: fork`, run in the background (default `true`) or wait for the result |
+| `hooks` | Hooks registered when the skill is invoked, active for the rest of the session |
+| `paths` | Glob list — auto-load this skill only when CWD/files match |
+| `disable-model-invocation` | `true` — only you can invoke the skill; Claude never triggers it automatically |
+| `user-invocable` | `false` — hides the skill from `/` autocomplete; only Claude can invoke it |
+| `shell` | `bash` (default) or `powershell` for inline `` !`command` `` blocks |
 
 ## Plugins
 
@@ -86,7 +93,7 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
   - `displayName` — human-readable name shown in the marketplace and `/plugin list`.
   - `defaultEnabled` — boolean; whether the plugin activates on install without user opt-in.
   - `dependencies` — list of other plugin names that must be installed for this plugin to function.
-- Components sit at the plugin root, not inside `.claude-plugin/`: `skills/`, `agents/`, `commands/`, `hooks/`, `.mcp.json`, `.lsp.json`, `monitors/`, `settings.json`.
+- Components sit at the plugin root, not inside `.claude-plugin/`: `skills/`, `agents/`, `commands/`, `hooks/`, `.mcp.json`, `.lsp.json`, `monitors/`, `bin/`, `settings.json`.
 - Version every release; users update through the marketplace. `/reload-plugins` picks up local edits.
 
 ## Recommendations
@@ -96,7 +103,6 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 - Use a `PostToolUse` hook to run linters or formatters after `Write`/`Edit` instead of instructing Claude to do it.
 - Scope permissions explicitly: allowlist safe commands (`Bash(npm run test *)`), deny reads of secrets (`Read(./.env)`).
 - Pin plugin versions in team repos; run `/reload-plugins` after edits instead of restarting.
-- Namespace plugin skills; never rely on a collision-prone flat name.
 
 ## Deprecated patterns
 
