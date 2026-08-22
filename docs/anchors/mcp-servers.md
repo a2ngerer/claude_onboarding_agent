@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-06-12
+last_updated: 2026-08-22
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 3
+version: 4
 ---
 
 ## Recommended
@@ -27,8 +27,10 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 - **filesystem** — scoped filesystem access beyond the working directory. Install: `claude mcp add filesystem npx -- -y @modelcontextprotocol/server-filesystem <path>`
 - **git** — read git history, blame, diffs without shelling out. Install: `claude mcp add git uvx -- mcp-server-git`
 - **github** — issues, PRs, reviews via the official GitHub MCP server. `@modelcontextprotocol/server-github` has been archived; use the official `github/github-mcp-server` instead.
-  - Remote (recommended): `claude mcp add-json github '{"type":"http","url":"https://api.githubcopilot.com/mcp","headers":{"Authorization":"Bearer YOUR_GITHUB_PAT"}}'`
+  - Remote (recommended): `claude mcp add --transport http github https://api.githubcopilot.com/mcp --header "Authorization: Bearer YOUR_GITHUB_PAT"`
   - Local via Docker: `claude mcp add github -e GITHUB_PERSONAL_ACCESS_TOKEN=YOUR_PAT -- docker run -i --rm -e GITHUB_PERSONAL_ACCESS_TOKEN ghcr.io/github/github-mcp-server`
+- The reference `modelcontextprotocol/servers` repo keeps only 7 active servers (everything, fetch, filesystem, git, memory, sequential-thinking, time); everything else (AWS KB, Brave Search, GitLab, Google Drive/Maps, Postgres, Puppeteer, Redis, Sentry, Slack, SQLite, …) moved to an archived repo. Browse the wider ecosystem via the MCP Registry (`registry.modelcontextprotocol.io`) or the Anthropic Directory (`claude.ai/directory`) instead of assuming a reference server is still maintained.
+- **Code execution + MCP**: for agents that call many tools, pairing the code-execution tool with `web_search`/`web_fetch` lets Claude write code against MCP tool results instead of round-tripping each call through the model — cheaper and faster for heavy tool-use workloads (see Anthropic's "Code execution with MCP" engineering post).
 
 ## Knowledge base
 
@@ -59,8 +61,9 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Transport note
 
-- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release.
+- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated — use HTTP where available.
 - Use `claude mcp add-json` for HTTP servers with complex headers; use `claude mcp add` for stdio servers.
+- For non-OAuth custom auth (Kerberos, short-lived tokens, internal SSO), set `headersHelper` on the server entry to a command that mints headers at connect time, instead of a static `headers` value.
 
 ## Selection tips
 
