@@ -1,28 +1,33 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-06-12
+last_updated: 2026-08-26
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 2
+version: 3
 ---
 
 ## Named subagent frontmatter fields
 
-Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Available fields:
+Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Only `name` and `description` are required. Available fields:
 
 | Field | Purpose |
 |---|---|
 | `model` | Model to run this agent on. Accepts aliases (`fable`, `opus`, `sonnet`, `haiku`) or full IDs. Defaults to `inherit` (uses the invoking context's model). |
-| `disallowedTools` | Comma-separated list of tools the subagent cannot call, even if its `tools:` whitelist includes them. |
+| `disallowedTools` | Denylist of tools the subagent cannot call, applied before `tools:`, even if the whitelist includes them. |
+| `permissionMode` | `default`, `acceptEdits`, `auto`, `dontAsk`, `bypassPermissions`, or `plan`. Inherited and non-overridable if the parent uses `bypassPermissions`, `acceptEdits`, or `auto`. |
 | `maxTurns` | Maximum number of agentic turns before the subagent is forced to return. Prevents runaway loops. |
-| `skills` | Comma-separated skill slugs to preload into the subagent's context. |
-| `memory` | `true` / `false` — whether the subagent has access to the user's memory files. Default: `false` for read-only agents. |
-| `effort` | `low` / `normal` / `high` — thinking budget hint passed to the model. |
+| `skills` | Skill slugs to preload into the subagent's context. |
+| `mcpServers` | MCP servers scoped to this subagent only. |
+| `hooks` | Lifecycle hooks (`PreToolUse`, `PostToolUse`, `Stop`, etc.) that apply only within this subagent. |
+| `memory` | `user` / `project` / `local` scope for the subagent's own persistent memory, or unset for none. Default: unset for read-only agents. |
+| `effort` | `low` / `medium` / `high` / `xhigh` / `max` — thinking budget hint passed to the model. |
 | `isolation` | `worktree` — run the subagent in a temporary git worktree; branch and path returned to the caller on exit. |
 | `background` | `true` — spawn the subagent in the background; caller is notified on completion rather than waiting. |
+| `color` | Display color in the UI (`red`, `blue`, `green`, `yellow`, `purple`, `orange`, `pink`, `cyan`). |
+| `initialPrompt` | Auto-submitted first turn when this agent runs as the main session (e.g. via a plugin's `settings.json` `agent` key). |
 
 ## Model tiering for subagents
 
@@ -80,9 +85,14 @@ The main agent waits once, then relays a consolidated summary — it does not na
 - Preserve important facts by having subagents persist artifacts (files, memory) rather than stuffing them back into the main context.
 - Reuse frequently-spawned workers as named subagents in `.claude/agents/<name>.md` with a clear `description:` so the main agent picks them deterministically.
 
+## Nesting and concurrency limits
+
+- **Spawn depth:** subagents can dispatch their own subagents up to 3 layers below the main conversation by default (the main conversation counts as layer 0; subagents can spawn 2 further layers). Controlled by `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH`. At the limit, Claude Code withholds the `Agent` tool from subagents (forks are exempt).
+- **Concurrency:** 20 concurrent subagents by default, controlled by `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`; sessions with ultracode active bypass this limit.
+
 ## Anti-patterns
 
-- Subagents dispatching other subagents — nesting is technically supported up to 5 levels (since v2.1.172) but remains strongly discouraged; nested fan-out multiplies context cost and latency unpredictably.
+- Subagents dispatching other subagents — technically supported within the spawn-depth limit above, but remains strongly discouraged; nested fan-out multiplies context cost and latency unpredictably.
 - The main agent narrating subagent work step-by-step instead of relaying the final summary.
 - Dispatching a subagent for a task that is one tool call — the overhead dwarfs the work.
 - Vague prompts like "research X" with no output format — produces redundant searches and unfocused summaries.

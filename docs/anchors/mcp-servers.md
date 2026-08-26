@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-06-12
+last_updated: 2026-08-26
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 3
+version: 4
 ---
 
 ## Recommended
@@ -40,9 +40,14 @@ Per-category details follow. Keep the set small: every installed MCP expands the
   Install: `claude mcp add -s user figma-mcp -- npx -y figma-developer-mcp --figma-api-key=YOUR_FIGMA_API_KEY --stdio`
   Alternatively set `FIGMA_API_KEY` in the environment and omit the flag. API key from: https://www.figma.com/developers/api#access-tokens
 
+## Emerging patterns
+
+- **Code execution via MCP** — route MCP tool calls through a code-execution sandbox instead of direct tool calls; reduces token overhead for complex tool chains on large tool sets (Anthropic engineering, Nov 2025).
+- **`headersHelper`** — a command that mints HTTP headers dynamically for a remote server's requests, useful for tokens that must be freshly generated per call rather than a static `Authorization` header.
+
 ## Productivity
 
-- **slack** — read channels, post messages. Install: `claude mcp add slack npx -- -y @modelcontextprotocol/server-slack`
+- **slack** — read channels, post messages. The official `@modelcontextprotocol/server-slack` package has been archived upstream; the actively maintained fork is run by Zencoder. Verify the current install source before adding it in a new project.
 - **linear** — issues and projects. Install via Linear's official MCP integration.
 - **gmail / calendar / drive** — Google hosts official remote MCP endpoints for these services. Authentication requires OAuth2 via a Google Cloud project and is configured through the Claude.ai/Claude Desktop GUI (Settings > Connectors), not via a single CLI command. For Claude Code headless use, the Google Workspace CLI is the practical alternative:
   ```
@@ -59,7 +64,8 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Transport note
 
-- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release.
+- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated — use HTTP where available.
+- WebSocket (`ws`) transport exists for remote servers that push events unprompted; configure it via `claude mcp add-json` (the `--transport` flag doesn't accept `ws`).
 - Use `claude mcp add-json` for HTTP servers with complex headers; use `claude mcp add` for stdio servers.
 
 ## Selection tips
