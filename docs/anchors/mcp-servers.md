@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-06-12
+last_updated: 2026-08-27
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 3
+version: 4
 ---
 
 ## Recommended
@@ -18,6 +18,8 @@ version: 3
 - `figma-context` — read Figma frames into context for UI work
 - `slack` — read channels, post messages
 - `linear` — issues and projects (official Linear MCP)
+- `notion` — docs and databases: `claude mcp add --transport http notion https://mcp.notion.com/mcp`
+- `sentry` — error monitoring, official reviewed connector
 - `gmail` / `calendar` — Google productivity via official MCPs where available
 
 Per-category details follow. Keep the set small: every installed MCP expands the tool-selection surface and the trust boundary.
@@ -59,11 +61,13 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Transport note
 
-- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release.
-- Use `claude mcp add-json` for HTTP servers with complex headers; use `claude mcp add` for stdio servers.
+- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release. WebSocket (`"type":"ws"`) is also supported for persistent connections via `claude mcp add-json`.
+- Use `claude mcp add-json` for HTTP/WebSocket servers with complex headers or custom auth (`headersHelper` supports dynamic tokens); use `claude mcp add` for stdio servers.
 
 ## Selection tips
 
 - Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server. (Convention, not part of the official schema — but this plugin promotes it.)
-- Keep the installed set small. Every MCP server adds tool-selection overhead and expands the trust surface.
+- Keep the installed set small. Every MCP server adds tool-selection overhead and expands the trust surface. Tool Search defers tool definitions by default on Claude 4.5+ models to reduce this cost.
 - For read-only inspection tasks, prefer a dedicated CLI + Bash allowlist over an MCP server.
+- For agents that shell out to many MCP tools in sequence, consider the code-execution-with-MCP pattern (write code that calls tools programmatically) over one tool call per step — see Anthropic's engineering blog on MCP code execution.
+- To scaffold a new custom server, use the official `mcp-server-dev` plugin (`/plugin install mcp-server-dev@claude-plugins-official`) rather than starting from scratch.
