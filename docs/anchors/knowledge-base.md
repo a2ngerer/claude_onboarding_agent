@@ -1,19 +1,19 @@
 ---
 name: knowledge-base
 description: Recommended vault layouts, OKF v0.1 frontmatter patterns, and KB-agent structures for Obsidian-style knowledge bases
-last_updated: 2026-06-30
+last_updated: 2026-08-30
 sources:
   - https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md
   - https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing
   - https://help.obsidian.md/
   - https://help.obsidian.md/properties
   - https://publish.obsidian.md/hub/01+-+Community+Vaults
-version: 2
+version: 3
 ---
 
 ## Vault layout
 
-The plugin's recommended layout separates raw material from curated notes. `raw/` holds ingested source files (articles, PDFs, code, notes); `wiki/` holds the interlinked note graph produced from that raw material. The `wiki/` folder is an **OKF v0.1 bundle** (Google's Open Knowledge Format), so it stays portable across any OKF-aware agent or tool. Extra top-level folders only when justified by scale.
+The plugin's recommended layout separates raw material from curated notes. `raw/` holds ingested source files (articles, PDFs, code, notes); `wiki/` holds the interlinked note graph produced from that raw material. The `wiki/` folder is an **OKF bundle** (Google's Open Knowledge Format, now at spec v0.2 — see below), so it stays portable across any OKF-aware agent or tool. Extra top-level folders only when justified by scale.
 
 ```
 vault/
@@ -50,6 +50,18 @@ Notes carry OKF frontmatter in YAML delimited by `---`. Obsidian renders these a
 | `timestamp` | Recommended | date | ISO 8601 datetime of the last meaningful change |
 
 Real bundles emit keys in the order `type, resource, title, description, tags, timestamp`. Producers may add custom keys (e.g. `aliases`, `created`, `updated`); OKF consumers preserve unknown keys. If a vault already uses Obsidian's `created`/`updated`, keep OKF's single `timestamp` as canonical and let the others coexist as extensions. Reserved Obsidian keys (`aliases`, `tags`, `cssclasses`) keep their typed UI behavior. Dates use ISO 8601; lists may use YAML block or flow syntax.
+
+### OKF v0.2 trust & lifecycle fields (optional)
+
+The OKF spec has advanced to v0.2, layering optional provenance/lifecycle metadata onto the same core — `type` is still the only required key, and conformance rules are unchanged, so a v0.1-style bundle without these fields still conforms. Producers may add:
+
+| Field | Purpose |
+|---|---|
+| `generated` | Authorship + timestamp (`by`, `at`) for machine-generated notes |
+| `verified` | List of confirmation events (`actor`, timestamp) |
+| `status` | `draft` \| `stable` \| `deprecated` |
+| `stale_after` | ISO 8601 datetime marking the note as stale |
+| `sources` | Materials the note derives from, with credibility signals (`author`, `usage_count`, `last_modified`) |
 
 ## Naming conventions
 

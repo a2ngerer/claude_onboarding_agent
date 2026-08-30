@@ -1,14 +1,14 @@
 ---
 name: claude-tools
 description: How to configure Claude's core tooling surface — hooks, rules, memory files, settings, slash commands, plugins
-last_updated: 2026-06-12
+last_updated: 2026-08-30
 sources:
   - https://docs.claude.com/en/docs/claude-code/hooks
   - https://docs.claude.com/en/docs/claude-code/settings
   - https://docs.claude.com/en/docs/claude-code/plugins
   - https://docs.claude.com/en/docs/claude-code/slash-commands
   - https://docs.claude.com/en/docs/claude-code/memory
-version: 2
+version: 3
 ---
 
 ## Memory files
@@ -18,11 +18,12 @@ version: 2
 - `AGENTS.md` — not read natively by Claude Code. If the repo needs both, `CLAUDE.md` imports it with `@AGENTS.md`.
 - Size target: keep each `CLAUDE.md` under ~200 lines. Longer files reduce adherence.
 - For modular rules, use `.claude/rules/*.md` with optional `paths:` frontmatter to scope by glob. Rules without `paths:` load unconditionally.
-- Imports: `@path/to/file` inside `CLAUDE.md` pulls another file into context at launch (max depth 5).
+- Imports: `@path/to/file` inside `CLAUDE.md` pulls another file into context at launch (max depth 4).
+- Auto memory: Claude also writes its own notes to `~/.claude/projects/<project>/memory/` (`MEMORY.md` index + topic files, types `user`/`feedback`/`project`/`reference`) — distinct from CLAUDE.md; browse/toggle via `/memory` or the `autoMemoryEnabled` setting.
 
 ## Settings
 
-Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `outputStyle`, `sandbox`, `claudeMdExcludes`, `fallbackModel`, `requiredMinimumVersion`, `enforceAvailableModels`. Permission rules evaluate in order `deny → ask → allow`; first match wins.
+Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `outputStyle`, `sandbox`, `claudeMdExcludes`, `fallbackModel`, `requiredMinimumVersion`, `enforceAvailableModels`, `modelPicker`, `autoMemoryEnabled`. Permission rules evaluate in order `deny → ask → allow`; first match wins.
 
 ```json
 { "permissions": { "allow": ["Bash(npm run test *)"], "deny": ["Read(./.env)"] } }
@@ -44,6 +45,7 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 | `PreToolUse` | Block or gate a tool call | Deny `Bash(rm -rf *)` |
 | `PostToolUse` | Lint or log after a tool runs | Auto-run `eslint --fix` after `Edit` |
 | `PostToolBatch` | React after a full parallel tool batch completes | Summarize a batch of file reads |
+| `PreModelSwitch` / `PostModelSwitch` | Block/confirm a model switch before it happens, or react after it changes | Deny switching to a cheaper model mid-task |
 | `MessageDisplay` | Intercept or annotate a message before it is shown | Inject a reminder banner |
 | `PreCompact` | Save state before context compaction | Checkpoint session notes |
 | `PostCompact` | Re-inject context after compaction | Reload pinned snippets |
@@ -79,6 +81,7 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 | `paths` | Glob list — load this skill only when CWD matches |
 | `disable-model-invocation` | `true` — skill runs its command without calling the model (pure automation) |
 | `user-invocable` | `false` — hides the skill from `/` autocomplete; only callable programmatically |
+| `disallowed-tools` | Tools removed from Claude's pool while this skill is active (denylist) |
 
 ## Plugins
 

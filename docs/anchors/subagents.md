@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-06-12
+last_updated: 2026-08-30
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 2
+version: 3
 ---
 
 ## Named subagent frontmatter fields
@@ -17,12 +17,16 @@ Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Availa
 |---|---|
 | `model` | Model to run this agent on. Accepts aliases (`fable`, `opus`, `sonnet`, `haiku`) or full IDs. Defaults to `inherit` (uses the invoking context's model). |
 | `disallowedTools` | Comma-separated list of tools the subagent cannot call, even if its `tools:` whitelist includes them. |
+| `permissionMode` | Permission mode for this subagent: `default`, `acceptEdits`, `auto`, `dontAsk`, `bypassPermissions`, `plan`, or `manual`. |
 | `maxTurns` | Maximum number of agentic turns before the subagent is forced to return. Prevents runaway loops. |
 | `skills` | Comma-separated skill slugs to preload into the subagent's context. |
 | `memory` | `true` / `false` — whether the subagent has access to the user's memory files. Default: `false` for read-only agents. |
 | `effort` | `low` / `normal` / `high` — thinking budget hint passed to the model. |
 | `isolation` | `worktree` — run the subagent in a temporary git worktree; branch and path returned to the caller on exit. |
 | `background` | `true` — spawn the subagent in the background; caller is notified on completion rather than waiting. |
+| `experimental.cacheTtl` | `5m` or `1h` — per-subagent prompt cache TTL (requires v2.1.248+). |
+
+Other, less commonly set fields: `mcpServers` (inline or referenced MCP servers scoped to this subagent), `hooks` (lifecycle hooks scoped to the subagent), `color` (display color in the UI), `initialPrompt` (auto-submitted first turn when the agent runs as the main session).
 
 ## Model tiering for subagents
 
@@ -38,8 +42,12 @@ Set `model: haiku` on read-only scanner agents; let implementation agents defaul
 - A side task would flood the main context with file contents, search hits, or logs that are not referenced again.
 - The work needs a different tool-set, a different model (e.g. Haiku for cheap scans), or a separate permission profile.
 - The task is breadth-first: three or more independent queries that can run in parallel.
-- Verification after implementation — a fresh context is less biased toward the code it just wrote.
+- Verification after implementation — a fresh, *non-forked* context is less biased toward the code it just wrote (see Fork mode below).
 - A repeated worker with the same instructions — formalize it as a named subagent under `.claude/agents/`.
+
+## Fork mode default
+
+Since v2.1.232, `Agent` dispatch forks the parent conversation by default in interactive sessions — the subagent inherits the full history and prompt cache instead of starting clean. Non-interactive (`-p`) runs and the Agent SDK default to independent context instead; override either way with `CLAUDE_CODE_FORK_SUBAGENT=1`/`=0`. For an unbiased reviewer or a cheap-model scan, use `isolation: worktree` or otherwise avoid fork mode — a forked subagent is not the clean-context pattern this file recommends elsewhere.
 
 ## Delegation heuristics
 
@@ -82,7 +90,7 @@ The main agent waits once, then relays a consolidated summary — it does not na
 
 ## Anti-patterns
 
-- Subagents dispatching other subagents — nesting is technically supported up to 5 levels (since v2.1.172) but remains strongly discouraged; nested fan-out multiplies context cost and latency unpredictably.
+- Subagents dispatching other subagents — nesting defaults to a depth of 3 below the main conversation (`CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH`; set to `1` to disable nesting) but remains strongly discouraged; nested fan-out multiplies context cost and latency unpredictably. Concurrent subagents default-cap at 20 (`CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`, exempt when ultracode is active) — don't assume unlimited parallel fan-out.
 - The main agent narrating subagent work step-by-step instead of relaying the final summary.
 - Dispatching a subagent for a task that is one tool call — the overhead dwarfs the work.
 - Vague prompts like "research X" with no output format — produces redundant searches and unfocused summaries.
