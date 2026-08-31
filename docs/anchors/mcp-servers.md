@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-06-12
+last_updated: 2026-08-31
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 3
+version: 4
 ---
 
 ## Recommended
@@ -16,7 +16,7 @@ version: 3
 - `github` — issues, PRs, reviews via the GitHub API
 - `obsidian` (official CLI + `obsidian-vault-keeper` subagent) — vault I/O without always-on tool schemas
 - `figma-context` — read Figma frames into context for UI work
-- `slack` — read channels, post messages
+- `slack` — read channels, post messages (the reference implementation is archived; a third party now maintains it)
 - `linear` — issues and projects (official Linear MCP)
 - `gmail` / `calendar` — Google productivity via official MCPs where available
 
@@ -42,7 +42,7 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Productivity
 
-- **slack** — read channels, post messages. Install: `claude mcp add slack npx -- -y @modelcontextprotocol/server-slack`
+- **slack** — the official `@modelcontextprotocol/server-slack` reference server has been archived; Slack's MCP integration is now maintained by a third party (Zencoder). Verify current maintainership before installing, or prefer a vetted community alternative.
 - **linear** — issues and projects. Install via Linear's official MCP integration.
 - **gmail / calendar / drive** — Google hosts official remote MCP endpoints for these services. Authentication requires OAuth2 via a Google Cloud project and is configured through the Claude.ai/Claude Desktop GUI (Settings > Connectors), not via a single CLI command. For Claude Code headless use, the Google Workspace CLI is the practical alternative:
   ```
@@ -62,8 +62,13 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 - **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release.
 - Use `claude mcp add-json` for HTTP servers with complex headers; use `claude mcp add` for stdio servers.
 
+## Other official reference servers
+
+The `modelcontextprotocol/servers` repo also ships `fetch` (web content fetching), `memory` (knowledge-graph persistent memory), `sequential-thinking`, and `time` (timezone conversion) as maintained reference implementations. Reach for these before a third-party equivalent.
+
 ## Selection tips
 
 - Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server. (Convention, not part of the official schema — but this plugin promotes it.)
 - Keep the installed set small. Every MCP server adds tool-selection overhead and expands the trust surface.
 - For read-only inspection tasks, prefer a dedicated CLI + Bash allowlist over an MCP server.
+- For high-volume tool calls, consider the code-execution pattern (Claude writes code that calls MCP tools programmatically) instead of loading every tool schema into context — it cuts token overhead on large tool sets.

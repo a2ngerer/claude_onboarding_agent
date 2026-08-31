@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-06-12
+last_updated: 2026-08-31
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 2
+version: 3
 ---
 
 ## Named subagent frontmatter fields
@@ -15,14 +15,19 @@ Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Availa
 
 | Field | Purpose |
 |---|---|
-| `model` | Model to run this agent on. Accepts aliases (`fable`, `opus`, `sonnet`, `haiku`) or full IDs. Defaults to `inherit` (uses the invoking context's model). |
-| `disallowedTools` | Comma-separated list of tools the subagent cannot call, even if its `tools:` whitelist includes them. |
+| `model` | Model to run this agent on. Accepts aliases (`fable`, `opus`, `sonnet`, `haiku`) or full IDs. Omitting it falls back to `CLAUDE_CODE_SUBAGENT_MODEL`, then the parent model (`inherit`). |
+| `tools` / `disallowedTools` | Allowlist / denylist of tools; `disallowedTools` removes entries even from an inherited or specified `tools:` list. |
+| `permissionMode` | `default`, `acceptEdits`, `auto`, `dontAsk`, `bypassPermissions`, or `plan` — permission prompting behavior for this subagent. |
 | `maxTurns` | Maximum number of agentic turns before the subagent is forced to return. Prevents runaway loops. |
-| `skills` | Comma-separated skill slugs to preload into the subagent's context. |
-| `memory` | `true` / `false` — whether the subagent has access to the user's memory files. Default: `false` for read-only agents. |
-| `effort` | `low` / `normal` / `high` — thinking budget hint passed to the model. |
+| `skills` | List of skill slugs to preload in full into the subagent's context at startup. |
+| `memory` | `user`, `project`, or `local` — enables a persistent memory scope across the subagent's own sessions (auto-enables `Read`/`Write`/`Edit`). Omit for stateless, read-only agents. |
+| `effort` | `low` / `medium` / `high` / `xhigh` / `max` — thinking budget hint passed to the model. |
 | `isolation` | `worktree` — run the subagent in a temporary git worktree; branch and path returned to the caller on exit. |
 | `background` | `true` — spawn the subagent in the background; caller is notified on completion rather than waiting. |
+| `mcpServers` | MCP servers (by name or inline definition) available only to this subagent. |
+| `hooks` | Lifecycle hooks scoped to this subagent only; they run only if the agent file's folder is trusted. |
+| `color` | Display color (`red`, `blue`, `green`, …) in the task list and transcript. |
+| `experimental.cacheTtl` | `5m` or `1h` — prompt-cache lifetime override for this subagent. |
 
 ## Model tiering for subagents
 
@@ -79,6 +84,7 @@ The main agent waits once, then relays a consolidated summary — it does not na
 - Route high-volume or low-stakes work to Haiku via the subagent's `model:` field.
 - Preserve important facts by having subagents persist artifacts (files, memory) rather than stuffing them back into the main context.
 - Reuse frequently-spawned workers as named subagents in `.claude/agents/<name>.md` with a clear `description:` so the main agent picks them deterministically.
+- For work that spans separate top-level sessions rather than a single conversation's subagents, `SendMessage` / `ListAgents` let one session message another by name — a lighter-weight alternative to nested dispatch for cross-session handoffs.
 
 ## Anti-patterns
 
