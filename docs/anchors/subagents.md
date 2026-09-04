@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-06-12
+last_updated: 2026-09-04
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 2
+version: 3
 ---
 
 ## Named subagent frontmatter fields
@@ -15,12 +15,15 @@ Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Availa
 
 | Field | Purpose |
 |---|---|
-| `model` | Model to run this agent on. Accepts aliases (`fable`, `opus`, `sonnet`, `haiku`) or full IDs. Defaults to `inherit` (uses the invoking context's model). |
+| `model` | Model to run this agent on. Accepts aliases (`fable`, `opus`, `sonnet`, `haiku`) or full IDs. Defaults to `inherit` (uses the invoking context's model). Resolution order: per-invocation parameter → frontmatter → `CLAUDE_CODE_SUBAGENT_MODEL` env var → main conversation's model. |
+| `tools` | Allowlist of tools this subagent can call; supports MCP patterns (`mcp__<server>` or `mcp__<server>__*`). |
 | `disallowedTools` | Comma-separated list of tools the subagent cannot call, even if its `tools:` whitelist includes them. |
-| `maxTurns` | Maximum number of agentic turns before the subagent is forced to return. Prevents runaway loops. |
+| `permissionMode` | Permission behavior when active: `default`, `acceptEdits`, `auto`, `dontAsk`, `bypassPermissions`, or `plan`. |
+| `maxTurns` | Maximum number of agentic turns before the subagent is forced to return. Prevents runaway loops; output is marked partial and can be resumed. |
 | `skills` | Comma-separated skill slugs to preload into the subagent's context. |
-| `memory` | `true` / `false` — whether the subagent has access to the user's memory files. Default: `false` for read-only agents. |
-| `effort` | `low` / `normal` / `high` — thinking budget hint passed to the model. |
+| `memory` | Persistent memory scope: `user` (`~/.claude/agent-memory/<name>/`), `project` (`.claude/agent-memory/<name>/`), or `local` (`.claude/agent-memory-local/<name>/`). Omit for no persistent memory. |
+| `mcpServers` | Inline MCP server definitions available only to this subagent. |
+| `effort` | `low` / `medium` / `high` / `xhigh` / `max` — thinking budget hint passed to the model; available levels depend on the model. |
 | `isolation` | `worktree` — run the subagent in a temporary git worktree; branch and path returned to the caller on exit. |
 | `background` | `true` — spawn the subagent in the background; caller is notified on completion rather than waiting. |
 
@@ -79,10 +82,11 @@ The main agent waits once, then relays a consolidated summary — it does not na
 - Route high-volume or low-stakes work to Haiku via the subagent's `model:` field.
 - Preserve important facts by having subagents persist artifacts (files, memory) rather than stuffing them back into the main context.
 - Reuse frequently-spawned workers as named subagents in `.claude/agents/<name>.md` with a clear `description:` so the main agent picks them deterministically.
+- To force every subagent in a session onto one model regardless of per-agent `model:` frontmatter, set `CLAUDE_CODE_SUBAGENT_MODEL_FORCE` rather than editing each agent file.
 
 ## Anti-patterns
 
-- Subagents dispatching other subagents — nesting is technically supported up to 5 levels (since v2.1.172) but remains strongly discouraged; nested fan-out multiplies context cost and latency unpredictably.
+- Subagents dispatching other subagents — nesting is limited to 3 layers below the main conversation by default (`CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH` to change it) and remains strongly discouraged; nested fan-out multiplies context cost and latency unpredictably. A default cap of 20 subagents may run concurrently (`CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`).
 - The main agent narrating subagent work step-by-step instead of relaying the final summary.
 - Dispatching a subagent for a task that is one tool call — the overhead dwarfs the work.
 - Vague prompts like "research X" with no output format — produces redundant searches and unfocused summaries.

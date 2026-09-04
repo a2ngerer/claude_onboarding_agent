@@ -1,14 +1,14 @@
 ---
 name: claude-tools
 description: How to configure Claude's core tooling surface — hooks, rules, memory files, settings, slash commands, plugins
-last_updated: 2026-06-12
+last_updated: 2026-09-04
 sources:
   - https://docs.claude.com/en/docs/claude-code/hooks
   - https://docs.claude.com/en/docs/claude-code/settings
   - https://docs.claude.com/en/docs/claude-code/plugins
   - https://docs.claude.com/en/docs/claude-code/slash-commands
   - https://docs.claude.com/en/docs/claude-code/memory
-version: 2
+version: 3
 ---
 
 ## Memory files
@@ -31,6 +31,7 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 - **`fallbackModel`** — model to use when the primary `model` is unavailable or rate-limited.
 - **`requiredMinimumVersion`** — semver string; Claude Code refuses to run if the installed version is older.
 - **`enforceAvailableModels`** — boolean; when `true`, rejects model IDs not available in the current account/tier at startup rather than failing at runtime.
+- **`managedMcpServers`** / **`promptCacheTtl`** / **`subagentPromptCacheTtl`** — push org-wide remote MCP servers, and set prompt-cache lifetime (`5m` or `1h`) separately for the main conversation and subagents.
 
 **Safe mode:** Set `CLAUDE_CODE_SAFE_MODE=1` in the environment to disable CLAUDE.md loading, plugins, skills, hooks, and MCP servers. Useful for security-sensitive CI environments or troubleshooting a broken config.
 
@@ -44,6 +45,8 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 | `PreToolUse` | Block or gate a tool call | Deny `Bash(rm -rf *)` |
 | `PostToolUse` | Lint or log after a tool runs | Auto-run `eslint --fix` after `Edit` |
 | `PostToolBatch` | React after a full parallel tool batch completes | Summarize a batch of file reads |
+| `PreModelSwitch` | Before Claude Code applies a requested model switch; can block it | Deny switching away from a pinned compliance model |
+| `PostModelSwitch` | After the session's model changes | Log model-switch events for audit |
 | `MessageDisplay` | Intercept or annotate a message before it is shown | Inject a reminder banner |
 | `PreCompact` | Save state before context compaction | Checkpoint session notes |
 | `PostCompact` | Re-inject context after compaction | Reload pinned snippets |
@@ -74,8 +77,9 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 | `allowed-tools` | Comma-separated tool whitelist for this skill's invocation |
 | `model` | Override model for this skill (accepts aliases: `fable`, `opus`, `sonnet`, `haiku`, `inherit`) |
 | `effort` | `low` / `normal` / `high` — hint to the model's thinking budget |
-| `context: fork` | Run the skill in a forked context (isolated from main conversation) |
-| `context: agent` | Run the skill as a full subagent turn |
+| `context: fork` | Run the skill in a forked subagent context (isolated from main conversation) |
+| `agent` | Subagent type to use when `context: fork` is set |
+| `background` | With `context: fork`, set `false` to wait for the result inline instead of backgrounding it (default `true`) |
 | `paths` | Glob list — load this skill only when CWD matches |
 | `disable-model-invocation` | `true` — skill runs its command without calling the model (pure automation) |
 | `user-invocable` | `false` — hides the skill from `/` autocomplete; only callable programmatically |
