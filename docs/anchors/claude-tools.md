@@ -1,14 +1,14 @@
 ---
 name: claude-tools
 description: How to configure Claude's core tooling surface — hooks, rules, memory files, settings, slash commands, plugins
-last_updated: 2026-06-12
+last_updated: 2026-09-05
 sources:
   - https://docs.claude.com/en/docs/claude-code/hooks
   - https://docs.claude.com/en/docs/claude-code/settings
   - https://docs.claude.com/en/docs/claude-code/plugins
   - https://docs.claude.com/en/docs/claude-code/slash-commands
   - https://docs.claude.com/en/docs/claude-code/memory
-version: 2
+version: 3
 ---
 
 ## Memory files
@@ -18,7 +18,8 @@ version: 2
 - `AGENTS.md` — not read natively by Claude Code. If the repo needs both, `CLAUDE.md` imports it with `@AGENTS.md`.
 - Size target: keep each `CLAUDE.md` under ~200 lines. Longer files reduce adherence.
 - For modular rules, use `.claude/rules/*.md` with optional `paths:` frontmatter to scope by glob. Rules without `paths:` load unconditionally.
-- Imports: `@path/to/file` inside `CLAUDE.md` pulls another file into context at launch (max depth 5).
+- Imports: `@path/to/file` inside `CLAUDE.md` pulls another file into context at launch (max depth 4 hops).
+- Auto memory: Claude's own persistent notes at `~/.claude/projects/<project>/memory/` (`MEMORY.md` index + topic files), separate from and complementary to `CLAUDE.md`. Toggle with `autoMemoryEnabled`.
 
 ## Settings
 
@@ -45,6 +46,8 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 | `PostToolUse` | Lint or log after a tool runs | Auto-run `eslint --fix` after `Edit` |
 | `PostToolBatch` | React after a full parallel tool batch completes | Summarize a batch of file reads |
 | `MessageDisplay` | Intercept or annotate a message before it is shown | Inject a reminder banner |
+| `SubagentStart` / `SubagentStop` | React when a subagent spawns or finishes | Log delegated-task duration |
+| `PreModelSwitch` / `PostModelSwitch` | Gate or react to a mid-session model change | Block switching away from a pinned model |
 | `PreCompact` | Save state before context compaction | Checkpoint session notes |
 | `PostCompact` | Re-inject context after compaction | Reload pinned snippets |
 | `WorktreeCreate` | Set up a fresh worktree (install deps, copy env) | `npm ci` in the new branch |
@@ -52,7 +55,7 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 | `Stop` | Cleanup when Claude finishes a turn | Persist session notes |
 | `SessionEnd` | Release resources or save artifacts | Flush metrics |
 
-Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries. Plugins ship hooks in `hooks/hooks.json`.
+This table covers the hooks most relevant to plugin authoring; Claude Code ships 30+ hook events in total. Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries; plugins ship hooks in `hooks/hooks.json`.
 
 ## Slash commands
 
@@ -63,6 +66,8 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 - `/reload-skills` — hot-reload skill/command files without restarting the session.
 - `/cd <path>` — change the working directory for the current session.
 - `/plugin list` — list installed plugins and their status.
+- `/skill-doctor` — shows unused loaded skills and their context cost, for pruning.
+- `/diff` — opens a diff panel of uncommitted changes as Claude edits.
 - `claude plugin init` — scaffold a new plugin in the current directory (CLI, not a slash command).
 - `claude agents` — list all available named subagents (CLI).
 
@@ -71,9 +76,10 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 | Field | Purpose |
 |---|---|
 | `argument-hint` | Short placeholder shown in autocomplete (e.g. `[branch]`) |
+| `arguments` | Named positional args (e.g. `[issue-number]`) bound to `$issue-number` in the body |
 | `allowed-tools` | Comma-separated tool whitelist for this skill's invocation |
 | `model` | Override model for this skill (accepts aliases: `fable`, `opus`, `sonnet`, `haiku`, `inherit`) |
-| `effort` | `low` / `normal` / `high` — hint to the model's thinking budget |
+| `effort` | `low` / `medium` / `high` / `xhigh` / `max` — hint to the model's thinking budget |
 | `context: fork` | Run the skill in a forked context (isolated from main conversation) |
 | `context: agent` | Run the skill as a full subagent turn |
 | `paths` | Glob list — load this skill only when CWD matches |
@@ -82,12 +88,10 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 
 ## Plugins
 
-- Manifest: `.claude-plugin/plugin.json` with `name`, `version` (semver), `description`, optional `author`, `homepage`, `repository`, `displayName`, `defaultEnabled`, `dependencies`.
-  - `displayName` — human-readable name shown in the marketplace and `/plugin list`.
-  - `defaultEnabled` — boolean; whether the plugin activates on install without user opt-in.
-  - `dependencies` — list of other plugin names that must be installed for this plugin to function.
+- Manifest: `.claude-plugin/plugin.json` with `name`, `version` (semver), `description`, optional `author`, `homepage`, `repository`, `displayName` (shown in marketplace/`/plugin list`), `defaultEnabled` (activates without opt-in), `dependencies` (other required plugins).
 - Components sit at the plugin root, not inside `.claude-plugin/`: `skills/`, `agents/`, `commands/`, `hooks/`, `.mcp.json`, `.lsp.json`, `monitors/`, `settings.json`.
 - Version every release; users update through the marketplace. `/reload-plugins` picks up local edits.
+- Run `claude plugin validate ./plugin-dir` before submitting to a marketplace — the same check gates community-marketplace review.
 
 ## Recommendations
 
@@ -95,7 +99,6 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 - Prefer skills (`SKILL.md`) over fat `CLAUDE.md` sections for anything longer than a few bullets or invoked only sometimes.
 - Use a `PostToolUse` hook to run linters or formatters after `Write`/`Edit` instead of instructing Claude to do it.
 - Scope permissions explicitly: allowlist safe commands (`Bash(npm run test *)`), deny reads of secrets (`Read(./.env)`).
-- Pin plugin versions in team repos; run `/reload-plugins` after edits instead of restarting.
 - Namespace plugin skills; never rely on a collision-prone flat name.
 
 ## Deprecated patterns

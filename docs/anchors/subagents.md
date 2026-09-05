@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-06-12
+last_updated: 2026-09-05
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 2
+version: 3
 ---
 
 ## Named subagent frontmatter fields
@@ -15,14 +15,16 @@ Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Availa
 
 | Field | Purpose |
 |---|---|
-| `model` | Model to run this agent on. Accepts aliases (`fable`, `opus`, `sonnet`, `haiku`) or full IDs. Defaults to `inherit` (uses the invoking context's model). |
-| `disallowedTools` | Comma-separated list of tools the subagent cannot call, even if its `tools:` whitelist includes them. |
+| `model` | Model to run this agent on. Accepts aliases (`fable`, `opus`, `sonnet`, `haiku`) or full IDs. Defaults to `inherit` (uses the invoking context's model). Resolution order: per-invocation param → this field → `CLAUDE_CODE_SUBAGENT_MODEL` env var → main conversation's model. |
+| `disallowedTools` | Comma-separated list of tools the subagent cannot call, even if its `tools:` whitelist includes them. Applied before `tools`; supports MCP patterns like `mcp__github` or `mcp__*`. |
 | `maxTurns` | Maximum number of agentic turns before the subagent is forced to return. Prevents runaway loops. |
-| `skills` | Comma-separated skill slugs to preload into the subagent's context. |
-| `memory` | `true` / `false` — whether the subagent has access to the user's memory files. Default: `false` for read-only agents. |
-| `effort` | `low` / `normal` / `high` — thinking budget hint passed to the model. |
+| `skills` | Comma-separated skill slugs to preload into the subagent's context (full content injected, not just descriptions). |
+| `memory` | `user` / `project` / `local` — enables persistent memory across sessions at `~/.claude/agent-memory/<name>/`, `.claude/agent-memory/<name>/`, or `.claude/agent-memory-local/<name>/` respectively. Omit for no persistent memory. |
+| `effort` | `low` / `medium` / `high` / `xhigh` / `max` — thinking budget hint passed to the model. |
 | `isolation` | `worktree` — run the subagent in a temporary git worktree; branch and path returned to the caller on exit. |
-| `background` | `true` — spawn the subagent in the background; caller is notified on completion rather than waiting. |
+| `background` | `true` — keep the subagent running in the background even if the caller asks for foreground execution. |
+| `permissionMode` | `default` / `acceptEdits` / `auto` / `dontAsk` / `bypassPermissions` / `plan` — controls permission prompting for this subagent. Ignored if the parent is already in `bypassPermissions` or `acceptEdits`. |
+| `mcpServers` | MCP servers scoped to this subagent only; inline definitions connect when the subagent starts. |
 
 ## Model tiering for subagents
 
@@ -82,7 +84,8 @@ The main agent waits once, then relays a consolidated summary — it does not na
 
 ## Anti-patterns
 
-- Subagents dispatching other subagents — nesting is technically supported up to 5 levels (since v2.1.172) but remains strongly discouraged; nested fan-out multiplies context cost and latency unpredictably.
+- Subagents dispatching other subagents — nesting depth defaults to 3 layers below the main conversation (configurable via `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH`; set to `1` to disable nesting entirely) but remains strongly discouraged; nested fan-out multiplies context cost and latency unpredictably.
+- Exceeding the concurrent-subagent cap — 20 subagents may run at once by default (`CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`); sessions with ultracode active are exempt.
 - The main agent narrating subagent work step-by-step instead of relaying the final summary.
 - Dispatching a subagent for a task that is one tool call — the overhead dwarfs the work.
 - Vague prompts like "research X" with no output format — produces redundant searches and unfocused summaries.

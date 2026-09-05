@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-06-12
+last_updated: 2026-09-05
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 3
+version: 4
 ---
 
 ## Recommended
@@ -42,7 +42,7 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Productivity
 
-- **slack** — read channels, post messages. Install: `claude mcp add slack npx -- -y @modelcontextprotocol/server-slack`
+- **slack** — read channels, post messages. The reference `@modelcontextprotocol/server-slack` package is archived; a community fork is maintained by Zencoder. Verify the current package name before installing, or check the Anthropic Directory (claude.ai/directory) for an officially listed connector.
 - **linear** — issues and projects. Install via Linear's official MCP integration.
 - **gmail / calendar / drive** — Google hosts official remote MCP endpoints for these services. Authentication requires OAuth2 via a Google Cloud project and is configured through the Claude.ai/Claude Desktop GUI (Settings > Connectors), not via a single CLI command. For Claude Code headless use, the Google Workspace CLI is the practical alternative:
   ```
@@ -59,11 +59,14 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Transport note
 
-- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release.
-- Use `claude mcp add-json` for HTTP servers with complex headers; use `claude mcp add` for stdio servers.
+- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated — use HTTP instead where available.
+- WebSocket transport (`--transport ws` / `"type":"ws"`) exists for remote servers that push events unprompted.
+- Use `claude mcp add --transport http|stdio|ws <name> ...` for the common cases (supports `--header`, `--env`, `--scope`); use `claude mcp add-json` when you need full JSON control (e.g. OAuth blocks). Use `--` to separate Claude's own flags from a stdio server's command args.
+- `claude mcp add-from-claude-desktop` imports servers already configured in Claude Desktop.
 
 ## Selection tips
 
+- Check the Anthropic Directory (claude.ai/directory) first — it lists officially supported connectors (GitHub, Notion, Asana, Sentry, Stripe, and others) that are kept up to date, ahead of hand-rolled `claude mcp add` commands for the same service.
 - Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server. (Convention, not part of the official schema — but this plugin promotes it.)
 - Keep the installed set small. Every MCP server adds tool-selection overhead and expands the trust surface.
 - For read-only inspection tasks, prefer a dedicated CLI + Bash allowlist over an MCP server.
