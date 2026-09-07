@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-06-12
+last_updated: 2026-09-07
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 2
+version: 3
 ---
 
 ## Named subagent frontmatter fields
@@ -15,21 +15,26 @@ Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Availa
 
 | Field | Purpose |
 |---|---|
+| `tools` | Comma-separated tool whitelist for this subagent; inherits all available tools if omitted. |
 | `model` | Model to run this agent on. Accepts aliases (`fable`, `opus`, `sonnet`, `haiku`) or full IDs. Defaults to `inherit` (uses the invoking context's model). |
 | `disallowedTools` | Comma-separated list of tools the subagent cannot call, even if its `tools:` whitelist includes them. |
+| `permissionMode` | `default` / `acceptEdits` / `auto` / `dontAsk` / `bypassPermissions` / `plan` / `manual`. |
 | `maxTurns` | Maximum number of agentic turns before the subagent is forced to return. Prevents runaway loops. |
 | `skills` | Comma-separated skill slugs to preload into the subagent's context. |
-| `memory` | `true` / `false` — whether the subagent has access to the user's memory files. Default: `false` for read-only agents. |
-| `effort` | `low` / `normal` / `high` — thinking budget hint passed to the model. |
+| `mcpServers` | MCP servers available to this subagent (inline definitions or name references). |
+| `hooks` | Lifecycle hooks scoped to this subagent. |
+| `memory` | Persistent memory scope for this subagent's own auto memory: `user`, `project`, or `local`. Separate from the parent conversation's memory, which subagents don't inherit (the exception is a fork, which inherits the parent conversation). |
+| `effort` | `low` / `medium` / `high` / `xhigh` / `max` — thinking budget hint passed to the model. |
 | `isolation` | `worktree` — run the subagent in a temporary git worktree; branch and path returned to the caller on exit. |
 | `background` | `true` — spawn the subagent in the background; caller is notified on completion rather than waiting. |
+| `color` | Display color for the subagent in the UI. |
 
 ## Model tiering for subagents
 
 - **Haiku** (`haiku`) — read-only scans, grep/glob searches, file counts, cheap classification. Fastest and cheapest.
 - **Sonnet** (`sonnet`) — default worker for most implementation, review, and analysis tasks. Good balance of cost and capability.
-- **Opus** (`opus`) — complex multi-step reasoning, architectural decisions, tasks that must get it right the first time.
-- **Fable** (`fable`) — maximum capability; reserve for the hardest reasoning tasks where cost is secondary to quality.
+- **Opus** (`opus`) — complex multi-step reasoning, architectural decisions, tasks that must get it right the first time. Anthropic recommends Opus 5 as the starting point for most workloads generally.
+- **Fable** (`fable`) — maximum capability; reserve for the hardest, longest-horizon reasoning tasks where cost is secondary to quality.
 
 Set `model: haiku` on read-only scanner agents; let implementation agents default to `sonnet` via `inherit`. Bump to `opus` or `fable` only when the task demonstrably needs it.
 
@@ -38,7 +43,7 @@ Set `model: haiku` on read-only scanner agents; let implementation agents defaul
 - A side task would flood the main context with file contents, search hits, or logs that are not referenced again.
 - The work needs a different tool-set, a different model (e.g. Haiku for cheap scans), or a separate permission profile.
 - The task is breadth-first: three or more independent queries that can run in parallel.
-- Verification after implementation — a fresh context is less biased toward the code it just wrote.
+- Verification after implementation — a fresh context is less biased toward the code it just wrote. A subagent reviewer sees only the diff and the criteria you give it, not the reasoning that produced the change.
 - A repeated worker with the same instructions — formalize it as a named subagent under `.claude/agents/`.
 
 ## Delegation heuristics
@@ -79,10 +84,11 @@ The main agent waits once, then relays a consolidated summary — it does not na
 - Route high-volume or low-stakes work to Haiku via the subagent's `model:` field.
 - Preserve important facts by having subagents persist artifacts (files, memory) rather than stuffing them back into the main context.
 - Reuse frequently-spawned workers as named subagents in `.claude/agents/<name>.md` with a clear `description:` so the main agent picks them deterministically.
+- Before treating unattended work as done, dispatch a fresh-context subagent to adversarially review the diff against the plan; tell it to flag only gaps that affect correctness, not style preferences.
 
 ## Anti-patterns
 
-- Subagents dispatching other subagents — nesting is technically supported up to 5 levels (since v2.1.172) but remains strongly discouraged; nested fan-out multiplies context cost and latency unpredictably.
+- Subagents dispatching other subagents — nesting is supported up to 3 levels below the main conversation by default (configurable via `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH`), but remains strongly discouraged; nested fan-out multiplies context cost and latency unpredictably.
 - The main agent narrating subagent work step-by-step instead of relaying the final summary.
 - Dispatching a subagent for a task that is one tool call — the overhead dwarfs the work.
 - Vague prompts like "research X" with no output format — produces redundant searches and unfocused summaries.

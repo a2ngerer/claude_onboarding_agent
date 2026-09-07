@@ -1,14 +1,14 @@
 ---
 name: claude-tools
 description: How to configure Claude's core tooling surface — hooks, rules, memory files, settings, slash commands, plugins
-last_updated: 2026-06-12
+last_updated: 2026-09-07
 sources:
   - https://docs.claude.com/en/docs/claude-code/hooks
   - https://docs.claude.com/en/docs/claude-code/settings
   - https://docs.claude.com/en/docs/claude-code/plugins
   - https://docs.claude.com/en/docs/claude-code/slash-commands
   - https://docs.claude.com/en/docs/claude-code/memory
-version: 2
+version: 3
 ---
 
 ## Memory files
@@ -16,18 +16,23 @@ version: 2
 - `CLAUDE.md` — project instructions at `./CLAUDE.md` or `./.claude/CLAUDE.md`; user-level at `~/.claude/CLAUDE.md`. Loaded into every session.
 - `CLAUDE.local.md` — personal project notes; gitignored, appended after `CLAUDE.md`.
 - `AGENTS.md` — not read natively by Claude Code. If the repo needs both, `CLAUDE.md` imports it with `@AGENTS.md`.
-- Size target: keep each `CLAUDE.md` under ~200 lines. Longer files reduce adherence.
+- Size target: keep each `CLAUDE.md` under ~200 lines. Longer files reduce adherence; files over 4 MiB are skipped entirely.
 - For modular rules, use `.claude/rules/*.md` with optional `paths:` frontmatter to scope by glob. Rules without `paths:` load unconditionally.
-- Imports: `@path/to/file` inside `CLAUDE.md` pulls another file into context at launch (max depth 5).
+- Imports: `@path/to/file` inside `CLAUDE.md` pulls another file into context at launch (max depth 4 hops).
+
+## Auto memory
+
+Claude Code also maintains its own memory, separate from `CLAUDE.md`: notes Claude writes itself from your corrections and preferences, stored at `~/.claude/projects/<project>/memory/` (a `MEMORY.md` index plus one file per topic). Four kinds: `user`, `feedback`, `project`, `reference`. Only the first 200 lines / 25KB of `MEMORY.md` load at session start; topic files load on demand. Toggle with the `autoMemoryEnabled` setting or `/memory`; relocate with `autoMemoryDirectory`.
 
 ## Settings
 
-Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `outputStyle`, `sandbox`, `claudeMdExcludes`, `fallbackModel`, `requiredMinimumVersion`, `enforceAvailableModels`. Permission rules evaluate in order `deny → ask → allow`; first match wins.
+Top-level keys in `.claude/settings.json` include `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `outputStyle`, `sandbox`, `claudeMdExcludes`, `fallbackModel`, `requiredMinimumVersion`, `enforceAvailableModels`, `modelPicker`, `autoMemoryEnabled`, `autoMemoryDirectory`, `bashOutputMaxChars`, `taskOutputMaxChars`. Permission rules evaluate in order `deny → ask → allow`; first match wins.
 
 ```json
 { "permissions": { "allow": ["Bash(npm run test *)"], "deny": ["Read(./.env)"] } }
 ```
 
+- **Scope precedence (highest first):** managed settings → `--settings` (CLI) → `.claude/settings.local.json` → `.claude/settings.json` → `~/.claude/settings.json`. List-valued keys like `permissions.allow` merge across scopes instead of overriding.
 - **`fallbackModel`** — model to use when the primary `model` is unavailable or rate-limited.
 - **`requiredMinimumVersion`** — semver string; Claude Code refuses to run if the installed version is older.
 - **`enforceAvailableModels`** — boolean; when `true`, rejects model IDs not available in the current account/tier at startup rather than failing at runtime.
@@ -36,33 +41,21 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 
 ## Hooks
 
-| Event | Typical use | Example |
-|---|---|---|
-| `SessionStart` | Load context or env vars on session open | Inject current git branch |
-| `InstructionsLoaded` | React to what triggered loading (new session, `/reload-skills`, plugin install); inspect `load_reason` | Log which skills were loaded |
-| `UserPromptSubmit` | Validate or enrich the user prompt | Block secret patterns |
-| `PreToolUse` | Block or gate a tool call | Deny `Bash(rm -rf *)` |
-| `PostToolUse` | Lint or log after a tool runs | Auto-run `eslint --fix` after `Edit` |
-| `PostToolBatch` | React after a full parallel tool batch completes | Summarize a batch of file reads |
-| `MessageDisplay` | Intercept or annotate a message before it is shown | Inject a reminder banner |
-| `PreCompact` | Save state before context compaction | Checkpoint session notes |
-| `PostCompact` | Re-inject context after compaction | Reload pinned snippets |
-| `WorktreeCreate` | Set up a fresh worktree (install deps, copy env) | `npm ci` in the new branch |
-| `WorktreeRemove` | Clean up after a worktree is deleted | Remove temp build artifacts |
-| `Stop` | Cleanup when Claude finishes a turn | Persist session notes |
-| `SessionEnd` | Release resources or save artifacts | Flush metrics |
+Hook events span the full session lifecycle: `SessionStart`/`SessionEnd`, `UserPromptSubmit`/`Stop`, `PreToolUse`/`PostToolUse`/`PostToolBatch`, `SubagentStart`/`SubagentStop`, `TaskCreated`/`TaskCompleted`, `PreModelSwitch`/`PostModelSwitch`, `PreCompact`/`PostCompact`, `WorktreeCreate`/`WorktreeRemove`, `InstructionsLoaded`, `ConfigChange`, `FileChanged`, `Notification`/`MessageDisplay`. 30+ events exist as of `last_updated`; consult the full hooks reference for the complete list and payload schemas.
 
-Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries. Plugins ship hooks in `hooks/hooks.json`.
+Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of entries. Supported entry `type`s: `command` (shell script), `http` (webhook), `mcp_tool` (call an MCP tool), `prompt` (ask a small model), `agent` (dispatch a subagent). Plugins ship hooks in `hooks/hooks.json`.
 
 ## Slash commands
 
 - Skills and custom commands are merged. Project skills live at `.claude/skills/<name>/SKILL.md`; user skills at `~/.claude/skills/<name>/SKILL.md`. Legacy `.claude/commands/*.md` files still work.
 - Plugin-provided skills are namespaced: `/<plugin-name>:<skill-name>` to prevent collisions.
-- Arguments: `$ARGUMENTS` (full string), `$0`/`$1`/… or `$ARGUMENTS[N]` (positional), named args via `arguments:` frontmatter.
+- Arguments: `$ARGUMENTS` (full string), `$0`/`$1`/… or `$ARGUMENTS[N]` (positional), named args via `arguments:` frontmatter (`$name`).
 - Name slugs: lowercase letters, digits, hyphens only; max 64 chars.
-- `/reload-skills` — hot-reload skill/command files without restarting the session.
+- `/reload-plugins` — hot-reload skills, agents, hooks, and plugin MCP/LSP servers without restarting the session (supersedes the older `/reload-skills`).
 - `/cd <path>` — change the working directory for the current session.
-- `/plugin list` — list installed plugins and their status.
+- `/skill-doctor` — shows unused loaded skills and their context cost.
+- `/doctor` — setup checkup; also proposes trims for an oversized checked-in CLAUDE.md.
+- `/plugin` — browse/install from the plugin marketplace; `/plugin list` lists installed plugins.
 - `claude plugin init` — scaffold a new plugin in the current directory (CLI, not a slash command).
 - `claude agents` — list all available named subagents (CLI).
 
@@ -71,11 +64,12 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 | Field | Purpose |
 |---|---|
 | `argument-hint` | Short placeholder shown in autocomplete (e.g. `[branch]`) |
-| `allowed-tools` | Comma-separated tool whitelist for this skill's invocation |
+| `arguments` | Named positional arguments for `$name` substitution |
+| `allowed-tools` / `disallowed-tools` | Comma-separated tool allow/deny list for this skill's invocation |
 | `model` | Override model for this skill (accepts aliases: `fable`, `opus`, `sonnet`, `haiku`, `inherit`) |
-| `effort` | `low` / `normal` / `high` — hint to the model's thinking budget |
-| `context: fork` | Run the skill in a forked context (isolated from main conversation) |
-| `context: agent` | Run the skill as a full subagent turn |
+| `effort` | `low` / `medium` / `high` / `xhigh` / `max` — hint to the model's thinking budget |
+| `context: fork` | Run the skill in a forked, isolated context |
+| `agent` | Subagent type to use when `context: fork` (e.g. `Explore`, `Plan`, `general-purpose`) |
 | `paths` | Glob list — load this skill only when CWD matches |
 | `disable-model-invocation` | `true` — skill runs its command without calling the model (pure automation) |
 | `user-invocable` | `false` — hides the skill from `/` autocomplete; only callable programmatically |
@@ -86,8 +80,9 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
   - `displayName` — human-readable name shown in the marketplace and `/plugin list`.
   - `defaultEnabled` — boolean; whether the plugin activates on install without user opt-in.
   - `dependencies` — list of other plugin names that must be installed for this plugin to function.
-- Components sit at the plugin root, not inside `.claude-plugin/`: `skills/`, `agents/`, `commands/`, `hooks/`, `.mcp.json`, `.lsp.json`, `monitors/`, `settings.json`.
+- Components sit at the plugin root, not inside `.claude-plugin/`: `skills/`, `agents/`, `commands/`, `hooks/`, `.mcp.json`, `.lsp.json`, `monitors/`, `settings.json`, `bin/`.
 - Version every release; users update through the marketplace. `/reload-plugins` picks up local edits.
+- `claude --plugin-dir ./my-plugin` (or `--plugin-url` for a hosted `.zip`) loads a plugin for local testing without installing it.
 
 ## Recommendations
 
