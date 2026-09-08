@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-06-12
+last_updated: 2026-09-08
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 2
+version: 3
 ---
 
 ## Named subagent frontmatter fields
@@ -15,14 +15,23 @@ Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Availa
 
 | Field | Purpose |
 |---|---|
-| `model` | Model to run this agent on. Accepts aliases (`fable`, `opus`, `sonnet`, `haiku`) or full IDs. Defaults to `inherit` (uses the invoking context's model). |
-| `disallowedTools` | Comma-separated list of tools the subagent cannot call, even if its `tools:` whitelist includes them. |
-| `maxTurns` | Maximum number of agentic turns before the subagent is forced to return. Prevents runaway loops. |
-| `skills` | Comma-separated skill slugs to preload into the subagent's context. |
-| `memory` | `true` / `false` — whether the subagent has access to the user's memory files. Default: `false` for read-only agents. |
-| `effort` | `low` / `normal` / `high` — thinking budget hint passed to the model. |
+| `model` | Model to run this agent on. Accepts aliases (`fable`, `opus`, `sonnet`, `haiku`), a full model ID, or `inherit` (default; uses the invoking context's model). |
+| `tools` | Allowlist of tools the subagent can use; inherits all available tools if omitted. |
+| `disallowedTools` | Denylist of tools the subagent cannot call, applied before `tools` is resolved, even if `tools:` includes them. |
+| `permissionMode` | Permission mode the subagent runs in: `default`, `acceptEdits`, `auto`, `dontAsk`, `bypassPermissions`, `plan`, or `manual`. Overridden by the parent session's `bypassPermissions`/`acceptEdits`. |
+| `maxTurns` | Maximum number of agentic turns before the subagent is forced to return (marked partial; can be resumed). Prevents runaway loops. |
+| `skills` | List of skill names to preload (full content, not just descriptions) into the subagent's context at startup. |
+| `mcpServers` | MCP servers available to this subagent (by name, or an inline definition). Ignored for plugin subagents. |
+| `hooks` | Lifecycle hooks scoped to this subagent (`PreToolUse`, `PostToolUse`, `Stop`). Ignored for plugin subagents. |
+| `memory` | `user` / `project` / `local` — persistent memory scope enabling cross-session learning; omit for no persistent memory (default for read-only agents). |
+| `effort` | `low` / `medium` / `high` / `xhigh` / `max` — thinking budget hint, overrides the session's effort level. |
 | `isolation` | `worktree` — run the subagent in a temporary git worktree; branch and path returned to the caller on exit. |
-| `background` | `true` — spawn the subagent in the background; caller is notified on completion rather than waiting. |
+| `background` | `true` — keep the subagent in the background even when foreground execution is requested; caller is notified on completion. |
+| `color` | Display color in the task list and transcript (`red`, `blue`, `green`, `yellow`, `purple`, `orange`, `pink`, `cyan`). |
+| `initialPrompt` | Auto-submitted as the first user turn when this agent runs as the main session agent (via `--agent` or the `agent` setting). |
+| `experimental.cacheTtl` | `5m` or `1h` — prompt-cache lifetime override for this subagent. |
+
+**Model resolution order** when a subagent's model is ambiguous: (1) a per-invocation `model` parameter passed to the Agent tool, (2) the subagent's `model:` frontmatter (`inherit` selects the main conversation's model), (3) the `CLAUDE_CODE_SUBAGENT_MODEL` env var, (4) the main conversation's model. Setting `CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1` alongside `CLAUDE_CODE_SUBAGENT_MODEL` overrides every subagent to one model regardless of the above.
 
 ## Model tiering for subagents
 
@@ -31,7 +40,7 @@ Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Availa
 - **Opus** (`opus`) — complex multi-step reasoning, architectural decisions, tasks that must get it right the first time.
 - **Fable** (`fable`) — maximum capability; reserve for the hardest reasoning tasks where cost is secondary to quality.
 
-Set `model: haiku` on read-only scanner agents; let implementation agents default to `sonnet` via `inherit`. Bump to `opus` or `fable` only when the task demonstrably needs it.
+Set `model: haiku` on read-only scanner agents; let implementation agents default to `sonnet` via `inherit`. Bump to `opus` or `fable` only when the task demonstrably needs it. For orchestrators dispatching varied subtasks, the Claude Code team has suggested letting the orchestrating model itself judge which lower-power model fits each subtask, rather than hard-coding a tier per agent — useful when subtask difficulty varies a lot within one workflow.
 
 ## When to use a subagent
 
