@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-06-12
+last_updated: 2026-09-15
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 2
+version: 3
 ---
 
 ## Named subagent frontmatter fields
@@ -17,12 +17,17 @@ Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Availa
 |---|---|
 | `model` | Model to run this agent on. Accepts aliases (`fable`, `opus`, `sonnet`, `haiku`) or full IDs. Defaults to `inherit` (uses the invoking context's model). |
 | `disallowedTools` | Comma-separated list of tools the subagent cannot call, even if its `tools:` whitelist includes them. |
+| `permissionMode` | `default`, `acceptEdits`, `auto`, `dontAsk`, `bypassPermissions`, `plan`, or `manual` — permission mode the subagent runs under. |
 | `maxTurns` | Maximum number of agentic turns before the subagent is forced to return. Prevents runaway loops. |
 | `skills` | Comma-separated skill slugs to preload into the subagent's context. |
+| `mcpServers` | MCP servers available to the subagent, scoped independently of the parent session. |
 | `memory` | `true` / `false` — whether the subagent has access to the user's memory files. Default: `false` for read-only agents. |
 | `effort` | `low` / `normal` / `high` — thinking budget hint passed to the model. |
 | `isolation` | `worktree` — run the subagent in a temporary git worktree; branch and path returned to the caller on exit. |
 | `background` | `true` — spawn the subagent in the background; caller is notified on completion rather than waiting. |
+| `omitClaudeMd` | `true` — skip user/project/local `CLAUDE.md` files for this subagent; managed policy files still load. Useful for narrowly-scoped plugin/custom agents. |
+
+Model resolution order: per-invocation `model` parameter → the subagent's own `model:` frontmatter → `CLAUDE_CODE_SUBAGENT_MODEL` env var → the main conversation's model.
 
 ## Model tiering for subagents
 
@@ -86,7 +91,7 @@ The main agent waits once, then relays a consolidated summary — it does not na
 - The main agent narrating subagent work step-by-step instead of relaying the final summary.
 - Dispatching a subagent for a task that is one tool call — the overhead dwarfs the work.
 - Vague prompts like "research X" with no output format — produces redundant searches and unfocused summaries.
-- Unbounded spawning — e.g. 50 subagents for a simple query; cap the fan-out in the orchestrator prompt.
+- Unbounded spawning — e.g. 50 subagents for a simple query; cap the fan-out in the orchestrator prompt. The `Workflow` tool's dynamic-workflow guideline defaults to 10 concurrent agents (smaller on some plans); `CLAUDE_CODE_WORKFLOW_MAX_CONCURRENT_AGENTS` bounds it explicitly.
 - "Endless search" loops where the subagent scours for sources that do not exist; include a stop condition.
 - Duplicate work from overlapping task boundaries — partition the problem space explicitly.
 - Write-capable subagents invoked without parsing a contracted output — "run it and hope" corrupts state silently.

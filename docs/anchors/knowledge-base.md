@@ -1,14 +1,14 @@
 ---
 name: knowledge-base
-description: Recommended vault layouts, OKF v0.1 frontmatter patterns, and KB-agent structures for Obsidian-style knowledge bases
-last_updated: 2026-06-30
+description: Recommended vault layouts, OKF v0.2 frontmatter patterns, and KB-agent structures for Obsidian-style knowledge bases
+last_updated: 2026-09-15
 sources:
   - https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md
   - https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing
   - https://help.obsidian.md/
   - https://help.obsidian.md/properties
   - https://publish.obsidian.md/hub/01+-+Community+Vaults
-version: 2
+version: 3
 ---
 
 ## Vault layout
@@ -26,9 +26,9 @@ vault/
 └── .obsidian/     ← vault config, plugins, workspace state
 ```
 
-## OKF v0.1 conformance
+## OKF v0.2 conformance
 
-OKF (Open Knowledge Format) is Google Cloud's published standard for the Karpathy LLM-wiki pattern: a directory of Markdown concept files, one concept per file, cross-linked with standard Markdown links. A bundle conforms when:
+OKF (Open Knowledge Format) is Google Cloud's published standard for the Karpathy LLM-wiki pattern: a directory of Markdown concept files, one concept per file, cross-linked with standard Markdown links. OKF v0.2 supersedes v0.1 as a backward-compatible minor revision — a v0.1 bundle remains consumable. A bundle conforms when:
 
 1. Every non-reserved `.md` file carries a parseable YAML frontmatter block.
 2. Every such block has a non-empty `type` (the single required key).
@@ -38,7 +38,7 @@ Everything else is soft: missing optional fields, unknown `type` values, custom 
 
 ## Frontmatter conventions
 
-Notes carry OKF frontmatter in YAML delimited by `---`. Obsidian renders these as native *Properties*, so OKF and Obsidian agree on the same block. OKF requires exactly one key (`type`) and recommends five more.
+Notes carry OKF frontmatter in YAML delimited by `---`. Obsidian renders these as native *Properties*, so OKF and Obsidian agree on the same block. OKF requires exactly one key (`type`) and recommends four more.
 
 | Property | OKF status | Type | Purpose |
 |---|---|---|---|
@@ -47,9 +47,8 @@ Notes carry OKF frontmatter in YAML delimited by `---`. Obsidian renders these a
 | `description` | Recommended | text | Single-sentence summary (used for index generation and search previews) |
 | `resource` | Recommended | text | URI uniquely identifying the underlying asset (omit for prose notes) |
 | `tags` | Recommended | list | Categorization strings (`[graphs, retrieval]`); enables dataview queries |
-| `timestamp` | Recommended | date | ISO 8601 datetime of the last meaningful change |
 
-Real bundles emit keys in the order `type, resource, title, description, tags, timestamp`. Producers may add custom keys (e.g. `aliases`, `created`, `updated`); OKF consumers preserve unknown keys. If a vault already uses Obsidian's `created`/`updated`, keep OKF's single `timestamp` as canonical and let the others coexist as extensions. Reserved Obsidian keys (`aliases`, `tags`, `cssclasses`) keep their typed UI behavior. Dates use ISO 8601; lists may use YAML block or flow syntax.
+Real bundles emit keys in the order `type, resource, title, description, tags`. As of v0.2, the last-change timestamp moves into an optional `generated: { by, at }` object (`generated.by` is an actor string like `human:alice` or `agent-name/version`; `generated.at` is ISO 8601) — this supersedes the old top-level `timestamp` key, though consumers should still fall back to a legacy `timestamp` when `generated` is absent. v0.2 also adds optional provenance/trust families (`sources`, `verified`, `status`, `stale_after`) for agent-maintained bundles; skip them for hand-authored vaults. Producers may add custom keys (e.g. `aliases`, `created`, `updated`); OKF consumers preserve unknown keys. Reserved Obsidian keys (`aliases`, `tags`, `cssclasses`) keep their typed UI behavior. Dates use ISO 8601; lists may use YAML block or flow syntax.
 
 ## Naming conventions
 
