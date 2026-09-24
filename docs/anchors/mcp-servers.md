@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-06-12
+last_updated: 2026-09-24
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 3
+version: 4
 ---
 
 ## Recommended
@@ -18,6 +18,7 @@ version: 3
 - `figma-context` — read Figma frames into context for UI work
 - `slack` — read channels, post messages
 - `linear` — issues and projects (official Linear MCP)
+- `notion` — official remote MCP for Notion docs and knowledge-base search
 - `gmail` / `calendar` — Google productivity via official MCPs where available
 
 Per-category details follow. Keep the set small: every installed MCP expands the tool-selection surface and the trust boundary.
@@ -44,6 +45,7 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 - **slack** — read channels, post messages. Install: `claude mcp add slack npx -- -y @modelcontextprotocol/server-slack`
 - **linear** — issues and projects. Install via Linear's official MCP integration.
+- **notion** — docs and knowledge-base search/edit. Install: `claude mcp add --transport http notion https://mcp.notion.com/mcp`
 - **gmail / calendar / drive** — Google hosts official remote MCP endpoints for these services. Authentication requires OAuth2 via a Google Cloud project and is configured through the Claude.ai/Claude Desktop GUI (Settings > Connectors), not via a single CLI command. For Claude Code headless use, the Google Workspace CLI is the practical alternative:
   ```
   npm install -g @googleworkspace/cli
@@ -59,8 +61,9 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Transport note
 
-- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release.
-- Use `claude mcp add-json` for HTTP servers with complex headers; use `claude mcp add` for stdio servers.
+- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated; Claude Code tries HTTP first and falls back to SSE automatically (v2.1.265+) when a server only speaks SSE.
+- WebSocket (`"type":"ws"` via `claude mcp add-json`) is available for servers that push events unprompted — rare; most servers should use HTTP or stdio.
+- Use `claude mcp add --transport http` (or `add-json`) for HTTP servers with complex headers; use `claude mcp add` (default stdio) for local servers.
 
 ## Selection tips
 

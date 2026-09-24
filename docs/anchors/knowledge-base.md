@@ -1,19 +1,19 @@
 ---
 name: knowledge-base
 description: Recommended vault layouts, OKF v0.1 frontmatter patterns, and KB-agent structures for Obsidian-style knowledge bases
-last_updated: 2026-06-30
+last_updated: 2026-09-24
 sources:
   - https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md
   - https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing
   - https://help.obsidian.md/
   - https://help.obsidian.md/properties
   - https://publish.obsidian.md/hub/01+-+Community+Vaults
-version: 2
+version: 3
 ---
 
 ## Vault layout
 
-The plugin's recommended layout separates raw material from curated notes. `raw/` holds ingested source files (articles, PDFs, code, notes); `wiki/` holds the interlinked note graph produced from that raw material. The `wiki/` folder is an **OKF v0.1 bundle** (Google's Open Knowledge Format), so it stays portable across any OKF-aware agent or tool. Extra top-level folders only when justified by scale.
+The plugin's recommended layout separates raw material from curated notes. `raw/` holds ingested source files (articles, PDFs, code, notes); `wiki/` holds the interlinked note graph produced from that raw material. The `wiki/` folder is an **OKF v0.2 bundle** (Google's Open Knowledge Format), so it stays portable across any OKF-aware agent or tool. Extra top-level folders only when justified by scale.
 
 ```
 vault/
@@ -26,9 +26,9 @@ vault/
 └── .obsidian/     ← vault config, plugins, workspace state
 ```
 
-## OKF v0.1 conformance
+## OKF v0.2 conformance
 
-OKF (Open Knowledge Format) is Google Cloud's published standard for the Karpathy LLM-wiki pattern: a directory of Markdown concept files, one concept per file, cross-linked with standard Markdown links. A bundle conforms when:
+OKF (Open Knowledge Format) is Google Cloud's published standard for the Karpathy LLM-wiki pattern: a directory of Markdown concept files, one concept per file, cross-linked with standard Markdown links. v0.2 keeps the v0.1 conformance surface unchanged and adds optional field families (below) — a v0.1-style bundle with just `type` still conforms. A bundle conforms when:
 
 1. Every non-reserved `.md` file carries a parseable YAML frontmatter block.
 2. Every such block has a non-empty `type` (the single required key).
@@ -38,7 +38,7 @@ Everything else is soft: missing optional fields, unknown `type` values, custom 
 
 ## Frontmatter conventions
 
-Notes carry OKF frontmatter in YAML delimited by `---`. Obsidian renders these as native *Properties*, so OKF and Obsidian agree on the same block. OKF requires exactly one key (`type`) and recommends five more.
+Notes carry OKF frontmatter in YAML delimited by `---`. Obsidian renders these as native *Properties*, so OKF and Obsidian agree on the same block. OKF requires exactly one key (`type`) and recommends four more; `timestamp` is a widely-used producer convention rather than a spec-recommended key as of v0.2 (see Trust/provenance/lifecycle below for the formal alternative).
 
 | Property | OKF status | Type | Purpose |
 |---|---|---|---|
@@ -47,9 +47,17 @@ Notes carry OKF frontmatter in YAML delimited by `---`. Obsidian renders these a
 | `description` | Recommended | text | Single-sentence summary (used for index generation and search previews) |
 | `resource` | Recommended | text | URI uniquely identifying the underlying asset (omit for prose notes) |
 | `tags` | Recommended | list | Categorization strings (`[graphs, retrieval]`); enables dataview queries |
-| `timestamp` | Recommended | date | ISO 8601 datetime of the last meaningful change |
+| `timestamp` | Convention | date | ISO 8601 datetime of the last meaningful change |
 
 Real bundles emit keys in the order `type, resource, title, description, tags, timestamp`. Producers may add custom keys (e.g. `aliases`, `created`, `updated`); OKF consumers preserve unknown keys. If a vault already uses Obsidian's `created`/`updated`, keep OKF's single `timestamp` as canonical and let the others coexist as extensions. Reserved Obsidian keys (`aliases`, `tags`, `cssclasses`) keep their typed UI behavior. Dates use ISO 8601; lists may use YAML block or flow syntax.
+
+## Trust, provenance, and lifecycle (optional, v0.2)
+
+v0.2 adds three optional field families for concepts that need it — skip them for plain prose notes:
+
+- `sources` — provenance: materials a concept derives from, each with `resource` plus optional `author`/`usage_count`/`last_modified`; per-claim attribution uses markdown footnotes keyed to source IDs.
+- `generated` / `verified` — trust: producer/timestamp of creation, plus a list of verification events; yields three tiers (unverified → machine-confirmed → human-reviewed).
+- `status` (`draft` / `stable` / `deprecated`) / `stale_after` (ISO 8601) — lifecycle: marks when content should be treated as stale.
 
 ## Naming conventions
 
