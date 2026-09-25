@@ -1,24 +1,24 @@
 ---
 name: knowledge-base
-description: Recommended vault layouts, OKF v0.1 frontmatter patterns, and KB-agent structures for Obsidian-style knowledge bases
-last_updated: 2026-06-30
+description: Recommended vault layouts, OKF v0.2 frontmatter patterns, and KB-agent structures for Obsidian-style knowledge bases
+last_updated: 2026-09-25
 sources:
   - https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md
   - https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing
   - https://help.obsidian.md/
   - https://help.obsidian.md/properties
   - https://publish.obsidian.md/hub/01+-+Community+Vaults
-version: 2
+version: 3
 ---
 
 ## Vault layout
 
-The plugin's recommended layout separates raw material from curated notes. `raw/` holds ingested source files (articles, PDFs, code, notes); `wiki/` holds the interlinked note graph produced from that raw material. The `wiki/` folder is an **OKF v0.1 bundle** (Google's Open Knowledge Format), so it stays portable across any OKF-aware agent or tool. Extra top-level folders only when justified by scale.
+The plugin's recommended layout separates raw material from curated notes. `raw/` holds ingested source files (articles, PDFs, code, notes); `wiki/` holds the interlinked note graph produced from that raw material. The `wiki/` folder is an **OKF v0.2 bundle** (Google's Open Knowledge Format), so it stays portable across any OKF-aware agent or tool. Extra top-level folders only when justified by scale.
 
 ```
 vault/
 ├── raw/           ← drop source material here (ingestion input)
-├── wiki/          ← OKF v0.1 bundle (curated, interlinked concept notes)
+├── wiki/          ← OKF v0.2 bundle (curated, interlinked concept notes)
 │   ├── index.md   ← OKF directory listing (reserved; no frontmatter)
 │   ├── log.md     ← OKF update history (reserved; optional)
 │   └── README.md
@@ -26,9 +26,9 @@ vault/
 └── .obsidian/     ← vault config, plugins, workspace state
 ```
 
-## OKF v0.1 conformance
+## OKF v0.2 conformance
 
-OKF (Open Knowledge Format) is Google Cloud's published standard for the Karpathy LLM-wiki pattern: a directory of Markdown concept files, one concept per file, cross-linked with standard Markdown links. A bundle conforms when:
+OKF (Open Knowledge Format) is Google Cloud's published standard for the Karpathy LLM-wiki pattern: a directory of Markdown concept files, one concept per file, cross-linked with standard Markdown links. v0.2 keeps the v0.1 conformance bar unchanged and only adds optional frontmatter families (below). A bundle conforms when:
 
 1. Every non-reserved `.md` file carries a parseable YAML frontmatter block.
 2. Every such block has a non-empty `type` (the single required key).
@@ -46,10 +46,14 @@ Notes carry OKF frontmatter in YAML delimited by `---`. Obsidian renders these a
 | `title` | Recommended | text | Human-readable display name when it differs from the filename |
 | `description` | Recommended | text | Single-sentence summary (used for index generation and search previews) |
 | `resource` | Recommended | text | URI uniquely identifying the underlying asset (omit for prose notes) |
-| `tags` | Recommended | list | Categorization strings (`[graphs, retrieval]`); enables dataview queries |
+| `tags` | Recommended | list | Categorization strings (`[graphs, retrieval]`); enables dataview/Bases queries |
 | `timestamp` | Recommended | date | ISO 8601 datetime of the last meaningful change |
 
-Real bundles emit keys in the order `type, resource, title, description, tags, timestamp`. Producers may add custom keys (e.g. `aliases`, `created`, `updated`); OKF consumers preserve unknown keys. If a vault already uses Obsidian's `created`/`updated`, keep OKF's single `timestamp` as canonical and let the others coexist as extensions. Reserved Obsidian keys (`aliases`, `tags`, `cssclasses`) keep their typed UI behavior. Dates use ISO 8601; lists may use YAML block or flow syntax.
+v0.2 adds optional trust/provenance families producers may add when they matter: `generated` (`by`/`at` — who produced the note and when), `verified` (who confirmed it and when), `sources` (materials the concept derives from, with credibility signals like `author`, `usage_count`, `last_modified`), `status` (`draft` / `stable` / `deprecated`), and `stale_after` (timestamp marking when content should be treated as stale). None are required for conformance.
+
+Real bundles emit keys in the order `type, resource, title, description, tags, timestamp`. Producers may add custom keys (e.g. `aliases`, `created`, `updated`); OKF consumers preserve unknown keys. If a vault already uses Obsidian's `created`/`updated`, keep OKF's single `timestamp` as canonical and let the others coexist as extensions. Reserved Obsidian keys (`aliases`, `tags`, `cssclasses`, and the Publish-only `publish`, `permalink`, `image`, `cover`) keep their typed UI behavior — note Obsidian also reserves `description` for Publish, so a vault using both OKF and Publish should confirm the two `description` usages don't conflict. Dates use ISO 8601; lists may use YAML block or flow syntax.
+
+Obsidian's **Bases** feature can query notes by frontmatter field (e.g. `type`, `tags`); keeping types consistent (see Anti-patterns) is what keeps those queries reliable.
 
 ## Naming conventions
 
@@ -69,13 +73,13 @@ Real bundles emit keys in the order `type, resource, title, description, tags, t
 
 ## Recommended layout
 
-**`raw/` + `wiki/` (Karpathy LLM-Wiki pattern, OKF v0.1).** Exactly two top-level folders: `raw/` for ingested material, `wiki/` for the OKF concept-note bundle. Templates and daily notes go into dedicated subfolders (`templates/`, `daily/`) only when they are actually used. Vault ops are routed through the `obsidian-vault-keeper` subagent so the Obsidian CLI owns every write.
+**`raw/` + `wiki/` (Karpathy LLM-Wiki pattern, OKF v0.2).** Exactly two top-level folders: `raw/` for ingested material, `wiki/` for the OKF concept-note bundle. Templates and daily notes go into dedicated subfolders (`templates/`, `daily/`) only when they are actually used. Vault ops are routed through the `obsidian-vault-keeper` subagent so the Obsidian CLI owns every write.
 
 ## Anti-patterns
 
 - Deeply nested topical folders (`wiki/tech/programming/python/django/models/`) — defeats links, buries notes from the graph view.
 - Mixing daily notes with topical notes in one folder — date prefixes pollute the index and the graph.
-- Frontmatter type drift — `tags: "one, two"` (string) vs. `tags: [one, two]` (list) across notes breaks dataview queries; a missing or empty `type` breaks OKF conformance.
+- Frontmatter type drift — `tags: "one, two"` (string) vs. `tags: [one, two]` (list) across notes breaks dataview/Bases queries; a missing or empty `type` breaks OKF conformance.
 - Wikilink-only cross-linking — `[[note]]` is invisible to OKF consumers. Use Markdown links; treat wikilinks as optional Obsidian-only sugar.
 - Editing vault files with plain `Edit`/`Write` or `mv` — skips Obsidian's link-rewrite logic and silently corrupts backlinks.
 - Using the third-party Obsidian MCP for vault I/O — its tool schemas load into every session. Prefer the official CLI plus the vault-keeper subagent.
