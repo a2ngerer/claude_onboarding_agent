@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-06-12
+last_updated: 2026-09-27
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 3
+version: 4
 ---
 
 ## Recommended
@@ -30,6 +30,10 @@ Per-category details follow. Keep the set small: every installed MCP expands the
   - Remote (recommended): `claude mcp add-json github '{"type":"http","url":"https://api.githubcopilot.com/mcp","headers":{"Authorization":"Bearer YOUR_GITHUB_PAT"}}'`
   - Local via Docker: `claude mcp add github -e GITHUB_PERSONAL_ACCESS_TOKEN=YOUR_PAT -- docker run -i --rm -e GITHUB_PERSONAL_ACCESS_TOKEN ghcr.io/github/github-mcp-server`
 
+## Reference servers (official, low-risk to add)
+
+The `modelcontextprotocol/servers` repo directly maintains seven reference implementations: `filesystem`, `git`, `fetch` (web content retrieval), `memory` (knowledge-graph persistent memory), `sequential-thinking` (structured problem decomposition), `time` (timezone conversion), and `everything` (a test server). Twelve others — including the old GitHub, GitLab, Postgres, and SQLite servers — moved to `servers-archived`; prefer each service's own official server instead.
+
 ## Knowledge base
 
 - **obsidian (official CLI + subagent)** — use the official Obsidian CLI plus the `obsidian-vault-keeper` subagent pattern. The older third-party Obsidian MCP has known correctness issues; prefer this path. See `skills/knowledge-base-setup/SKILL.md`.
@@ -51,6 +55,7 @@ Per-category details follow. Keep the set small: every installed MCP expands the
   claude mcp add gws -- gws mcp -s drive,gmail,calendar
   ```
   The remote endpoints (`gmailmcp.googleapis.com`, `calendarmcp.googleapis.com`, `drivemcp.googleapis.com`) require a paid Claude plan and OAuth2 bearer tokens that cannot be injected as a static header — use the GUI connector flow for those.
+- **notion** / **sentry** / **asana** / **stripe** / **hubspot** — Anthropic's docs list these as example remote HTTP servers (`claude mcp add --transport http <name> <url>`); add only the ones your team actually uses to keep the tool surface small.
 
 ## DevOps / cloud
 
@@ -59,8 +64,9 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Transport note
 
-- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release.
-- Use `claude mcp add-json` for HTTP servers with complex headers; use `claude mcp add` for stdio servers.
+- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release. WebSocket (`"type":"ws"`, via `claude mcp add-json`) is available for event-streaming servers but is niche — most servers fit HTTP or stdio.
+- Use `claude mcp add-json` for HTTP/WebSocket servers with complex headers; use `claude mcp add` for stdio servers.
+- Long-running MCP tool calls (>2 min) auto-background. Tool output is capped at 25,000 tokens by default (`MAX_MCP_OUTPUT_TOKENS`); a server can declare a per-tool `anthropic/maxResultSizeChars` override.
 
 ## Selection tips
 
