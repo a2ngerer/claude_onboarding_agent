@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-06-12
+last_updated: 2026-09-29
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 3
+version: 4
 ---
 
 ## Recommended
@@ -42,7 +42,7 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Productivity
 
-- **slack** — read channels, post messages. Install: `claude mcp add slack npx -- -y @modelcontextprotocol/server-slack`
+- **slack** — read channels, post messages. `@modelcontextprotocol/server-slack` is archived (moved to `servers-archived`); prefer Slack's official/hosted MCP endpoint or a maintained community server, and pin its version.
 - **linear** — issues and projects. Install via Linear's official MCP integration.
 - **gmail / calendar / drive** — Google hosts official remote MCP endpoints for these services. Authentication requires OAuth2 via a Google Cloud project and is configured through the Claude.ai/Claude Desktop GUI (Settings > Connectors), not via a single CLI command. For Claude Code headless use, the Google Workspace CLI is the practical alternative:
   ```
@@ -59,8 +59,10 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Transport note
 
-- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release.
-- Use `claude mcp add-json` for HTTP servers with complex headers; use `claude mcp add` for stdio servers.
+- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated; since v2.1.265 `--transport http` tries HTTP first and falls back to SSE automatically.
+- WebSocket (`"type":"ws"`) is supported for persistent, server-push connections; configure it via `claude mcp add-json` (the `--transport` flag does not accept `ws`).
+- Use `claude mcp add-json` for servers with complex headers; use `claude mcp add` for stdio servers.
+- `/mcp reconnect all` (v2.1.284) retries every server; `CLAUDE_CODE_MAX_MCP_DESCRIPTION_LENGTH` caps tool descriptions (default 2,048).
 
 ## Selection tips
 
