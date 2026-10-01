@@ -1,14 +1,14 @@
 ---
 name: claude-tools
 description: How to configure Claude's core tooling surface — hooks, rules, memory files, settings, slash commands, plugins
-last_updated: 2026-06-12
+last_updated: 2026-10-01
 sources:
   - https://docs.claude.com/en/docs/claude-code/hooks
   - https://docs.claude.com/en/docs/claude-code/settings
   - https://docs.claude.com/en/docs/claude-code/plugins
   - https://docs.claude.com/en/docs/claude-code/slash-commands
   - https://docs.claude.com/en/docs/claude-code/memory
-version: 2
+version: 3
 ---
 
 ## Memory files
@@ -31,6 +31,7 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 - **`fallbackModel`** — model to use when the primary `model` is unavailable or rate-limited.
 - **`requiredMinimumVersion`** — semver string; Claude Code refuses to run if the installed version is older.
 - **`enforceAvailableModels`** — boolean; when `true`, rejects model IDs not available in the current account/tier at startup rather than failing at runtime.
+- **Managed settings:** `deniedModels` blocks models even if `availableModels` allows them; `availableModelsMatch: "exact"` requires exact versions; `allowedProviders` limits API providers.
 
 **Safe mode:** Set `CLAUDE_CODE_SAFE_MODE=1` in the environment to disable CLAUDE.md loading, plugins, skills, hooks, and MCP servers. Useful for security-sensitive CI environments or troubleshooting a broken config.
 
@@ -44,6 +45,8 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 | `PreToolUse` | Block or gate a tool call | Deny `Bash(rm -rf *)` |
 | `PostToolUse` | Lint or log after a tool runs | Auto-run `eslint --fix` after `Edit` |
 | `PostToolBatch` | React after a full parallel tool batch completes | Summarize a batch of file reads |
+| `PostToolUseFailure`, `PermissionRequest`, `PermissionDenied` | Handle failed tools and permission outcomes | Log auto-mode denials |
+| `SubagentStart` / `SubagentStop` | Set up or clean up around a subagent | Seed env for `db-agent` |
 | `MessageDisplay` | Intercept or annotate a message before it is shown | Inject a reminder banner |
 | `PreCompact` | Save state before context compaction | Checkpoint session notes |
 | `PostCompact` | Re-inject context after compaction | Reload pinned snippets |
@@ -73,7 +76,7 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 | `argument-hint` | Short placeholder shown in autocomplete (e.g. `[branch]`) |
 | `allowed-tools` | Comma-separated tool whitelist for this skill's invocation |
 | `model` | Override model for this skill (accepts aliases: `fable`, `opus`, `sonnet`, `haiku`, `inherit`) |
-| `effort` | `low` / `normal` / `high` — hint to the model's thinking budget |
+| `effort` | `low` / `medium` / `high` / `xhigh` / `max` — overrides the session effort level |
 | `context: fork` | Run the skill in a forked context (isolated from main conversation) |
 | `context: agent` | Run the skill as a full subagent turn |
 | `paths` | Glob list — load this skill only when CWD matches |
