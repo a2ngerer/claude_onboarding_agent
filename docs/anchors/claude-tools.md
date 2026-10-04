@@ -1,14 +1,14 @@
 ---
 name: claude-tools
 description: How to configure Claude's core tooling surface — hooks, rules, memory files, settings, slash commands, plugins
-last_updated: 2026-06-12
+last_updated: 2026-10-04
 sources:
   - https://docs.claude.com/en/docs/claude-code/hooks
   - https://docs.claude.com/en/docs/claude-code/settings
   - https://docs.claude.com/en/docs/claude-code/plugins
   - https://docs.claude.com/en/docs/claude-code/slash-commands
   - https://docs.claude.com/en/docs/claude-code/memory
-version: 2
+version: 3
 ---
 
 ## Memory files
@@ -49,6 +49,9 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 | `PostCompact` | Re-inject context after compaction | Reload pinned snippets |
 | `WorktreeCreate` | Set up a fresh worktree (install deps, copy env) | `npm ci` in the new branch |
 | `WorktreeRemove` | Clean up after a worktree is deleted | Remove temp build artifacts |
+| `SubagentStart` / `SubagentStop` | Init or react around a subagent's run | Log subagent results |
+| `PermissionRequest` / `PermissionDenied` | Auto-decide or react to permission prompts | Allow a known-safe command |
+| `PreModelSwitch` / `PostModelSwitch` | Gate or react to model changes | Block switching to Fable |
 | `Stop` | Cleanup when Claude finishes a turn | Persist session notes |
 | `SessionEnd` | Release resources or save artifacts | Flush metrics |
 
@@ -63,6 +66,7 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 - `/reload-skills` — hot-reload skill/command files without restarting the session.
 - `/cd <path>` — change the working directory for the current session.
 - `/plugin list` — list installed plugins and their status.
+- `/doctor prompt-audit` — audit CLAUDE.md, skills, agents, and commands for outdated model-specific patterns.
 - `claude plugin init` — scaffold a new plugin in the current directory (CLI, not a slash command).
 - `claude agents` — list all available named subagents (CLI).
 
@@ -73,7 +77,7 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 | `argument-hint` | Short placeholder shown in autocomplete (e.g. `[branch]`) |
 | `allowed-tools` | Comma-separated tool whitelist for this skill's invocation |
 | `model` | Override model for this skill (accepts aliases: `fable`, `opus`, `sonnet`, `haiku`, `inherit`) |
-| `effort` | `low` / `normal` / `high` — hint to the model's thinking budget |
+| `effort` | `low` / `medium` / `high` / `xhigh` / `max` — thinking-effort level for this skill |
 | `context: fork` | Run the skill in a forked context (isolated from main conversation) |
 | `context: agent` | Run the skill as a full subagent turn |
 | `paths` | Glob list — load this skill only when CWD matches |
@@ -87,7 +91,8 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
   - `defaultEnabled` — boolean; whether the plugin activates on install without user opt-in.
   - `dependencies` — list of other plugin names that must be installed for this plugin to function.
 - Components sit at the plugin root, not inside `.claude-plugin/`: `skills/`, `agents/`, `commands/`, `hooks/`, `.mcp.json`, `.lsp.json`, `monitors/`, `settings.json`.
-- Version every release; users update through the marketplace. `/reload-plugins` picks up local edits.
+- Version every release; users update through the marketplace. `/reload-plugins` picks up local edits. `claude plugin configure` shows or saves plugin options.
+- Plugins can also ship "mods" (live panes, status lines, toasts via function hooks), introduced in Claude Code 2.1.287.
 
 ## Recommendations
 
