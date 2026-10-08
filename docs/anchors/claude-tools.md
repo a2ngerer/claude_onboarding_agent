@@ -1,14 +1,14 @@
 ---
 name: claude-tools
 description: How to configure Claude's core tooling surface — hooks, rules, memory files, settings, slash commands, plugins
-last_updated: 2026-06-12
+last_updated: 2026-10-08
 sources:
   - https://docs.claude.com/en/docs/claude-code/hooks
   - https://docs.claude.com/en/docs/claude-code/settings
   - https://docs.claude.com/en/docs/claude-code/plugins
   - https://docs.claude.com/en/docs/claude-code/slash-commands
   - https://docs.claude.com/en/docs/claude-code/memory
-version: 2
+version: 3
 ---
 
 ## Memory files
@@ -44,15 +44,17 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 | `PreToolUse` | Block or gate a tool call | Deny `Bash(rm -rf *)` |
 | `PostToolUse` | Lint or log after a tool runs | Auto-run `eslint --fix` after `Edit` |
 | `PostToolBatch` | React after a full parallel tool batch completes | Summarize a batch of file reads |
-| `MessageDisplay` | Intercept or annotate a message before it is shown | Inject a reminder banner |
-| `PreCompact` | Save state before context compaction | Checkpoint session notes |
-| `PostCompact` | Re-inject context after compaction | Reload pinned snippets |
+| `PermissionRequest` / `PermissionDenied` | Decide or log permission outcomes (auto-mode denials) | Audit denied tool calls |
+| `SubagentStart` / `SubagentStop` | Track or gate subagent lifecycle | Log subagent results |
+| `MessageDisplay` | Display-only hook on assistant message text | Inject a reminder banner |
+| `PreCompact` / `PostCompact` | Save state before, or re-inject context after, compaction | Checkpoint session notes |
+| `PreModelSwitch` / `PostModelSwitch` | Block or react to a model switch | Deny switching to a costly model |
 | `WorktreeCreate` | Set up a fresh worktree (install deps, copy env) | `npm ci` in the new branch |
 | `WorktreeRemove` | Clean up after a worktree is deleted | Remove temp build artifacts |
 | `Stop` | Cleanup when Claude finishes a turn | Persist session notes |
 | `SessionEnd` | Release resources or save artifacts | Flush metrics |
 
-Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries. Plugins ship hooks in `hooks/hooks.json`.
+Claude Code supports 33 hook events in total; others include `Setup`, `StopFailure`, `PostToolUseFailure`, `Elicitation`, `TaskCreated`/`TaskCompleted`, `ConfigChange`, `CwdChanged`, `FileChanged`, and `Notification`. Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries. Plugins ship hooks in `hooks/hooks.json`.
 
 ## Slash commands
 
@@ -64,21 +66,23 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 - `/cd <path>` — change the working directory for the current session.
 - `/plugin list` — list installed plugins and their status.
 - `claude plugin init` — scaffold a new plugin in the current directory (CLI, not a slash command).
+- `claude plugin install --marketplace <source>` adds the marketplace if needed, then installs; `claude plugin configure <plugin>` shows or saves a plugin's options; `claude plugin validate` checks a plugin.
 - `claude agents` — list all available named subagents (CLI).
 
 ## SKILL.md frontmatter fields
 
 | Field | Purpose |
 |---|---|
-| `argument-hint` | Short placeholder shown in autocomplete (e.g. `[branch]`) |
-| `allowed-tools` | Comma-separated tool whitelist for this skill's invocation |
-| `model` | Override model for this skill (accepts aliases: `fable`, `opus`, `sonnet`, `haiku`, `inherit`) |
-| `effort` | `low` / `normal` / `high` — hint to the model's thinking budget |
-| `context: fork` | Run the skill in a forked context (isolated from main conversation) |
-| `context: agent` | Run the skill as a full subagent turn |
-| `paths` | Glob list — load this skill only when CWD matches |
-| `disable-model-invocation` | `true` — skill runs its command without calling the model (pure automation) |
-| `user-invocable` | `false` — hides the skill from `/` autocomplete; only callable programmatically |
+| `argument-hint` / `arguments` | Autocomplete placeholder (e.g. `[branch]`) / named positional args for `$name` substitution |
+| `when_to_use` | Extra trigger phrases, appended to `description` (combined listing truncated at 1,536 chars) |
+| `allowed-tools` / `disallowed-tools` | Tools usable without prompting / removed from the pool while the skill is active |
+| `model` | Override model for the current turn (aliases: `fable`, `opus`, `sonnet`, `haiku`, `inherit`) |
+| `effort` | `low` / `medium` / `high` / `xhigh` / `max` |
+| `context: fork` | Run the skill in a subagent; pair with `agent:` (e.g. `Explore`) to pick the type |
+| `hooks` | Hooks registered while the skill is invoked |
+| `paths` | Glob list — activate automatically only for matching files |
+| `disable-model-invocation` | `true` — Claude cannot load the skill automatically (use for side-effect workflows like deploys) |
+| `user-invocable` | `false` — hides the skill from the `/` menu; only Claude invokes it |
 
 ## Plugins
 
