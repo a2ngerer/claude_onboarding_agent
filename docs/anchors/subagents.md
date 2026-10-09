@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-06-12
+last_updated: 2026-10-09
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 2
+version: 3
 ---
 
 ## Named subagent frontmatter fields
@@ -15,14 +15,19 @@ Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Availa
 
 | Field | Purpose |
 |---|---|
-| `model` | Model to run this agent on. Accepts aliases (`fable`, `opus`, `sonnet`, `haiku`) or full IDs. Defaults to `inherit` (uses the invoking context's model). |
-| `disallowedTools` | Comma-separated list of tools the subagent cannot call, even if its `tools:` whitelist includes them. |
-| `maxTurns` | Maximum number of agentic turns before the subagent is forced to return. Prevents runaway loops. |
-| `skills` | Comma-separated skill slugs to preload into the subagent's context. |
-| `memory` | `true` / `false` — whether the subagent has access to the user's memory files. Default: `false` for read-only agents. |
-| `effort` | `low` / `normal` / `high` — thinking budget hint passed to the model. |
-| `isolation` | `worktree` — run the subagent in a temporary git worktree; branch and path returned to the caller on exit. |
-| `background` | `true` — spawn the subagent in the background; caller is notified on completion rather than waiting. |
+| `name`, `description` | Required. `name` up to 256 characters, no `:`, cannot start with `-`. |
+| `tools` / `disallowedTools` | Allowlist / denylist (denylist applies first). Omitting `tools` inherits all subagent-available tools. |
+| `model` | `fable`, `opus`, `sonnet`, `haiku`, a full model ID, or `inherit`. Order: per-invocation → frontmatter → `CLAUDE_CODE_SUBAGENT_MODEL` → main model. |
+| `permissionMode` | `default`, `acceptEdits`, `auto`, `dontAsk`, `bypassPermissions`, `plan`, `manual`. Ignored for plugin subagents. |
+| `maxTurns` | Max agentic turns; on the limit, partial output is returned and can be resumed. |
+| `skills` | Skills to preload in full at startup (max 32, each once). Other skills stay discoverable unless `Skill` is denied. |
+| `mcpServers` / `hooks` | Scoped MCP servers / lifecycle hooks. Ignored for plugin subagents. |
+| `memory` | Persistent memory scope: `user`, `project`, or `local`. |
+| `effort` | `low`, `medium`, `high`, `xhigh`, or `max`. The Agent tool also takes a per-invocation `effort` (v2.1.292+). |
+| `isolation` | `worktree` — temporary git worktree; removed automatically if no changes were made. |
+| `background` | `true` — keep the subagent in the background; permission prompts surface in the main session. |
+| `omitClaudeMd` | `true` skips user, project, and local CLAUDE.md files (v2.1.271+). |
+| `color`, `initialPrompt`, `experimental` | Display color; auto-submitted first turn when run as the main agent; experimental options (`cacheTtl`). |
 
 ## Model tiering for subagents
 
@@ -82,7 +87,7 @@ The main agent waits once, then relays a consolidated summary — it does not na
 
 ## Anti-patterns
 
-- Subagents dispatching other subagents — nesting is technically supported up to 5 levels (since v2.1.172) but remains strongly discouraged; nested fan-out multiplies context cost and latency unpredictably.
+- Subagents dispatching other subagents — nesting is supported up to three layers by default (`CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH`; `1` disables it) but remains strongly discouraged; nested fan-out multiplies context cost and latency unpredictably. Up to 20 subagents run concurrently by default (`CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`).
 - The main agent narrating subagent work step-by-step instead of relaying the final summary.
 - Dispatching a subagent for a task that is one tool call — the overhead dwarfs the work.
 - Vague prompts like "research X" with no output format — produces redundant searches and unfocused summaries.
