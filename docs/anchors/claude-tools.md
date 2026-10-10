@@ -1,21 +1,21 @@
 ---
 name: claude-tools
 description: How to configure Claude's core tooling surface — hooks, rules, memory files, settings, slash commands, plugins
-last_updated: 2026-06-12
+last_updated: 2026-10-10
 sources:
   - https://docs.claude.com/en/docs/claude-code/hooks
   - https://docs.claude.com/en/docs/claude-code/settings
   - https://docs.claude.com/en/docs/claude-code/plugins
   - https://docs.claude.com/en/docs/claude-code/slash-commands
   - https://docs.claude.com/en/docs/claude-code/memory
-version: 2
+version: 3
 ---
 
 ## Memory files
 
 - `CLAUDE.md` — project instructions at `./CLAUDE.md` or `./.claude/CLAUDE.md`; user-level at `~/.claude/CLAUDE.md`. Loaded into every session.
 - `CLAUDE.local.md` — personal project notes; gitignored, appended after `CLAUDE.md`.
-- `AGENTS.md` — not read natively by Claude Code. If the repo needs both, `CLAUDE.md` imports it with `@AGENTS.md`.
+- `AGENTS.md` — Claude Code can read a repo's `AGENTS.md` in place of `CLAUDE.md`. If the repo needs both, `CLAUDE.md` imports it with `@AGENTS.md`.
 - Size target: keep each `CLAUDE.md` under ~200 lines. Longer files reduce adherence.
 - For modular rules, use `.claude/rules/*.md` with optional `paths:` frontmatter to scope by glob. Rules without `paths:` load unconditionally.
 - Imports: `@path/to/file` inside `CLAUDE.md` pulls another file into context at launch (max depth 5).
@@ -45,6 +45,8 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 | `PostToolUse` | Lint or log after a tool runs | Auto-run `eslint --fix` after `Edit` |
 | `PostToolBatch` | React after a full parallel tool batch completes | Summarize a batch of file reads |
 | `MessageDisplay` | Intercept or annotate a message before it is shown | Inject a reminder banner |
+| `PermissionRequest` / `PermissionDenied` | Decide a pending permission, or react to an auto-mode denial | Auto-allow `git status` |
+| `SubagentStart` / `SubagentStop` | Track subagent spawn and completion | Log delegated work |
 | `PreCompact` | Save state before context compaction | Checkpoint session notes |
 | `PostCompact` | Re-inject context after compaction | Reload pinned snippets |
 | `WorktreeCreate` | Set up a fresh worktree (install deps, copy env) | `npm ci` in the new branch |
@@ -52,7 +54,7 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 | `Stop` | Cleanup when Claude finishes a turn | Persist session notes |
 | `SessionEnd` | Release resources or save artifacts | Flush metrics |
 
-Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries. Plugins ship hooks in `hooks/hooks.json`.
+Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of handlers. Handler `type` is `command`, `http`, `mcp_tool`, `prompt`, or `agent` (experimental). Set `"onFailure": "block"` on `command`/`http` hooks (v2.1.295+) so a hook that fails to start, times out, or errors blocks the action instead of letting it proceed. Plugins ship hooks in `hooks/hooks.json`.
 
 ## Slash commands
 
@@ -73,11 +75,12 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 | `argument-hint` | Short placeholder shown in autocomplete (e.g. `[branch]`) |
 | `allowed-tools` | Comma-separated tool whitelist for this skill's invocation |
 | `model` | Override model for this skill (accepts aliases: `fable`, `opus`, `sonnet`, `haiku`, `inherit`) |
-| `effort` | `low` / `normal` / `high` — hint to the model's thinking budget |
-| `context: fork` | Run the skill in a forked context (isolated from main conversation) |
-| `context: agent` | Run the skill as a full subagent turn |
+| `effort` | Effort level override while the skill is active |
+| `context: fork` | Run the skill in a forked subagent (isolated from main conversation); pair with `agent:` to pick the subagent type |
+| `when_to_use` | Extra trigger phrases; `description` + `when_to_use` are truncated at 1,536 chars in the listing |
 | `paths` | Glob list — load this skill only when CWD matches |
-| `disable-model-invocation` | `true` — skill runs its command without calling the model (pure automation) |
+| `disallowed-tools` | Tools removed from Claude's pool while the skill is active |
+| `disable-model-invocation` | `true` — Claude never loads the skill automatically; use for manually triggered workflows |
 | `user-invocable` | `false` — hides the skill from `/` autocomplete; only callable programmatically |
 
 ## Plugins
@@ -102,6 +105,5 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 
 - Do not stuff templates, multi-step procedures, or tool references into `CLAUDE.md` — move them into `skills/` or `.claude/rules/`.
 - Do not place `commands/`, `agents/`, `skills/`, or `hooks/` inside `.claude-plugin/`; only `plugin.json` belongs there.
-- Do not rely on `AGENTS.md` being read directly by Claude Code — import it from `CLAUDE.md` with `@AGENTS.md`.
 - Do not use legacy `.claude/commands/*.md` for new functionality — prefer `skills/<name>/SKILL.md` so supporting files and frontmatter are available.
 - Do not silently overwrite an existing `CLAUDE.md` — extend with a delimited, attributed section.
