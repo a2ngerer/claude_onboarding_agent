@@ -1,47 +1,48 @@
 ---
 name: claude-models
 description: Current Claude model IDs, aliases, context limits, and recommended defaults
-last_updated: 2026-06-12
+last_updated: 2026-10-13
 sources:
   - https://docs.claude.com/en/docs/about-claude/models
   - https://docs.claude.com/en/docs/about-claude/pricing
-version: 2
+version: 3
 ---
 
 ## Latest family
 
-Claude 4.x / 5.x is the current family as of `last_updated`. The Fable 5 tier sits above Opus as the highest-capability generally available model. Default to the latest IDs listed below unless a project has pinned an older version for a specific reason.
+Claude 5.5 is the current family as of `last_updated` (Fable 5.1, Opus 5.5, Sonnet 5.5, Haiku 5.5). Start with Opus 5.5 for most workloads; use Fable 5.1 for demanding reasoning and long-horizon agentic work. Default to the latest IDs below unless a project has pinned an older version for a specific reason.
 
 ## Model IDs
 
-| Tier   | Model ID              | Alias   | Context | Max output | Input / Output (per MTok) | Typical use case |
-|--------|-----------------------|---------|---------|------------|---------------------------|------------------|
-| Fable  | `claude-fable-5`      | `fable` | 1M      | 128k       | $10 / $50                 | Maximum capability, Mythos-class reasoning, adaptive thinking |
-| Opus   | `claude-opus-4-8`     | `opus`  | 1M      | 128k       | $5 / $25                  | Hard reasoning, deep code analysis, agentic workflows; defaults to high effort |
-| Sonnet | `claude-sonnet-4-6`   | `sonnet`| 1M      | 64k        | $3 / $15                  | Balanced default — most coding and general tasks |
-| Haiku  | `claude-haiku-4-5-20251001` | `haiku` | 200k | 64k    | $1 / $5                   | Fast, cheap, high-volume tasks and subagents |
+| Tier   | Model ID            | Alias    | Context | Max output | Input / Output (per MTok) | Typical use case |
+|--------|---------------------|----------|---------|------------|---------------------------|------------------|
+| Fable  | `claude-fable-5-1`  | `fable`  | 1M      | 128k       | $10 / $50                 | Demanding reasoning, long-horizon agentic work; adaptive thinking always on |
+| Opus   | `claude-opus-5-5`   | `opus`   | 1M      | 128k       | $4 / $20                  | Long-running agentic coding and knowledge work; default effort `medium` |
+| Sonnet | `claude-sonnet-5-5` | `sonnet` | 1M      | 128k       | $2 / $10                  | Best speed/intelligence balance — most coding and general tasks |
+| Haiku  | `claude-haiku-5-5`  | `haiku`  | 1M      | 128k       | $0.10 / $0.50 (prompts ≤100k); $0.50 / $2.50 (>100k) | High-volume, latency-sensitive work: classification, extraction, routing, subagents |
 
-`claude-mythos-5` is the same model as Fable 5 but without dual-use safety measures. It is invitation-only and not recommended for general use.
+Prompt-cache reads cost 10% of base input (2.5% on Fable 5.1 and Mythos 5.1, 5% on Opus 5.5 and Sonnet 5.5). Batch API requests are 50% off. Mythos models are limited-availability variants without dual-use safety measures; not recommended for general use.
 
 ## Aliases
 
-The `model:` field accepts short aliases (`fable`, `opus`, `sonnet`, `haiku`) plus `inherit` (take the parent agent's model). Aliases always point to the current recommended snapshot for that tier — they move when Anthropic promotes a new default.
+The `model:` field accepts short aliases (`fable`, `opus`, `sonnet`, `haiku`) plus `inherit` (take the parent agent's model). Aliases resolve to the current recommended model for that tier — they move when Anthropic promotes a new default.
 
 ## ID pinning behavior
 
-Since the 4.6 generation, undated model IDs (e.g. `claude-opus-4-8`) are pinned snapshots, not moving pointers. Use them when you want stability without memorizing a full dated ID. Aliases still move; if you want reproducibility across alias promotions, use the undated or dated ID directly.
+Every Claude model ID is a pinned snapshot, including the dateless IDs used from the 4.6 generation on (e.g. `claude-opus-5-5`). Use them for stability without memorizing a dated ID. Only the short aliases move; use the full ID for reproducibility across alias promotions.
 
-## Deprecated / retiring soon
+## Legacy (still available)
 
-Do not use these IDs in new code or configs. Entries marked with a retirement date will stop working on that date.
+Usable but not recommended for new work: `claude-fable-5`, `claude-opus-5`, `claude-opus-4-8`, `claude-opus-4-7`, `claude-opus-4-6`, `claude-opus-4-5`, `claude-sonnet-5`, `claude-sonnet-4-6`, `claude-haiku-4-5-20251001`.
 
-- `claude-sonnet-4-0` — **retires 2026-06-15 (imminent)**
-- `claude-opus-4-0` — **retires 2026-06-15 (imminent)**
-- `claude-opus-4-1` — retires 2026-08-05
-- `claude-opus-4-7` — legacy, still available
-- `claude-opus-4-6` — legacy, still available
-- `claude-opus-4-5` — legacy, still available
-- `claude-sonnet-4-5` — legacy, still available
+Current-generation retirement is not sooner than 2027-09-01 (Fable 5.1), 2027-09-22 (Opus 5.5), 2027-09-28 (Sonnet 5.5), and 2027-10-07 (Haiku 5.5).
+
+## Deprecated / retired
+
+Do not use these IDs in new code or configs.
+
+- `claude-sonnet-4-0`, `claude-opus-4-0`, `claude-opus-4-1` — retired on the Claude API (may linger on Bedrock / Google Cloud)
+- `claude-sonnet-4-5` — deprecated
 - `claude-3-opus-20240229`
 - `claude-3-sonnet-20240229`
 - `claude-3-haiku-20240307`
@@ -54,16 +55,17 @@ Do not use these IDs in new code or configs. Entries marked with a retirement da
 
 ## Tokenizer note
 
-Fable 5, Mythos 5, and Opus 4.7+ use a new tokenizer that produces roughly 30% more tokens for the same text. Factor this into cost estimates when migrating from older models.
+Claude 4.7 and later models (including the whole 5.x family) use a newer tokenizer that produces roughly 30% more tokens for the same text. Factor this into cost estimates when migrating from Sonnet 4.6 or earlier.
 
 ## Defaults
 
-- **Everyday tasks and agentic coding (Claude Code default):** `claude-sonnet-4-6`
-- **Deep reasoning / agentic planning:** `claude-opus-4-8`
-- **Maximum capability:** `claude-fable-5`
-- **Fast / cheap subagent scans:** `claude-haiku-4-5-20251001`
+- **Everyday tasks and agentic coding:** `claude-sonnet-5-5`
+- **Hard reasoning / agentic planning:** `claude-opus-5-5`
+- **Maximum capability:** `claude-fable-5-1`
+- **Fast / cheap subagent scans:** `claude-haiku-5-5`
 
 ## Tips
 
-- Use undated IDs (`claude-opus-4-8`) for production stability; they are pinned snapshots since the 4.6 generation. Aliases (`opus`, `sonnet`, etc.) move when defaults are promoted.
+- Use full IDs (`claude-opus-5-5`) for production stability; aliases (`opus`, `sonnet`, etc.) move when defaults are promoted.
+- Adaptive thinking replaces manual `thinking.type: "enabled"` + `budget_tokens` on 5.x models; steer depth with the `effort` parameter instead.
 - When migrating between models, re-run your eval suite; prompts tuned for one model family may need light adjustment.

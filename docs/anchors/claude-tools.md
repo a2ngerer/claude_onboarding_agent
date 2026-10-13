@@ -1,24 +1,24 @@
 ---
 name: claude-tools
 description: How to configure Claude's core tooling surface — hooks, rules, memory files, settings, slash commands, plugins
-last_updated: 2026-06-12
+last_updated: 2026-10-13
 sources:
   - https://docs.claude.com/en/docs/claude-code/hooks
   - https://docs.claude.com/en/docs/claude-code/settings
   - https://docs.claude.com/en/docs/claude-code/plugins
   - https://docs.claude.com/en/docs/claude-code/slash-commands
   - https://docs.claude.com/en/docs/claude-code/memory
-version: 2
+version: 3
 ---
 
 ## Memory files
 
 - `CLAUDE.md` — project instructions at `./CLAUDE.md` or `./.claude/CLAUDE.md`; user-level at `~/.claude/CLAUDE.md`. Loaded into every session.
 - `CLAUDE.local.md` — personal project notes; gitignored, appended after `CLAUDE.md`.
-- `AGENTS.md` — not read natively by Claude Code. If the repo needs both, `CLAUDE.md` imports it with `@AGENTS.md`.
+- `AGENTS.md` — read as project instructions (v2.1.277+) only when no `CLAUDE.md`/`CLAUDE.local.md` exists in the working directory or above; otherwise `CLAUDE.md` wins. If the repo needs both, `CLAUDE.md` imports it with `@AGENTS.md`.
 - Size target: keep each `CLAUDE.md` under ~200 lines. Longer files reduce adherence.
 - For modular rules, use `.claude/rules/*.md` with optional `paths:` frontmatter to scope by glob. Rules without `paths:` load unconditionally.
-- Imports: `@path/to/file` inside `CLAUDE.md` pulls another file into context at launch (max depth 5).
+- Imports: `@path/to/file` inside `CLAUDE.md` pulls another file into context at launch (max depth 4 hops).
 
 ## Settings
 
@@ -42,6 +42,7 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 | `InstructionsLoaded` | React to what triggered loading (new session, `/reload-skills`, plugin install); inspect `load_reason` | Log which skills were loaded |
 | `UserPromptSubmit` | Validate or enrich the user prompt | Block secret patterns |
 | `PreToolUse` | Block or gate a tool call | Deny `Bash(rm -rf *)` |
+| `PermissionRequest` | Auto-answer or log permission prompts | Deny unknown hosts |
 | `PostToolUse` | Lint or log after a tool runs | Auto-run `eslint --fix` after `Edit` |
 | `PostToolBatch` | React after a full parallel tool batch completes | Summarize a batch of file reads |
 | `MessageDisplay` | Intercept or annotate a message before it is shown | Inject a reminder banner |
@@ -52,7 +53,9 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 | `Stop` | Cleanup when Claude finishes a turn | Persist session notes |
 | `SessionEnd` | Release resources or save artifacts | Flush metrics |
 
-Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries. Plugins ship hooks in `hooks/hooks.json`.
+Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of handler entries. Handler `type` is `command`, `http`, `mcp_tool`, `prompt`, or `agent` (experimental). Plugins ship hooks in `hooks/hooks.json`.
+
+`onFailure: "block"` (v2.1.295+, `command` and `http` handlers) makes a failed hook — won't start, times out, non-2xx, unexpected exit — block the action like exit code 2; default is `"continue"`. Use it for security-critical gates.
 
 ## Slash commands
 
@@ -65,20 +68,23 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 - `/plugin list` — list installed plugins and their status.
 - `claude plugin init` — scaffold a new plugin in the current directory (CLI, not a slash command).
 - `claude agents` — list all available named subagents (CLI).
+- `/doctor prompt-audit` — audit CLAUDE.md, rules, skills, and subagent instructions; `/skill-doctor` reports per-skill context cost.
 
 ## SKILL.md frontmatter fields
 
 | Field | Purpose |
 |---|---|
 | `argument-hint` | Short placeholder shown in autocomplete (e.g. `[branch]`) |
-| `allowed-tools` | Comma-separated tool whitelist for this skill's invocation |
+| `when_to_use` | Extra trigger phrases; counts toward the 1,536-char cap shared with `description` |
+| `allowed-tools` | Tools pre-approved while the skill runs (does not restrict other tools) |
+| `disallowed-tools` | Tools removed from Claude's pool while the skill is active |
 | `model` | Override model for this skill (accepts aliases: `fable`, `opus`, `sonnet`, `haiku`, `inherit`) |
-| `effort` | `low` / `normal` / `high` — hint to the model's thinking budget |
-| `context: fork` | Run the skill in a forked context (isolated from main conversation) |
-| `context: agent` | Run the skill as a full subagent turn |
-| `paths` | Glob list — load this skill only when CWD matches |
-| `disable-model-invocation` | `true` — skill runs its command without calling the model (pure automation) |
-| `user-invocable` | `false` — hides the skill from `/` autocomplete; only callable programmatically |
+| `effort` | `low` / `medium` / `high` / `xhigh` / `max` — effort level while the skill is active |
+| `context: fork` | Run the skill in a forked subagent (isolated from main conversation) |
+| `agent` | Subagent type for `context: fork` (`Explore`, `Plan`, `general-purpose`, or a custom agent) |
+| `paths` | Glob list — load this skill only when working with matching files |
+| `disable-model-invocation` | `true` — Claude never loads the skill automatically; user-invoked only |
+| `user-invocable` | `false` — hides the skill from `/` autocomplete; only Claude invokes it |
 
 ## Plugins
 
@@ -102,6 +108,6 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 
 - Do not stuff templates, multi-step procedures, or tool references into `CLAUDE.md` — move them into `skills/` or `.claude/rules/`.
 - Do not place `commands/`, `agents/`, `skills/`, or `hooks/` inside `.claude-plugin/`; only `plugin.json` belongs there.
-- Do not rely on `AGENTS.md` being read directly by Claude Code — import it from `CLAUDE.md` with `@AGENTS.md`.
+- Do not rely on `AGENTS.md` loading when a `CLAUDE.md` exists — it is only read as a fallback; import it with `@AGENTS.md`.
 - Do not use legacy `.claude/commands/*.md` for new functionality — prefer `skills/<name>/SKILL.md` so supporting files and frontmatter are available.
 - Do not silently overwrite an existing `CLAUDE.md` — extend with a delimited, attributed section.
