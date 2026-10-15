@@ -1,14 +1,14 @@
 ---
 name: knowledge-base
 description: Recommended vault layouts, OKF v0.1 frontmatter patterns, and KB-agent structures for Obsidian-style knowledge bases
-last_updated: 2026-06-30
+last_updated: 2026-10-15
 sources:
   - https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md
   - https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing
   - https://help.obsidian.md/
   - https://help.obsidian.md/properties
   - https://publish.obsidian.md/hub/01+-+Community+Vaults
-version: 2
+version: 3
 ---
 
 ## Vault layout
@@ -33,6 +33,8 @@ OKF (Open Knowledge Format) is Google Cloud's published standard for the Karpath
 1. Every non-reserved `.md` file carries a parseable YAML frontmatter block.
 2. Every such block has a non-empty `type` (the single required key).
 3. Reserved filenames — `index.md` (per-directory listing, no frontmatter) and `log.md` (optional chronological history) — follow their structures when present.
+
+OKF has since published **v0.2** (the plugin still targets v0.1; `type` remains the only required key and `index.md`/`log.md` remain reserved). v0.2 replaces `timestamp` with a `generated` block (`generated.at`, `generated.by`) and the body `# Citations` list with a `sources` frontmatter field, and adds optional `verified`, `status` (draft/stable/deprecated), and `stale_after`. Consumers may fall back to `timestamp` when `generated` is absent, so v0.1 bundles stay readable.
 
 Everything else is soft: missing optional fields, unknown `type` values, custom keys, and broken links never invalidate a bundle. Concepts link with Markdown links (`[Title](note.md)` or bundle-relative `[Title](/folder/note.md)`), **not** `[[wikilinks]]` — OKF consumers cannot parse wikilinks.
 
