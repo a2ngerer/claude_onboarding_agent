@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-06-12
+last_updated: 2026-10-20
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 3
+version: 4
 ---
 
 ## Recommended
@@ -42,7 +42,7 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Productivity
 
-- **slack** — read channels, post messages. Install: `claude mcp add slack npx -- -y @modelcontextprotocol/server-slack`
+- **slack** — read channels, post messages. `@modelcontextprotocol/server-slack` is archived; Slack's server is now maintained by Zencoder in a separate repository — check the MCP Registry for the current package before installing.
 - **linear** — issues and projects. Install via Linear's official MCP integration.
 - **gmail / calendar / drive** — Google hosts official remote MCP endpoints for these services. Authentication requires OAuth2 via a Google Cloud project and is configured through the Claude.ai/Claude Desktop GUI (Settings > Connectors), not via a single CLI command. For Claude Code headless use, the Google Workspace CLI is the practical alternative:
   ```
@@ -59,8 +59,10 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Transport note
 
-- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release.
-- Use `claude mcp add-json` for HTTP servers with complex headers; use `claude mcp add` for stdio servers.
+- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated; Claude Code v2.1.265+ tries HTTP first and falls back to SSE. WebSocket (`"type":"ws"`, header auth only) exists for servers that push events.
+- Use `claude mcp add --transport http <name> <url> --header ...` or `claude mcp add-json` for remote servers with complex headers; use `claude mcp add` for stdio servers.
+- Permission rules match one server exactly: `mcp__a` no longer covers server `a__b`. Use `mcp__<server>__*` for a whole server; agent `tools:` lists follow the same rule.
+- Tool output is limited to 25,000 tokens by default (`MAX_MCP_OUTPUT_TOKENS`); tool descriptions and server instructions are capped at 4,096 characters.
 
 ## Selection tips
 

@@ -1,14 +1,14 @@
 ---
 name: knowledge-base
 description: Recommended vault layouts, OKF v0.1 frontmatter patterns, and KB-agent structures for Obsidian-style knowledge bases
-last_updated: 2026-06-30
+last_updated: 2026-10-20
 sources:
   - https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md
   - https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing
   - https://help.obsidian.md/
   - https://help.obsidian.md/properties
   - https://publish.obsidian.md/hub/01+-+Community+Vaults
-version: 2
+version: 3
 ---
 
 ## Vault layout
@@ -50,6 +50,16 @@ Notes carry OKF frontmatter in YAML delimited by `---`. Obsidian renders these a
 | `timestamp` | Recommended | date | ISO 8601 datetime of the last meaningful change |
 
 Real bundles emit keys in the order `type, resource, title, description, tags, timestamp`. Producers may add custom keys (e.g. `aliases`, `created`, `updated`); OKF consumers preserve unknown keys. If a vault already uses Obsidian's `created`/`updated`, keep OKF's single `timestamp` as canonical and let the others coexist as extensions. Reserved Obsidian keys (`aliases`, `tags`, `cssclasses`) keep their typed UI behavior. Dates use ISO 8601; lists may use YAML block or flow syntax.
+
+## OKF v0.2 changes
+
+The upstream spec is now **v0.2**. The conformance rule is unchanged (parseable frontmatter with a non-empty `type`; reserved `index.md`/`log.md` follow their structure), so v0.1 bundles stay valid. Differences to be aware of:
+
+- **Breaking:** `timestamp` is superseded by `generated.at`, and the body `# Citations` list by a frontmatter `sources` list (entries need `resource`). Consumers may still read `timestamp` and legacy citations.
+- **Additive:** optional `generated` (`by`, `at`), `verified`, `status` (`draft` | `stable` | `deprecated`), and `stale_after`; a new `Attested Computation` type; a bundle-root `index.md` may carry `okf_version`. Actor identities use `producer/version`, `human:<id>`, or `process:<id>`.
+- `log.md` uses `YYYY-MM-DD` date headings, newest first.
+
+Until the plugin's generators migrate, keep emitting v0.1 keys (including `timestamp`) and treat the v0.2 keys as optional extensions.
 
 ## Naming conventions
 
