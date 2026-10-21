@@ -1,14 +1,14 @@
 ---
 name: claude-tools
 description: How to configure Claude's core tooling surface — hooks, rules, memory files, settings, slash commands, plugins
-last_updated: 2026-06-12
+last_updated: 2026-10-21
 sources:
   - https://docs.claude.com/en/docs/claude-code/hooks
   - https://docs.claude.com/en/docs/claude-code/settings
   - https://docs.claude.com/en/docs/claude-code/plugins
   - https://docs.claude.com/en/docs/claude-code/slash-commands
   - https://docs.claude.com/en/docs/claude-code/memory
-version: 2
+version: 3
 ---
 
 ## Memory files
@@ -22,11 +22,9 @@ version: 2
 
 ## Settings
 
-Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `outputStyle`, `sandbox`, `claudeMdExcludes`, `fallbackModel`, `requiredMinimumVersion`, `enforceAvailableModels`. Permission rules evaluate in order `deny → ask → allow`; first match wins.
+Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `outputStyle`, `sandbox`, `claudeMdExcludes`, `fallbackModel`, `requiredMinimumVersion`, `enforceAvailableModels`. Permission rules evaluate in order `deny → ask → allow`; first match wins. Precedence, highest first: managed, command line (`--settings`), `.claude/settings.local.json`, `.claude/settings.json`, `~/.claude/settings.json`. List keys such as `permissions.allow` merge across files. Settings files are strict JSON (no comments or trailing commas); run `/status` to see which loaded and `claude doctor` for rejected entries.
 
-```json
-{ "permissions": { "allow": ["Bash(npm run test *)"], "deny": ["Read(./.env)"] } }
-```
+Example: `{ "permissions": { "allow": ["Bash(npm run test *)"], "deny": ["Read(./.env)"] } }`
 
 - **`fallbackModel`** — model to use when the primary `model` is unavailable or rate-limited.
 - **`requiredMinimumVersion`** — semver string; Claude Code refuses to run if the installed version is older.
@@ -52,7 +50,9 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 | `Stop` | Cleanup when Claude finishes a turn | Persist session notes |
 | `SessionEnd` | Release resources or save artifacts | Flush metrics |
 
-Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries. Plugins ship hooks in `hooks/hooks.json`.
+Other events: `Setup`, `UserPromptExpansion` (can block a command expansion), `PermissionRequest`, `PermissionDenied`, `PostToolUseFailure`, `Notification`, `SubagentStart`/`SubagentStop`, `TaskCreated`/`TaskCompleted`, `StopFailure`, `TeammateIdle`, `ConfigChange`, `CwdChanged`, `DirectoryAdded`, `FileChanged`, `PreModelSwitch`/`PostModelSwitch`, `Elicitation`/`ElicitationResult`.
+
+Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of handler entries. Handler `type` is `command`, `http`, `mcp_tool`, `prompt`, or `agent` (experimental). Common fields: `if` (permission-rule filter such as `"Bash(git *)"`), `timeout`, `statusMessage`. Command and HTTP handlers accept `onFailure: "block"` (v2.1.295+) so a hook that fails to start or times out blocks the action. Plugins ship hooks in `hooks/hooks.json`.
 
 ## Slash commands
 
@@ -60,9 +60,10 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 - Plugin-provided skills are namespaced: `/<plugin-name>:<skill-name>` to prevent collisions.
 - Arguments: `$ARGUMENTS` (full string), `$0`/`$1`/… or `$ARGUMENTS[N]` (positional), named args via `arguments:` frontmatter.
 - Name slugs: lowercase letters, digits, hyphens only; max 64 chars.
-- `/reload-skills` — hot-reload skill/command files without restarting the session.
-- `/cd <path>` — change the working directory for the current session.
-- `/plugin list` — list installed plugins and their status.
+- `/reload-skills` — pick up skills in a top-level skills directory created after the session started (existing directories are watched live).
+- `/cd <path>` — change the working directory for the session and load that directory's project skills.
+- `/skill-doctor` — report context cost and usage per skill; `/doctor prompt-audit` checks instructions for conflicts and outdated guidance.
+- `/plugin` — browse, install, and manage plugins.
 - `claude plugin init` — scaffold a new plugin in the current directory (CLI, not a slash command).
 - `claude agents` — list all available named subagents (CLI).
 
@@ -73,12 +74,17 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 | `argument-hint` | Short placeholder shown in autocomplete (e.g. `[branch]`) |
 | `allowed-tools` | Comma-separated tool whitelist for this skill's invocation |
 | `model` | Override model for this skill (accepts aliases: `fable`, `opus`, `sonnet`, `haiku`, `inherit`) |
-| `effort` | `low` / `normal` / `high` — hint to the model's thinking budget |
-| `context: fork` | Run the skill in a forked context (isolated from main conversation) |
-| `context: agent` | Run the skill as a full subagent turn |
-| `paths` | Glob list — load this skill only when CWD matches |
-| `disable-model-invocation` | `true` — skill runs its command without calling the model (pure automation) |
-| `user-invocable` | `false` — hides the skill from `/` autocomplete; only callable programmatically |
+| `when_to_use` | Extra trigger context; counts toward the combined 1,536-character cap with `description` |
+| `arguments` | Named positional arguments for `$name` substitution |
+| `disallowed-tools` | Tools removed from the pool while the skill is active |
+| `effort` | `low` / `medium` / `high` / `xhigh` / `max` — hint to the model's thinking budget |
+| `context: fork` | Run the skill in a subagent (isolated from main conversation); pair with `agent:` to pick the subagent type |
+| `paths` | Glob list — limits automatic activation |
+| `hooks` | Hooks registered when the skill is invoked |
+| `disable-model-invocation` | `true` — Claude does not load the skill automatically |
+| `user-invocable` | `false` — hides the skill from `/` autocomplete; Claude can still use it |
+
+Keep `SKILL.md` under 500 lines. Outside Claude Code (claude.ai uploads, Skills API) only `name`, `description`, `license`, `compatibility`, `metadata`, and `allowed-tools` are allowed.
 
 ## Plugins
 
@@ -95,8 +101,7 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 - Prefer skills (`SKILL.md`) over fat `CLAUDE.md` sections for anything longer than a few bullets or invoked only sometimes.
 - Use a `PostToolUse` hook to run linters or formatters after `Write`/`Edit` instead of instructing Claude to do it.
 - Scope permissions explicitly: allowlist safe commands (`Bash(npm run test *)`), deny reads of secrets (`Read(./.env)`).
-- Pin plugin versions in team repos; run `/reload-plugins` after edits instead of restarting.
-- Namespace plugin skills; never rely on a collision-prone flat name.
+- Pin plugin versions in team repos; namespace plugin skills; run `/reload-plugins` after edits.
 
 ## Deprecated patterns
 
