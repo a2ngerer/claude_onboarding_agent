@@ -1,14 +1,14 @@
 ---
 name: knowledge-base
 description: Recommended vault layouts, OKF v0.1 frontmatter patterns, and KB-agent structures for Obsidian-style knowledge bases
-last_updated: 2026-06-30
+last_updated: 2026-10-22
 sources:
   - https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md
   - https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing
   - https://help.obsidian.md/
   - https://help.obsidian.md/properties
   - https://publish.obsidian.md/hub/01+-+Community+Vaults
-version: 2
+version: 3
 ---
 
 ## Vault layout
@@ -36,6 +36,8 @@ OKF (Open Knowledge Format) is Google Cloud's published standard for the Karpath
 
 Everything else is soft: missing optional fields, unknown `type` values, custom keys, and broken links never invalidate a bundle. Concepts link with Markdown links (`[Title](note.md)` or bundle-relative `[Title](/folder/note.md)`), **not** `[[wikilinks]]` — OKF consumers cannot parse wikilinks.
 
+**OKF v0.2 (spec on `main`).** The spec repository now describes v0.2; Google's announcement post still documents v0.1. Conformance is unchanged (parseable frontmatter, non-empty `type`). Breaking changes: `timestamp` is replaced by `generated.at`, and the body `# Citations` list is replaced by a frontmatter `sources` list. Additive: `generated`, `verified`, `status` (`draft`/`stable`/`deprecated`), `stale_after`, and an optional `okf_version` on the root `index.md`. This plugin still emits v0.1 (`timestamp`); consumers may keep parsing it, so migrate deliberately rather than mixing both in one bundle.
+
 ## Frontmatter conventions
 
 Notes carry OKF frontmatter in YAML delimited by `---`. Obsidian renders these as native *Properties*, so OKF and Obsidian agree on the same block. OKF requires exactly one key (`type`) and recommends five more.
@@ -49,7 +51,7 @@ Notes carry OKF frontmatter in YAML delimited by `---`. Obsidian renders these a
 | `tags` | Recommended | list | Categorization strings (`[graphs, retrieval]`); enables dataview queries |
 | `timestamp` | Recommended | date | ISO 8601 datetime of the last meaningful change |
 
-Real bundles emit keys in the order `type, resource, title, description, tags, timestamp`. Producers may add custom keys (e.g. `aliases`, `created`, `updated`); OKF consumers preserve unknown keys. If a vault already uses Obsidian's `created`/`updated`, keep OKF's single `timestamp` as canonical and let the others coexist as extensions. Reserved Obsidian keys (`aliases`, `tags`, `cssclasses`) keep their typed UI behavior. Dates use ISO 8601; lists may use YAML block or flow syntax.
+Real bundles emit keys in the order `type, resource, title, description, tags, timestamp`. Producers may add custom keys (e.g. `aliases`, `created`, `updated`); OKF consumers preserve unknown keys. If a vault already uses Obsidian's `created`/`updated`, keep OKF's single `timestamp` as canonical and let the others coexist as extensions. Reserved Obsidian keys (`aliases`, `tags`, `cssclasses`) keep their typed UI behavior; the singular `tag`/`alias`/`cssclass` forms were deprecated in Obsidian 1.4 and no longer supported as of 1.9. Dates use ISO 8601; lists may use YAML block or flow syntax.
 
 ## Naming conventions
 
