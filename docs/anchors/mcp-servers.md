@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-06-12
+last_updated: 2026-10-24
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 3
+version: 4
 ---
 
 ## Recommended
@@ -61,6 +61,15 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 - **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release.
 - Use `claude mcp add-json` for HTTP servers with complex headers; use `claude mcp add` for stdio servers.
+
+## Client behavior notes
+
+- **Transports:** HTTP (remote, recommended), stdio (local), WebSocket (`ws`, via `add-json` only), SSE (legacy). Claude Code v2.1.265+ tries HTTP first and falls back to SSE. A `url` entry without `type` is a config error.
+- **Install syntax:** `claude mcp add --transport http <name> <url>`; scopes `local` (default), `project` (`.mcp.json`), `user`.
+- **Tool search** is on by default, so installed servers no longer load all tool schemas up front. Long calls (>2 min) auto-background; set a per-server `"timeout"` in ms where needed.
+- **Allow rules:** `mcp__a` matches only server `a`; use `mcp__<server>__*` with the full normalized name.
+- **MCP tasks** (public beta) manage long-running server jobs in `/tasks`; the v2 client runtime targets protocol revision 2026-07-28 (`MCP_SDK_GENERATION` selects v1/v2).
+- Credential variables like `ANTHROPIC_API_KEY` expand to empty in remote `url`/`headers`; copy the value to a custom variable name to pass it.
 
 ## Selection tips
 

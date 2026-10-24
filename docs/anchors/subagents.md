@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-06-12
+last_updated: 2026-10-24
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 2
+version: 3
 ---
 
 ## Named subagent frontmatter fields
@@ -15,14 +15,19 @@ Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Availa
 
 | Field | Purpose |
 |---|---|
-| `model` | Model to run this agent on. Accepts aliases (`fable`, `opus`, `sonnet`, `haiku`) or full IDs. Defaults to `inherit` (uses the invoking context's model). |
-| `disallowedTools` | Comma-separated list of tools the subagent cannot call, even if its `tools:` whitelist includes them. |
-| `maxTurns` | Maximum number of agentic turns before the subagent is forced to return. Prevents runaway loops. |
-| `skills` | Comma-separated skill slugs to preload into the subagent's context. |
-| `memory` | `true` / `false` — whether the subagent has access to the user's memory files. Default: `false` for read-only agents. |
-| `effort` | `low` / `normal` / `high` — thinking budget hint passed to the model. |
-| `isolation` | `worktree` — run the subagent in a temporary git worktree; branch and path returned to the caller on exit. |
-| `background` | `true` — spawn the subagent in the background; caller is notified on completion rather than waiting. |
+| `model` | Model to run this agent on. Accepts aliases (`fable`, `opus`, `sonnet`, `haiku`), full IDs, or `inherit`. Resolution: per-invocation parameter, then frontmatter, then `CLAUDE_CODE_SUBAGENT_MODEL`, then the main conversation's model. |
+| `tools` / `disallowedTools` | Allowlist / denylist of tools. The denylist is applied first. Omitting `tools` inherits all subagent-available tools. |
+| `permissionMode` | `default`, `acceptEdits`, `auto`, `dontAsk`, `bypassPermissions`, or `plan`. Ignored when the main conversation is in `bypassPermissions`, `acceptEdits`, or `auto`. |
+| `maxTurns` | Maximum number of agentic turns before the subagent stops and returns partial output. Prevents runaway loops. |
+| `skills` | Skills whose full content is preloaded at startup (up to 32). |
+| `mcpServers` / `hooks` | MCP servers (names or inline definitions) and lifecycle hooks scoped to this subagent. Ignored for plugin subagents. |
+| `memory` | Persistent memory scope: `user`, `project`, or `local`. |
+| `omitClaudeMd` | `true` skips user, project, and local CLAUDE.md files. |
+| `effort` | `low` / `medium` / `high` / `xhigh` / `max` — thinking effort hint. |
+| `isolation` | `worktree` — run the subagent in a temporary git worktree. |
+| `background` | `true` — keep the subagent in the background even when Claude waits for it. |
+
+Only `name` and `description` are required. Field names are camelCase and unrecognized fields are ignored silently, so check spelling. Plugin `agents/` have the lowest scope priority (managed, `--agents`, project, user, plugin).
 
 ## Model tiering for subagents
 
@@ -78,11 +83,12 @@ The main agent waits once, then relays a consolidated summary — it does not na
 - Scope tool access per subagent: read-only agents list only `Read, Grep, Glob, Bash`; write-capable agents require a deliberate carve-out.
 - Route high-volume or low-stakes work to Haiku via the subagent's `model:` field.
 - Preserve important facts by having subagents persist artifacts (files, memory) rather than stuffing them back into the main context.
+- Resume instead of restarting: continue prior work with `SendMessage` using the agent ID or name. Fork subagents are on by default in `claude -p`, the Agent SDK, desktop, and VS Code (`CLAUDE_CODE_FORK_SUBAGENT=0` disables).
 - Reuse frequently-spawned workers as named subagents in `.claude/agents/<name>.md` with a clear `description:` so the main agent picks them deterministically.
 
 ## Anti-patterns
 
-- Subagents dispatching other subagents — nesting is technically supported up to 5 levels (since v2.1.172) but remains strongly discouraged; nested fan-out multiplies context cost and latency unpredictably.
+- Subagents dispatching other subagents — nesting is supported up to three layers below the main conversation by default (`CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH`; `1` disables it) but remains strongly discouraged; nested fan-out multiplies context cost and latency unpredictably. Up to 20 subagents run concurrently (`CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`).
 - The main agent narrating subagent work step-by-step instead of relaying the final summary.
 - Dispatching a subagent for a task that is one tool call — the overhead dwarfs the work.
 - Vague prompts like "research X" with no output format — produces redundant searches and unfocused summaries.
