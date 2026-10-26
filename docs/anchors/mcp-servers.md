@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-06-12
+last_updated: 2026-10-26
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 3
+version: 4
 ---
 
 ## Recommended
@@ -42,7 +42,7 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Productivity
 
-- **slack** — read channels, post messages. Install: `claude mcp add slack npx -- -y @modelcontextprotocol/server-slack`
+- **slack** — read channels, post messages. The reference `@modelcontextprotocol/server-slack` is archived (now maintained by Zencoder); use a maintained Slack MCP server and pin its version.
 - **linear** — issues and projects. Install via Linear's official MCP integration.
 - **gmail / calendar / drive** — Google hosts official remote MCP endpoints for these services. Authentication requires OAuth2 via a Google Cloud project and is configured through the Claude.ai/Claude Desktop GUI (Settings > Connectors), not via a single CLI command. For Claude Code headless use, the Google Workspace CLI is the practical alternative:
   ```
@@ -59,8 +59,15 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Transport note
 
-- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release.
-- Use `claude mcp add-json` for HTTP servers with complex headers; use `claude mcp add` for stdio servers.
+- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release. On Claude Code v2.1.265+, `--transport http` falls back to SSE if the server rejects HTTP.
+- Use `claude mcp add --transport http <name> <url> [--header ...]` for remote servers; use `claude mcp add --transport stdio <name> -- <cmd>` for local ones. `claude mcp add-json` handles complex configs (including `"type":"ws"` WebSocket).
+- A JSON entry with a `url` but no `type` is read as stdio and skipped — always set `"type"`.
+- Tool output over 25,000 tokens is truncated by default (`MAX_MCP_OUTPUT_TOKENS`); per-server `timeout` is configurable.
+- Agent `tools:` and allow rules match on the full server name: use `mcp__<server>__*`; `mcp__a` no longer matches a server named `a__b`.
+
+## Active reference servers
+
+Maintained under `modelcontextprotocol/servers`: `filesystem`, `git`, `memory`, `fetch`, `time`, `sequential-thinking`, `everything`. GitHub, GitLab, Google Drive, PostgreSQL, Puppeteer, Redis, Sentry, SQLite, and Slack references are archived; use vendor-maintained servers instead.
 
 ## Selection tips
 
