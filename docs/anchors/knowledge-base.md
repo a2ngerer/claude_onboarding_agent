@@ -1,14 +1,14 @@
 ---
 name: knowledge-base
-description: Recommended vault layouts, OKF v0.1 frontmatter patterns, and KB-agent structures for Obsidian-style knowledge bases
-last_updated: 2026-06-30
+description: Recommended vault layouts, OKF frontmatter patterns, and KB-agent structures for Obsidian-style knowledge bases
+last_updated: 2026-10-31
 sources:
   - https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md
   - https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing
   - https://help.obsidian.md/
   - https://help.obsidian.md/properties
   - https://publish.obsidian.md/hub/01+-+Community+Vaults
-version: 2
+version: 3
 ---
 
 ## Vault layout
@@ -26,7 +26,9 @@ vault/
 └── .obsidian/     ← vault config, plugins, workspace state
 ```
 
-## OKF v0.1 conformance
+## OKF conformance (spec now v0.2)
+
+The published OKF spec is now v0.2; the conformance rules below are unchanged from v0.1 (`type` remains the only always-required key). v0.2 adds optional families — provenance (`sources`), trust (`generated`, `verified`), lifecycle (`status`: draft/stable/deprecated, `stale_after`), and computation keys for `Attested Computation` concepts (which also require `runtime`) — and lets the bundle-root `index.md` carry an `okf_version` key. None are required.
 
 OKF (Open Knowledge Format) is Google Cloud's published standard for the Karpathy LLM-wiki pattern: a directory of Markdown concept files, one concept per file, cross-linked with standard Markdown links. A bundle conforms when:
 
