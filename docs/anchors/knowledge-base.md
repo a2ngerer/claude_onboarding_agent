@@ -1,14 +1,14 @@
 ---
 name: knowledge-base
 description: Recommended vault layouts, OKF v0.1 frontmatter patterns, and KB-agent structures for Obsidian-style knowledge bases
-last_updated: 2026-06-30
+last_updated: 2026-11-03
 sources:
   - https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md
   - https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing
   - https://help.obsidian.md/
   - https://help.obsidian.md/properties
   - https://publish.obsidian.md/hub/01+-+Community+Vaults
-version: 2
+version: 3
 ---
 
 ## Vault layout
@@ -34,11 +34,13 @@ OKF (Open Knowledge Format) is Google Cloud's published standard for the Karpath
 2. Every such block has a non-empty `type` (the single required key).
 3. Reserved filenames — `index.md` (per-directory listing, no frontmatter) and `log.md` (optional chronological history) — follow their structures when present.
 
+The upstream spec is now labeled **v0.2** (announced as v0.1 on 2026-06-12). v0.2 keeps `type` as the only required key and adds optional provenance, trust, and lifecycle families (`sources`, `generated`, `verified`, `status`, `stale_after`). A bundle-root `index.md` may carry frontmatter solely for `okf_version: "0.2"`. `log.md` is a flat, newest-first list under ISO `YYYY-MM-DD` headings. Bundle-relative links starting with `/` are recommended because they survive file moves. Consumers should best-effort read bundles declaring an unknown version.
+
 Everything else is soft: missing optional fields, unknown `type` values, custom keys, and broken links never invalidate a bundle. Concepts link with Markdown links (`[Title](note.md)` or bundle-relative `[Title](/folder/note.md)`), **not** `[[wikilinks]]` — OKF consumers cannot parse wikilinks.
 
 ## Frontmatter conventions
 
-Notes carry OKF frontmatter in YAML delimited by `---`. Obsidian renders these as native *Properties*, so OKF and Obsidian agree on the same block. OKF requires exactly one key (`type`) and recommends five more.
+Notes carry OKF frontmatter in YAML delimited by `---`. Obsidian renders these as native *Properties*, so OKF and Obsidian agree on the same block. Obsidian keeps one type per property name across the vault, and its singular `tag`/`alias`/`cssclass` names are no longer supported (use `tags`, `aliases`, `cssclasses`). OKF requires exactly one key (`type`) and recommends `title`, `description`, `resource`, and `tags`; `timestamp` is the v0.1 date key kept for compatibility.
 
 | Property | OKF status | Type | Purpose |
 |---|---|---|---|
@@ -47,7 +49,7 @@ Notes carry OKF frontmatter in YAML delimited by `---`. Obsidian renders these a
 | `description` | Recommended | text | Single-sentence summary (used for index generation and search previews) |
 | `resource` | Recommended | text | URI uniquely identifying the underlying asset (omit for prose notes) |
 | `tags` | Recommended | list | Categorization strings (`[graphs, retrieval]`); enables dataview queries |
-| `timestamp` | Recommended | date | ISO 8601 datetime of the last meaningful change |
+| `timestamp` | Legacy (v0.1) | date | ISO 8601 datetime of the last change; v0.2 supersedes it with `generated.at`, and consumers may fall back to `timestamp` when `generated` is absent |
 
 Real bundles emit keys in the order `type, resource, title, description, tags, timestamp`. Producers may add custom keys (e.g. `aliases`, `created`, `updated`); OKF consumers preserve unknown keys. If a vault already uses Obsidian's `created`/`updated`, keep OKF's single `timestamp` as canonical and let the others coexist as extensions. Reserved Obsidian keys (`aliases`, `tags`, `cssclasses`) keep their typed UI behavior. Dates use ISO 8601; lists may use YAML block or flow syntax.
 
