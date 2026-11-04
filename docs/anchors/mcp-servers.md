@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-06-12
+last_updated: 2026-11-04
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 3
+version: 4
 ---
 
 ## Recommended
@@ -59,8 +59,10 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Transport note
 
-- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release.
-- Use `claude mcp add-json` for HTTP servers with complex headers; use `claude mcp add` for stdio servers.
+- **Prefer HTTP for remote servers, stdio for local servers.** SSE is deprecated; Claude Code tries HTTP first and falls back to SSE (v2.1.265+). Force it only with `--transport sse`.
+- WebSocket (`"type":"ws"`) is for servers that push events unprompted; configure via `.mcp.json` or `claude mcp add-json` (`claude mcp add --transport` does not accept `ws`). Prefer HTTP when the server only responds to requests, since it supports OAuth.
+- Use `claude mcp add --transport http <name> <url>` for remote servers; `claude mcp add <name> -- <command>` for stdio; `claude mcp add-json` for complex headers.
+- Scopes: `local` (default), `project` (shared via `.mcp.json`), `user`. Admins can block servers with `deniedMcpServers` (URL entries also block matching Anthropic-provided servers).
 
 ## Selection tips
 
