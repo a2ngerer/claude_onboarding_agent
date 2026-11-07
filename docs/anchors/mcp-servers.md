@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-06-12
+last_updated: 2026-11-07
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 3
+version: 4
 ---
 
 ## Recommended
@@ -59,8 +59,9 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Transport note
 
-- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release.
-- Use `claude mcp add-json` for HTTP servers with complex headers; use `claude mcp add` for stdio servers.
+- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated; since v2.1.265 Claude Code tries HTTP first and falls back to SSE automatically. WebSocket (`ws`) is available for servers that push events, via `add-json` only.
+- Use `claude mcp add-json` for servers with complex headers; use `claude mcp add --transport http|stdio` otherwise. Scopes: `local` (default), `--scope project` (shared `.mcp.json`), `--scope user`.
+- Long-running tool calls: MCP tasks (v2.1.304+) run server-side and report back later; main-conversation calls still running after two minutes auto-background (`CLAUDE_CODE_MCP_AUTO_BACKGROUND_MS`). Output is capped at 25,000 tokens by default (`MAX_MCP_OUTPUT_TOKENS`).
 
 ## Selection tips
 
