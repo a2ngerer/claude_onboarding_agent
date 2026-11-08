@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-06-12
+last_updated: 2026-11-08
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 3
+version: 4
 ---
 
 ## Recommended
@@ -60,6 +60,8 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 ## Transport note
 
 - **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release.
+- **MCP tasks** (v2.1.304+, beta): tool calls running past two minutes move to a background task visible in `/tasks`. Set `CLAUDE_CODE_DISABLE_MCP_TASK_BACKGROUND=1` to make Claude wait instead.
+- `url` entries in `.mcp.json` without a `type` are configuration errors; set `"type": "http"`.
 - Use `claude mcp add-json` for HTTP servers with complex headers; use `claude mcp add` for stdio servers.
 
 ## Selection tips

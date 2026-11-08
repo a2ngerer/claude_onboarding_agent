@@ -1,14 +1,14 @@
 ---
 name: knowledge-base
 description: Recommended vault layouts, OKF v0.1 frontmatter patterns, and KB-agent structures for Obsidian-style knowledge bases
-last_updated: 2026-06-30
+last_updated: 2026-11-08
 sources:
   - https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md
   - https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing
   - https://help.obsidian.md/
   - https://help.obsidian.md/properties
   - https://publish.obsidian.md/hub/01+-+Community+Vaults
-version: 2
+version: 3
 ---
 
 ## Vault layout
@@ -78,5 +78,6 @@ Real bundles emit keys in the order `type, resource, title, description, tags, t
 - Frontmatter type drift — `tags: "one, two"` (string) vs. `tags: [one, two]` (list) across notes breaks dataview queries; a missing or empty `type` breaks OKF conformance.
 - Wikilink-only cross-linking — `[[note]]` is invisible to OKF consumers. Use Markdown links; treat wikilinks as optional Obsidian-only sugar.
 - Editing vault files with plain `Edit`/`Write` or `mv` — skips Obsidian's link-rewrite logic and silently corrupts backlinks.
+- Rewriting a whole note just to add a section — Obsidian 1.15+ CLI/URI commands can append or prepend content under a heading; prefer them via the vault keeper.
 - Using the third-party Obsidian MCP for vault I/O — its tool schemas load into every session. Prefer the official CLI plus the vault-keeper subagent.
 - Dumping raw source material into `wiki/` — `wiki/` is for curated OKF concept notes only; raw inputs belong in `raw/`.
