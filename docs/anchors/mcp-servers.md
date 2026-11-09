@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-06-12
+last_updated: 2026-11-09
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 3
+version: 4
 ---
 
 ## Recommended
@@ -42,7 +42,7 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Productivity
 
-- **slack** — read channels, post messages. Install: `claude mcp add slack npx -- -y @modelcontextprotocol/server-slack`
+- **slack** — read channels, post messages. The reference `@modelcontextprotocol/server-slack` is archived (now maintained by Zencoder); use a maintained alternative and pin the version before relying on it.
 - **linear** — issues and projects. Install via Linear's official MCP integration.
 - **gmail / calendar / drive** — Google hosts official remote MCP endpoints for these services. Authentication requires OAuth2 via a Google Cloud project and is configured through the Claude.ai/Claude Desktop GUI (Settings > Connectors), not via a single CLI command. For Claude Code headless use, the Google Workspace CLI is the practical alternative:
   ```
@@ -59,11 +59,15 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Transport note
 
-- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release.
-- Use `claude mcp add-json` for HTTP servers with complex headers; use `claude mcp add` for stdio servers.
+- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release; Claude Code v2.1.265+ tries HTTP first and falls back to SSE.
+- Use `claude mcp add --transport http <name> <url>` for remote servers (add `--header "Authorization: Bearer …"` if needed) and `claude mcp add --transport stdio` for local ones. WebSocket servers use `claude mcp add-json` with `"type":"ws"`.
+- In JSON configs set `"type"` explicitly; an entry with a `url` but no `type` is treated as stdio and fails.
+- Scopes: `local` (default), `project` (shared via `.mcp.json`), `user`. Block servers org-wide with `deniedMcpServers`.
 
 ## Selection tips
 
 - Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server. (Convention, not part of the official schema — but this plugin promotes it.)
 - Keep the installed set small. Every MCP server adds tool-selection overhead and expands the trust surface.
+- Active reference servers: `everything`, `fetch`, `filesystem`, `git`, `memory`, `sequential-thinking`, `time`. Most others (GitHub, GitLab, Postgres, Puppeteer, Redis, Sentry, SQLite, Google Drive/Maps, Brave Search) are archived — use vendor-maintained replacements.
+- MCP servers can run tool calls as background tasks; set `CLAUDE_CODE_DISABLE_MCP_TASKS=1` to turn that off.
 - For read-only inspection tasks, prefer a dedicated CLI + Bash allowlist over an MCP server.

@@ -1,14 +1,14 @@
 ---
 name: knowledge-base
 description: Recommended vault layouts, OKF v0.1 frontmatter patterns, and KB-agent structures for Obsidian-style knowledge bases
-last_updated: 2026-06-30
+last_updated: 2026-11-09
 sources:
   - https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md
   - https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing
   - https://help.obsidian.md/
   - https://help.obsidian.md/properties
   - https://publish.obsidian.md/hub/01+-+Community+Vaults
-version: 2
+version: 3
 ---
 
 ## Vault layout
@@ -26,7 +26,9 @@ vault/
 └── .obsidian/     ← vault config, plugins, workspace state
 ```
 
-## OKF v0.1 conformance
+## OKF conformance (spec v0.2; v0.1 bundles remain readable)
+
+The current OKF spec is **v0.2**, a minor update from v0.1 with two breaking changes: `timestamp` became `generated.at`, and the body `# Citations` list became the `sources` frontmatter key. Bundles written to v0.1 (this plugin's current output) still satisfy the permissive conformance rules below; migrate `timestamp` → `generated: {at: …}` when regenerating. A bundle-root `index.md` may carry `okf_version`.
 
 OKF (Open Knowledge Format) is Google Cloud's published standard for the Karpathy LLM-wiki pattern: a directory of Markdown concept files, one concept per file, cross-linked with standard Markdown links. A bundle conforms when:
 
@@ -47,9 +49,9 @@ Notes carry OKF frontmatter in YAML delimited by `---`. Obsidian renders these a
 | `description` | Recommended | text | Single-sentence summary (used for index generation and search previews) |
 | `resource` | Recommended | text | URI uniquely identifying the underlying asset (omit for prose notes) |
 | `tags` | Recommended | list | Categorization strings (`[graphs, retrieval]`); enables dataview queries |
-| `timestamp` | Recommended | date | ISO 8601 datetime of the last meaningful change |
+| `timestamp` | v0.1 recommended (v0.2: `generated.at`) | date | ISO 8601 datetime of the last meaningful change |
 
-Real bundles emit keys in the order `type, resource, title, description, tags, timestamp`. Producers may add custom keys (e.g. `aliases`, `created`, `updated`); OKF consumers preserve unknown keys. If a vault already uses Obsidian's `created`/`updated`, keep OKF's single `timestamp` as canonical and let the others coexist as extensions. Reserved Obsidian keys (`aliases`, `tags`, `cssclasses`) keep their typed UI behavior. Dates use ISO 8601; lists may use YAML block or flow syntax.
+v0.2 adds optional families: provenance (`sources` with per-entry `resource`), trust (`generated` with `by`/`at`, `verified` events), and lifecycle (`status`: draft/stable/deprecated, `stale_after`). Real bundles emit keys in the order `type, resource, title, description, tags, timestamp`. Producers may add custom keys (e.g. `aliases`, `created`, `updated`); OKF consumers preserve unknown keys. If a vault already uses Obsidian's `created`/`updated`, keep OKF's single `timestamp` as canonical and let the others coexist as extensions. Reserved Obsidian keys (`aliases`, `tags`, `cssclasses`) keep their typed UI behavior; the singular `tag`, `alias`, `cssclass` forms are deprecated. Dates use ISO 8601; lists may use YAML block or flow syntax.
 
 ## Naming conventions
 
@@ -62,7 +64,7 @@ Real bundles emit keys in the order `type, resource, title, description, tags, t
 
 ## Agent patterns
 
-- **Vault keeper** — dispatched subagent owning all vault I/O via the Obsidian CLI. Forbids direct `Edit`/`Write` so links and backlinks stay consistent. Reference: `.claude/agents/obsidian-vault-keeper.md`.
+- **Vault keeper** — dispatched subagent owning all vault I/O via the Obsidian CLI. Forbids direct `Edit`/`Write` so links and backlinks stay consistent. Reference: `.claude/agents/obsidian-vault-keeper.md`. Obsidian 1.15 added CLI/URI commands to append or prepend content under a heading, and `eval` accepts top-level `await`.
 - **Frontmatter validator** — reads notes, enforces OKF conformance (non-empty `type` on every non-reserved note; recommended keys present), reports missing/malformed entries. Read-only, Haiku-class model.
 - **Tag normalizer** — scans `tags:` across the vault, flags near-duplicates (`ai`, `AI`, `artificial-intelligence`), proposes a canonical form. Read-only.
 - **Ingester** — watches `raw/` for new files, summarizes into `wiki/` concept notes with frontmatter and Markdown backlinks, refreshes `index.md` and `log.md`. Write-capable; dispatched only on explicit user request.
