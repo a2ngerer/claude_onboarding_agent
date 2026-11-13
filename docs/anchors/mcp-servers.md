@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-06-12
+last_updated: 2026-11-13
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 3
+version: 4
 ---
 
 ## Recommended
@@ -16,7 +16,7 @@ version: 3
 - `github` — issues, PRs, reviews via the GitHub API
 - `obsidian` (official CLI + `obsidian-vault-keeper` subagent) — vault I/O without always-on tool schemas
 - `figma-context` — read Figma frames into context for UI work
-- `slack` — read channels, post messages
+- `slack` — read channels, post messages (reference server archived; verify the maintained fork)
 - `linear` — issues and projects (official Linear MCP)
 - `gmail` / `calendar` — Google productivity via official MCPs where available
 
@@ -42,7 +42,7 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Productivity
 
-- **slack** — read channels, post messages. Install: `claude mcp add slack npx -- -y @modelcontextprotocol/server-slack`
+- **slack** — read channels, post messages. `@modelcontextprotocol/server-slack` was archived from the reference-server repo and is now maintained by Zencoder; verify the current package and publisher before installing, or use Slack's hosted connector if available.
 - **linear** — issues and projects. Install via Linear's official MCP integration.
 - **gmail / calendar / drive** — Google hosts official remote MCP endpoints for these services. Authentication requires OAuth2 via a Google Cloud project and is configured through the Claude.ai/Claude Desktop GUI (Settings > Connectors), not via a single CLI command. For Claude Code headless use, the Google Workspace CLI is the practical alternative:
   ```
@@ -54,16 +54,21 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## DevOps / cloud
 
+- **Other reference servers** still maintained in `modelcontextprotocol/servers`: `fetch` (`uvx mcp-server-fetch`), `memory` (`npx -y @modelcontextprotocol/server-memory`), `sequential-thinking`, `time`. Archived (avoid for new setups): GitHub, GitLab, Google Drive, Postgres, Puppeteer, Redis, Sentry, SQLite, Brave Search (use the official `@brave/brave-search-mcp-server`).
 - **kubernetes** — cluster read access, kubectl-equivalent queries. Community servers available; pin a version before production use.
 - **aws / gcp** — prefer official CLIs wrapped via allowed Bash permissions; MCP wrappers exist but are less mature.
 
 ## Transport note
 
-- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release.
-- Use `claude mcp add-json` for HTTP servers with complex headers; use `claude mcp add` for stdio servers.
+- **HTTP is recommended for remote servers** (supports OAuth): `claude mcp add --transport http <name> <url>`. Add `--header "Authorization: Bearer …"` for token auth.
+- **stdio for local servers**: `claude mcp add [options] <name> -- <command> [args...]` (the `--` keeps server flags from being parsed by Claude Code).
+- **SSE is deprecated.** Claude Code v2.1.265+ tries HTTP first and falls back to SSE automatically.
+- **WebSocket** is supported only through `claude mcp add-json` or `.mcp.json` (`"type":"ws"`). A `url` entry with no `type` is treated as stdio and fails — always set `type`.
+- Scopes via `--scope`: `local` (default), `project` (shared `.mcp.json`), `user`. Manage with `claude mcp list|get|remove|login` and `/mcp`.
 
 ## Selection tips
 
 - Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server. (Convention, not part of the official schema — but this plugin promotes it.)
+- Verify any server that fetches external content — it can expose you to prompt injection. Use read-only credentials for database servers.
 - Keep the installed set small. Every MCP server adds tool-selection overhead and expands the trust surface.
 - For read-only inspection tasks, prefer a dedicated CLI + Bash allowlist over an MCP server.
