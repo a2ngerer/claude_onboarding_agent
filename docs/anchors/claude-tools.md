@@ -1,14 +1,14 @@
 ---
 name: claude-tools
 description: How to configure Claude's core tooling surface — hooks, rules, memory files, settings, slash commands, plugins
-last_updated: 2026-06-12
+last_updated: 2026-11-14
 sources:
   - https://docs.claude.com/en/docs/claude-code/hooks
   - https://docs.claude.com/en/docs/claude-code/settings
   - https://docs.claude.com/en/docs/claude-code/plugins
   - https://docs.claude.com/en/docs/claude-code/slash-commands
   - https://docs.claude.com/en/docs/claude-code/memory
-version: 2
+version: 3
 ---
 
 ## Memory files
@@ -22,12 +22,15 @@ version: 2
 
 ## Settings
 
-Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `agent`, `outputStyle`, `sandbox`, `claudeMdExcludes`, `fallbackModel`, `requiredMinimumVersion`, `enforceAvailableModels`. Permission rules evaluate in order `deny → ask → allow`; first match wins.
+Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpServers`, `model`, `outputStyle`, `sandbox`, `claudeMdExcludes`, `fallbackModel`, `requiredMinimumVersion`, `enforceAvailableModels`. Permission rules evaluate in order `deny → ask → allow`; first match wins.
 
 ```json
 { "permissions": { "allow": ["Bash(npm run test *)"], "deny": ["Read(./.env)"] } }
 ```
 
+- **`permissions.denyInsteadOfPrompting`** — a call that would wait on a permission prompt is denied and the turn continues (non-interactive/CI use).
+- **`sandbox.autoAllowBashIfSandboxed`** — sandboxed Bash follows the normal permission flow by default; set `true` to run sandboxed commands without prompts.
+- **`promptSuggestionEnabled`** — `false` turns off prompt suggestions. `pluginDigests` is deprecated and ignored; the `agent` setting is deprecated and warns at startup.
 - **`fallbackModel`** — model to use when the primary `model` is unavailable or rate-limited.
 - **`requiredMinimumVersion`** — semver string; Claude Code refuses to run if the installed version is older.
 - **`enforceAvailableModels`** — boolean; when `true`, rejects model IDs not available in the current account/tier at startup rather than failing at runtime.
@@ -36,21 +39,26 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 
 ## Hooks
 
+Claude Code defines 33 hook events. The most useful:
+
 | Event | Typical use | Example |
 |---|---|---|
-| `SessionStart` | Load context or env vars on session open | Inject current git branch |
-| `InstructionsLoaded` | React to what triggered loading (new session, `/reload-skills`, plugin install); inspect `load_reason` | Log which skills were loaded |
+| `SessionStart` / `SessionEnd` | Load context or env vars; flush artifacts | Inject current git branch |
 | `UserPromptSubmit` | Validate or enrich the user prompt | Block secret patterns |
+| `UserPromptExpansion` | Inspect or block a typed command's expansion | Gate risky slash commands |
 | `PreToolUse` | Block or gate a tool call | Deny `Bash(rm -rf *)` |
-| `PostToolUse` | Lint or log after a tool runs | Auto-run `eslint --fix` after `Edit` |
-| `PostToolBatch` | React after a full parallel tool batch completes | Summarize a batch of file reads |
-| `MessageDisplay` | Intercept or annotate a message before it is shown | Inject a reminder banner |
-| `PreCompact` | Save state before context compaction | Checkpoint session notes |
-| `PostCompact` | Re-inject context after compaction | Reload pinned snippets |
-| `WorktreeCreate` | Set up a fresh worktree (install deps, copy env) | `npm ci` in the new branch |
-| `WorktreeRemove` | Clean up after a worktree is deleted | Remove temp build artifacts |
-| `Stop` | Cleanup when Claude finishes a turn | Persist session notes |
-| `SessionEnd` | Release resources or save artifacts | Flush metrics |
+| `PermissionRequest` / `PermissionDenied` | Decide a permission prompt; retry after auto-mode denial | Auto-approve read-only calls |
+| `PostToolUse` / `PostToolUseFailure` | Lint, log, or react after a tool succeeds or fails | Auto-run `eslint --fix` after `Edit` |
+| `PostToolBatch` | React after a full parallel tool batch | Summarize a batch of file reads |
+| `SubagentStart` / `SubagentStop` | Track subagent lifecycle | Log delegated work |
+| `InstructionsLoaded` | React when CLAUDE.md or rules load; inspect `load_reason` | Log which rules loaded |
+| `ConfigChange` / `CwdChanged` / `FileChanged` | React to config, directory, or watched-file changes | Reload env on `cd` |
+| `PreCompact` / `PostCompact` | Save or re-inject state around compaction (receive `agent_id` for subagents) | Reload pinned snippets |
+| `PreModelSwitch` / `PostModelSwitch` | Block or observe model changes | Enforce an approved model list |
+| `WorktreeCreate` / `WorktreeRemove` | Set up or clean up a worktree | `npm ci` in the new branch |
+| `Stop` / `StopFailure` | Cleanup when a turn ends (or errors) | Persist session notes |
+
+Also available: `Setup`, `Notification`, `MessageDisplay`, `TaskCreated`, `TaskCompleted`, `TeammateIdle`, `DirectoryAdded`, `Elicitation`, `ElicitationResult`. PostToolUse hooks get up to 10 seconds to finish on calls that complete after an interrupting message.
 
 Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries. Plugins ship hooks in `hooks/hooks.json`.
 
@@ -61,10 +69,8 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 - Arguments: `$ARGUMENTS` (full string), `$0`/`$1`/… or `$ARGUMENTS[N]` (positional), named args via `arguments:` frontmatter.
 - Name slugs: lowercase letters, digits, hyphens only; max 64 chars.
 - `/reload-skills` — hot-reload skill/command files without restarting the session.
-- `/cd <path>` — change the working directory for the current session.
-- `/plugin list` — list installed plugins and their status.
-- `claude plugin init` — scaffold a new plugin in the current directory (CLI, not a slash command).
-- `claude agents` — list all available named subagents (CLI).
+- `/cd <path>` — change the session working directory; `/plugin list` — list installed plugins.
+- CLI: `claude plugin init` scaffolds a plugin; `claude agents` lists named subagents.
 
 ## SKILL.md frontmatter fields
 
@@ -82,12 +88,13 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 
 ## Plugins
 
-- Manifest: `.claude-plugin/plugin.json` with `name`, `version` (semver), `description`, optional `author`, `homepage`, `repository`, `displayName`, `defaultEnabled`, `dependencies`.
+- Manifest: `.claude-plugin/plugin.json` with `name`, `version` (semver), `description`, optional `author`, `homepage`, `repository`, `displayName`, `defaultEnabled`, `dependencies`, `engines["claude-code"]`.
+  - `engines["claude-code"]` — Claude Code version range; plugins outside it are not installed, updated, or loaded.
   - `displayName` — human-readable name shown in the marketplace and `/plugin list`.
   - `defaultEnabled` — boolean; whether the plugin activates on install without user opt-in.
   - `dependencies` — list of other plugin names that must be installed for this plugin to function.
 - Components sit at the plugin root, not inside `.claude-plugin/`: `skills/`, `agents/`, `commands/`, `hooks/`, `.mcp.json`, `.lsp.json`, `monitors/`, `settings.json`.
-- Version every release; users update through the marketplace. `/reload-plugins` picks up local edits.
+- Version every release; users update through the marketplace. `/reload-plugins` picks up local edits; `claude plugin validate [--strict]` checks a plugin (including TypeScript hooks modules).
 
 ## Recommendations
 
@@ -95,8 +102,6 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 - Prefer skills (`SKILL.md`) over fat `CLAUDE.md` sections for anything longer than a few bullets or invoked only sometimes.
 - Use a `PostToolUse` hook to run linters or formatters after `Write`/`Edit` instead of instructing Claude to do it.
 - Scope permissions explicitly: allowlist safe commands (`Bash(npm run test *)`), deny reads of secrets (`Read(./.env)`).
-- Pin plugin versions in team repos; run `/reload-plugins` after edits instead of restarting.
-- Namespace plugin skills; never rely on a collision-prone flat name.
 
 ## Deprecated patterns
 

@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-06-12
+last_updated: 2026-11-14
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 3
+version: 4
 ---
 
 ## Recommended
@@ -59,8 +59,11 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Transport note
 
-- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release.
-- Use `claude mcp add-json` for HTTP servers with complex headers; use `claude mcp add` for stdio servers.
+- **Prefer HTTP for remote servers, stdio for local servers.** SSE is deprecated (Claude Code v2.1.265+ tries HTTP first and falls back to SSE). WebSocket (`ws`) exists for push-style servers but has no OAuth; configure it with `add-json`.
+- Syntax: `claude mcp add --transport http <name> <url> [--header "Authorization: Bearer TOKEN"]`; stdio: `claude mcp add [--env KEY=value] --transport stdio <name> -- <command> [args...]`. Use `add-json` for complex headers.
+- A JSON entry with `url` but no `type` is rejected as stdio — always set `"type": "http"`, `"sse"`, or `"ws"`.
+- Scopes: `local` (default), `project` (shared `.mcp.json`), `user`. Manage with `claude mcp list|get|remove|login|logout`.
+- MCP tool search is on by default, so tool schemas load on demand. Long-running tool calls can run as background MCP tasks (see `/tasks`).
 
 ## Selection tips
 
