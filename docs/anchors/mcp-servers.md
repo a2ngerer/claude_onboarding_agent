@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-06-12
+last_updated: 2026-11-18
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 3
+version: 4
 ---
 
 ## Recommended
@@ -60,7 +60,10 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 ## Transport note
 
 - **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release.
-- Use `claude mcp add-json` for HTTP servers with complex headers; use `claude mcp add` for stdio servers.
+- Use `claude mcp add-json` for HTTP servers with complex headers; use `claude mcp add` for stdio servers. `claude mcp add-json <name> -` reads the JSON from stdin (v2.1.327+).
+- A JSON entry with a `url` but no `type` is treated as stdio and rejected — always set `"type": "http"`, `"sse"`, or `"ws"`. WebSocket (`ws`) is only configurable via `add-json`.
+- Claude Code v2.1.265+ tries HTTP first and falls back to SSE automatically.
+- Reviewed remote connectors are listed in the Anthropic Directory (https://claude.ai/directory); to build your own server, install `mcp-server-dev@claude-plugins-official`.
 
 ## Selection tips
 
