@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-06-12
+last_updated: 2026-11-19
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 2
+version: 3
 ---
 
 ## Named subagent frontmatter fields
@@ -15,14 +15,18 @@ Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Availa
 
 | Field | Purpose |
 |---|---|
-| `model` | Model to run this agent on. Accepts aliases (`fable`, `opus`, `sonnet`, `haiku`) or full IDs. Defaults to `inherit` (uses the invoking context's model). |
-| `disallowedTools` | Comma-separated list of tools the subagent cannot call, even if its `tools:` whitelist includes them. |
-| `maxTurns` | Maximum number of agentic turns before the subagent is forced to return. Prevents runaway loops. |
-| `skills` | Comma-separated skill slugs to preload into the subagent's context. |
-| `memory` | `true` / `false` — whether the subagent has access to the user's memory files. Default: `false` for read-only agents. |
-| `effort` | `low` / `normal` / `high` — thinking budget hint passed to the model. |
-| `isolation` | `worktree` — run the subagent in a temporary git worktree; branch and path returned to the caller on exit. |
-| `background` | `true` — spawn the subagent in the background; caller is notified on completion rather than waiting. |
+| `tools` | Allowlist of tools (comma-separated string or YAML list). Inherits all subagent-available tools if omitted. |
+| `model` | Model to run this agent on. Accepts aliases (`fable`, `opus`, `sonnet`, `haiku`), a full ID, or `inherit`. |
+| `permissionMode` | `default`, `acceptEdits`, `auto`, `dontAsk`, `bypassPermissions`, `plan`. Ignored for plugin subagents. |
+| `disallowedTools` | Denylist applied before `tools`. An entry with a specifier (e.g. `Bash(git push *)`) removes the whole tool. |
+| `maxTurns` | Maximum agentic turns. On reaching it, output is marked partial and can be resumed. Prevents runaway loops. |
+| `skills` | Skills whose full content is preloaded at startup (up to 32). Does not restrict which skills can be invoked. |
+| `mcpServers` / `hooks` | MCP servers and lifecycle hooks scoped to this subagent. Ignored for plugin subagents. |
+| `memory` | Persistent memory scope: `user` (`~/.claude/agent-memory/<agent>/`), `project` (`.claude/agent-memory/<agent>/`), or `local` (`.claude/agent-memory-local/<agent>/`). Enables Read/Write/Edit automatically. |
+| `effort` | `low` / `medium` / `high` / `xhigh` / `max` — thinking effort. |
+| `isolation` | `worktree` — run in a temporary git worktree branched from the default branch; cleaned up automatically if nothing changed. |
+| `background` | `true` — keep the subagent in the background even when Claude asks to wait; results arrive as a completion notification. |
+| `omitClaudeMd` | `true` — skip user/project/local CLAUDE.md at startup (managed policy files still load). |
 
 ## Model tiering for subagents
 
@@ -82,7 +86,7 @@ The main agent waits once, then relays a consolidated summary — it does not na
 
 ## Anti-patterns
 
-- Subagents dispatching other subagents — nesting is technically supported up to 5 levels (since v2.1.172) but remains strongly discouraged; nested fan-out multiplies context cost and latency unpredictably.
+- Subagents dispatching other subagents — nesting is supported up to three layers by default (`CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH` changes the limit; `1` disables it) but remains strongly discouraged; nested fan-out multiplies context cost and latency unpredictably. Omit `Agent` from a subagent's `tools` to prevent it.
 - The main agent narrating subagent work step-by-step instead of relaying the final summary.
 - Dispatching a subagent for a task that is one tool call — the overhead dwarfs the work.
 - Vague prompts like "research X" with no output format — produces redundant searches and unfocused summaries.
