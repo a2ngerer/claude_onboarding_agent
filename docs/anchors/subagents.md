@@ -1,12 +1,12 @@
 ---
 name: subagents
 description: Subagent orchestration patterns for Claude Code — when to delegate, how to structure, and what to avoid
-last_updated: 2026-06-12
+last_updated: 2026-11-23
 sources:
   - https://docs.claude.com/en/docs/claude-code/sub-agents
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/claude-code-best-practices
-version: 2
+version: 3
 ---
 
 ## Named subagent frontmatter fields
@@ -19,8 +19,15 @@ Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Availa
 | `disallowedTools` | Comma-separated list of tools the subagent cannot call, even if its `tools:` whitelist includes them. |
 | `maxTurns` | Maximum number of agentic turns before the subagent is forced to return. Prevents runaway loops. |
 | `skills` | Comma-separated skill slugs to preload into the subagent's context. |
-| `memory` | `true` / `false` — whether the subagent has access to the user's memory files. Default: `false` for read-only agents. |
-| `effort` | `low` / `normal` / `high` — thinking budget hint passed to the model. |
+| `memory` | Persistent memory scope: `user`, `project`, or `local`. |
+| `effort` | `low` / `medium` / `high` / `xhigh` / `max` — thinking effort for this subagent. |
+| `permissionMode` | `default`, `acceptEdits`, `auto`, `dontAsk`, `bypassPermissions`, or `plan`. Ignored for plugin subagents. |
+| `mcpServers` / `hooks` | MCP servers and lifecycle hooks scoped to this subagent. Ignored for plugin subagents. |
+| `omitClaudeMd` | `true` skips CLAUDE.md files at startup (restate critical rules in the prompt). |
+| `autoCompactWindow` | Auto-compact window for this subagent (minimum 100000 tokens). |
+| `color` / `initialPrompt` / `experimental` | Display color; auto-submitted first turn under `--agent`; experimental options such as `cacheTtl` (`5m`/`1h`). |
+
+Field names are camelCase and must match exactly — unrecognized fields are ignored without error. Only `name` and `description` are required. Built-in helpers include `Explore`, `Plan`, `general-purpose`, `claude`, `statusline-setup`, `claude-code-guide`, and `web-fetch`; deny one with `Agent(Explore)` in `permissions.deny`.
 | `isolation` | `worktree` — run the subagent in a temporary git worktree; branch and path returned to the caller on exit. |
 | `background` | `true` — spawn the subagent in the background; caller is notified on completion rather than waiting. |
 
@@ -31,7 +38,7 @@ Named subagents live at `.claude/agents/<name>.md` with YAML frontmatter. Availa
 - **Opus** (`opus`) — complex multi-step reasoning, architectural decisions, tasks that must get it right the first time.
 - **Fable** (`fable`) — maximum capability; reserve for the hardest reasoning tasks where cost is secondary to quality.
 
-Set `model: haiku` on read-only scanner agents; let implementation agents default to `sonnet` via `inherit`. Bump to `opus` or `fable` only when the task demonstrably needs it.
+Keep subagent `description:` fields short (combined descriptions over ~15,000 tokens trigger a startup warning). Set `model: haiku` on read-only scanner agents; let implementation agents default to `sonnet` via `inherit`. Bump to `opus` or `fable` only when the task demonstrably needs it.
 
 ## When to use a subagent
 
@@ -82,7 +89,7 @@ The main agent waits once, then relays a consolidated summary — it does not na
 
 ## Anti-patterns
 
-- Subagents dispatching other subagents — nesting is technically supported up to 5 levels (since v2.1.172) but remains strongly discouraged; nested fan-out multiplies context cost and latency unpredictably.
+- Subagents dispatching other subagents — nesting is supported up to 3 layers by default (`CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH`; up to 20 concurrent via `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`) but remains strongly discouraged; nested fan-out multiplies context cost and latency unpredictably.
 - The main agent narrating subagent work step-by-step instead of relaying the final summary.
 - Dispatching a subagent for a task that is one tool call — the overhead dwarfs the work.
 - Vague prompts like "research X" with no output format — produces redundant searches and unfocused summaries.

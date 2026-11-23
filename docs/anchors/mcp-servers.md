@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-06-12
+last_updated: 2026-11-23
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 3
+version: 4
 ---
 
 ## Recommended
@@ -43,6 +43,7 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 ## Productivity
 
 - **slack** — read channels, post messages. Install: `claude mcp add slack npx -- -y @modelcontextprotocol/server-slack`
+- **sentry** / **notion** / **stripe** — official remote HTTP servers (`https://mcp.sentry.dev/mcp`, `https://mcp.notion.com/mcp`, `https://mcp.stripe.com`); add with `claude mcp add --transport http <name> <url>`.
 - **linear** — issues and projects. Install via Linear's official MCP integration.
 - **gmail / calendar / drive** — Google hosts official remote MCP endpoints for these services. Authentication requires OAuth2 via a Google Cloud project and is configured through the Claude.ai/Claude Desktop GUI (Settings > Connectors), not via a single CLI command. For Claude Code headless use, the Google Workspace CLI is the practical alternative:
   ```
@@ -60,7 +61,8 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 ## Transport note
 
 - **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release.
-- Use `claude mcp add-json` for HTTP servers with complex headers; use `claude mcp add` for stdio servers.
+- Use `claude mcp add-json` for HTTP servers with complex headers; use `claude mcp add` for stdio servers. `claude mcp add-json <name> -` reads the JSON from stdin, keeping tokens off the command line. Claude Code tries HTTP first and falls back to SSE; WebSocket (`"type": "ws"`) is supported via `.mcp.json` or `add-json` only.
+- Scopes: `local` (default), `project` (`.mcp.json`, shared via VCS, needs approval), `user`.
 
 ## Selection tips
 
