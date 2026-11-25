@@ -1,12 +1,12 @@
 ---
 name: mcp-servers
 description: Recommended MCP servers by use case for Claude Code
-last_updated: 2026-06-12
+last_updated: 2026-11-25
 sources:
   - https://docs.claude.com/en/docs/claude-code/mcp
   - https://github.com/modelcontextprotocol/servers
   - https://www.anthropic.com/engineering
-version: 3
+version: 4
 ---
 
 ## Recommended
@@ -59,11 +59,11 @@ Per-category details follow. Keep the set small: every installed MCP expands the
 
 ## Transport note
 
-- **Prefer HTTP for remote servers, stdio for local servers.** SSE (Server-Sent Events) transport is deprecated and may be removed in a future release.
-- Use `claude mcp add-json` for HTTP servers with complex headers; use `claude mcp add` for stdio servers.
+- **Prefer HTTP for remote servers, stdio for local servers.** SSE is deprecated; Claude Code v2.1.265+ tries HTTP first and falls back to SSE automatically. WebSocket (`ws`) is available only via `.mcp.json` or `add-json` (header auth, no OAuth).
+- Use `claude mcp add-json` for HTTP servers with complex headers; use `claude mcp add` for stdio servers. `claude mcp add-json <name> -` reads the JSON from stdin, keeping tokens off the command line. A JSON entry with a `url` must include a `type`.
 
 ## Selection tips
 
 - Add a `"description"` field to each entry in `.claude/settings.json` so Claude knows when to pick the server. (Convention, not part of the official schema — but this plugin promotes it.)
-- Keep the installed set small. Every MCP server adds tool-selection overhead and expands the trust surface.
+- Keep the installed set small. Tool search is on by default, so tool schemas load on demand, but every server still expands the trust surface.
 - For read-only inspection tasks, prefer a dedicated CLI + Bash allowlist over an MCP server.

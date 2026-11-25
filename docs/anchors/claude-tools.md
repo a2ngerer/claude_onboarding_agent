@@ -1,14 +1,14 @@
 ---
 name: claude-tools
 description: How to configure Claude's core tooling surface — hooks, rules, memory files, settings, slash commands, plugins
-last_updated: 2026-06-12
+last_updated: 2026-11-25
 sources:
   - https://docs.claude.com/en/docs/claude-code/hooks
   - https://docs.claude.com/en/docs/claude-code/settings
   - https://docs.claude.com/en/docs/claude-code/plugins
   - https://docs.claude.com/en/docs/claude-code/slash-commands
   - https://docs.claude.com/en/docs/claude-code/memory
-version: 2
+version: 3
 ---
 
 ## Memory files
@@ -38,21 +38,26 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 
 | Event | Typical use | Example |
 |---|---|---|
-| `SessionStart` | Load context or env vars on session open | Inject current git branch |
-| `InstructionsLoaded` | React to what triggered loading (new session, `/reload-skills`, plugin install); inspect `load_reason` | Log which skills were loaded |
-| `UserPromptSubmit` | Validate or enrich the user prompt | Block secret patterns |
+| `SessionStart` / `Setup` | Load context or env vars on session open | Inject current git branch |
+| `InstructionsLoaded` | React to what triggered loading; inspect `load_reason` | Log which skills were loaded |
+| `UserPromptSubmit` / `UserPromptExpansion` | Validate or enrich the prompt | Block secret patterns |
+| `PreSkillShellCommand` | Refuse a skill's inline shell commands as they load | Deny untrusted `!`cmd`` blocks |
 | `PreToolUse` | Block or gate a tool call | Deny `Bash(rm -rf *)` |
-| `PostToolUse` | Lint or log after a tool runs | Auto-run `eslint --fix` after `Edit` |
-| `PostToolBatch` | React after a full parallel tool batch completes | Summarize a batch of file reads |
-| `MessageDisplay` | Intercept or annotate a message before it is shown | Inject a reminder banner |
-| `PreCompact` | Save state before context compaction | Checkpoint session notes |
-| `PostCompact` | Re-inject context after compaction | Reload pinned snippets |
-| `WorktreeCreate` | Set up a fresh worktree (install deps, copy env) | `npm ci` in the new branch |
-| `WorktreeRemove` | Clean up after a worktree is deleted | Remove temp build artifacts |
-| `Stop` | Cleanup when Claude finishes a turn | Persist session notes |
+| `PermissionRequest` / `PermissionDenied` | Observe or answer permission decisions | Auto-log denials |
+| `PostToolUse` / `PostToolUseFailure` | Lint or log after a tool runs or fails | Auto-run `eslint --fix` after `Edit` |
+| `PostToolBatch` | React after a full parallel tool batch | Summarize a batch of reads |
+| `MessageDisplay` | Annotate a message before it is shown | Inject a reminder banner |
+| `SubagentStart` / `SubagentStop` | Track delegated work | Log subagent results |
+| `TaskCreated` / `TaskCompleted` | Track background tasks | Notify on completion |
+| `PreCompact` / `PostCompact` | Save or re-inject context around compaction | Checkpoint session notes |
+| `PreModelSwitch` / `PostModelSwitch` | React to `/model` changes | Warn about cache cost |
+| `ConfigChange` / `CwdChanged` / `DirectoryAdded` / `FileChanged` | React to environment changes | Reload env on `cd` |
+| `WorktreeCreate` / `WorktreeRemove` | Set up or clean up a worktree | `npm ci` in the new branch |
+| `Elicitation` / `ElicitationResult` | Handle MCP elicitation requests | Auto-answer known prompts |
+| `Notification` / `Stop` / `StopFailure` / `TeammateIdle` | Turn-level signals | Persist session notes |
 | `SessionEnd` | Release resources or save artifacts | Flush metrics |
 
-Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries. Plugins ship hooks in `hooks/hooks.json`.
+Hook types include `command`, HTTP, prompt (accepts a `model` alias such as `haiku`), and `mcp_tool`; `"onFailure": "block"` works on command, HTTP, and `mcp_tool` hooks. Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries. Plugins ship hooks in `hooks/hooks.json`.
 
 ## Slash commands
 
@@ -61,10 +66,9 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 - Arguments: `$ARGUMENTS` (full string), `$0`/`$1`/… or `$ARGUMENTS[N]` (positional), named args via `arguments:` frontmatter.
 - Name slugs: lowercase letters, digits, hyphens only; max 64 chars.
 - `/reload-skills` — hot-reload skill/command files without restarting the session.
-- `/cd <path>` — change the working directory for the current session.
 - `/plugin list` — list installed plugins and their status.
 - `claude plugin init` — scaffold a new plugin in the current directory (CLI, not a slash command).
-- `claude agents` — list all available named subagents (CLI).
+- `/skills` lists skills; `/skill-doctor` reports per-skill context cost and usage.
 
 ## SKILL.md frontmatter fields
 
@@ -73,9 +77,11 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 | `argument-hint` | Short placeholder shown in autocomplete (e.g. `[branch]`) |
 | `allowed-tools` | Comma-separated tool whitelist for this skill's invocation |
 | `model` | Override model for this skill (accepts aliases: `fable`, `opus`, `sonnet`, `haiku`, `inherit`) |
-| `effort` | `low` / `normal` / `high` — hint to the model's thinking budget |
-| `context: fork` | Run the skill in a forked context (isolated from main conversation) |
-| `context: agent` | Run the skill as a full subagent turn |
+| `effort` | `low` / `medium` / `high` / `xhigh` / `max` — effort level for the turn |
+| `when_to_use` | Extra trigger phrases appended to `description` in the skill listing |
+| `disallowed-tools` | Tools removed while the skill is active |
+| `agent` | Subagent type to use when `context: fork` is set |
+| `context: fork` | Run the skill in a forked subagent (isolated from main conversation) |
 | `paths` | Glob list — load this skill only when CWD matches |
 | `disable-model-invocation` | `true` — skill runs its command without calling the model (pure automation) |
 | `user-invocable` | `false` — hides the skill from `/` autocomplete; only callable programmatically |
@@ -86,6 +92,7 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
   - `displayName` — human-readable name shown in the marketplace and `/plugin list`.
   - `defaultEnabled` — boolean; whether the plugin activates on install without user opt-in.
   - `dependencies` — list of other plugin names that must be installed for this plugin to function.
+  - `optionalDependencies` — plugins installed alongside this one that can be disabled or uninstalled independently.
 - Components sit at the plugin root, not inside `.claude-plugin/`: `skills/`, `agents/`, `commands/`, `hooks/`, `.mcp.json`, `.lsp.json`, `monitors/`, `settings.json`.
 - Version every release; users update through the marketplace. `/reload-plugins` picks up local edits.
 
@@ -95,8 +102,6 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 - Prefer skills (`SKILL.md`) over fat `CLAUDE.md` sections for anything longer than a few bullets or invoked only sometimes.
 - Use a `PostToolUse` hook to run linters or formatters after `Write`/`Edit` instead of instructing Claude to do it.
 - Scope permissions explicitly: allowlist safe commands (`Bash(npm run test *)`), deny reads of secrets (`Read(./.env)`).
-- Pin plugin versions in team repos; run `/reload-plugins` after edits instead of restarting.
-- Namespace plugin skills; never rely on a collision-prone flat name.
 
 ## Deprecated patterns
 
@@ -104,4 +109,3 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 - Do not place `commands/`, `agents/`, `skills/`, or `hooks/` inside `.claude-plugin/`; only `plugin.json` belongs there.
 - Do not rely on `AGENTS.md` being read directly by Claude Code — import it from `CLAUDE.md` with `@AGENTS.md`.
 - Do not use legacy `.claude/commands/*.md` for new functionality — prefer `skills/<name>/SKILL.md` so supporting files and frontmatter are available.
-- Do not silently overwrite an existing `CLAUDE.md` — extend with a delimited, attributed section.
