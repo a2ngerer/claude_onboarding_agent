@@ -1,14 +1,14 @@
 ---
 name: claude-tools
 description: How to configure Claude's core tooling surface — hooks, rules, memory files, settings, slash commands, plugins
-last_updated: 2026-06-12
+last_updated: 2026-11-26
 sources:
   - https://docs.claude.com/en/docs/claude-code/hooks
   - https://docs.claude.com/en/docs/claude-code/settings
   - https://docs.claude.com/en/docs/claude-code/plugins
   - https://docs.claude.com/en/docs/claude-code/slash-commands
   - https://docs.claude.com/en/docs/claude-code/memory
-version: 2
+version: 3
 ---
 
 ## Memory files
@@ -36,23 +36,27 @@ Top-level keys in `.claude/settings.json`: `permissions`, `env`, `hooks`, `mcpSe
 
 ## Hooks
 
+Claude Code supports 34 hook events. Commonly used ones:
+
 | Event | Typical use | Example |
 |---|---|---|
-| `SessionStart` | Load context or env vars on session open | Inject current git branch |
-| `InstructionsLoaded` | React to what triggered loading (new session, `/reload-skills`, plugin install); inspect `load_reason` | Log which skills were loaded |
-| `UserPromptSubmit` | Validate or enrich the user prompt | Block secret patterns |
+| `SessionStart` / `Setup` | Load context on open; one-time prep with `--init-only` / `--init` | Inject current git branch |
+| `UserPromptSubmit` / `UserPromptExpansion` | Validate prompts; block a command expansion | Block secret patterns |
+| `PreSkillShellCommand` | Refuse a skill's injected inline shell command before it runs | Deny risky skill shell blocks |
 | `PreToolUse` | Block or gate a tool call | Deny `Bash(rm -rf *)` |
-| `PostToolUse` | Lint or log after a tool runs | Auto-run `eslint --fix` after `Edit` |
-| `PostToolBatch` | React after a full parallel tool batch completes | Summarize a batch of file reads |
-| `MessageDisplay` | Intercept or annotate a message before it is shown | Inject a reminder banner |
-| `PreCompact` | Save state before context compaction | Checkpoint session notes |
-| `PostCompact` | Re-inject context after compaction | Reload pinned snippets |
-| `WorktreeCreate` | Set up a fresh worktree (install deps, copy env) | `npm ci` in the new branch |
-| `WorktreeRemove` | Clean up after a worktree is deleted | Remove temp build artifacts |
-| `Stop` | Cleanup when Claude finishes a turn | Persist session notes |
-| `SessionEnd` | Release resources or save artifacts | Flush metrics |
+| `PermissionRequest` / `PermissionDenied` | Decide permissions; `PermissionDenied` may set `retry: true` in auto mode | Auto-approve safe reads |
+| `PostToolUse` / `PostToolUseFailure` | Lint or log after a tool succeeds / fails | `eslint --fix` after `Edit` |
+| `PostToolBatch` | React after a parallel tool batch resolves | Summarize a batch of reads |
+| `SubagentStart` / `SubagentStop` | Track subagent lifecycle | Log delegated work |
+| `TaskCreated` / `TaskCompleted` | React to task-list changes | Notify on completion |
+| `InstructionsLoaded` / `ConfigChange` / `FileChanged` / `CwdChanged` | Observe context and environment changes | Log loaded rules |
+| `PreCompact` / `PostCompact` | Save / restore state around compaction | Checkpoint session notes |
+| `PreModelSwitch` / `PostModelSwitch` | Gate or observe model changes | Block a switch to Fable |
+| `Elicitation` / `ElicitationResult` | Intercept MCP user-input requests | Auto-answer known prompts |
+| `WorktreeCreate` / `WorktreeRemove` | Set up / clean up worktrees | `npm ci` in the new branch |
+| `Stop` / `StopFailure` / `SessionEnd` | Cleanup at turn end, API-error turn end, session end | Persist session notes |
 
-Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries. Plugins ship hooks in `hooks/hooks.json`.
+Also: `Notification`, `MessageDisplay`, `TeammateIdle`, `DirectoryAdded`. Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matcher` and a list of `{ type, command }` entries; `command`, HTTP, and `mcp_tool` hooks accept `"onFailure": "block"` to refuse on error. Plugins ship hooks in `hooks/hooks.json` (event map wrapped in a top-level `"hooks"` key).
 
 ## Slash commands
 
@@ -82,11 +86,12 @@ Hooks live in `.claude/settings.json` under `hooks.<EventName>[]` with a `matche
 
 ## Plugins
 
-- Manifest: `.claude-plugin/plugin.json` with `name`, `version` (semver), `description`, optional `author`, `homepage`, `repository`, `displayName`, `defaultEnabled`, `dependencies`.
+- Manifest: `.claude-plugin/plugin.json` (optional; `name` is the only required key) with `version`, `description`, `author`, `homepage`, `repository`, `license`, `keywords`, `displayName`, `defaultEnabled`, `dependencies`, `engines`, `userConfig`.
   - `displayName` — human-readable name shown in the marketplace and `/plugin list`.
   - `defaultEnabled` — boolean; whether the plugin activates on install without user opt-in.
-  - `dependencies` — list of other plugin names that must be installed for this plugin to function.
-- Components sit at the plugin root, not inside `.claude-plugin/`: `skills/`, `agents/`, `commands/`, `hooks/`, `.mcp.json`, `.lsp.json`, `monitors/`, `settings.json`.
+  - `dependencies` — plugins that must be enabled; entries are `"name"`, `"name@marketplace"`, or `{name, marketplace, version}`. `optionalDependencies` marks plugins that install alongside but can be disabled independently.
+  - `engines` — semver range under `claude-code` (e.g. `">=2.1.400"`); older Claude Code versions reject manifests containing it.
+- Components sit at the plugin root, not inside `.claude-plugin/`: `skills/`, `agents/`, `commands/`, `hooks/`, `.mcp.json`, `.lsp.json`, `workflows/`, `output-styles/`, `monitors/`, `settings.json`.
 - Version every release; users update through the marketplace. `/reload-plugins` picks up local edits.
 
 ## Recommendations
